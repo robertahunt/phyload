@@ -1,4 +1,4 @@
-seed(1237)
+seed(8483)
 ## This script will allow simulation of an alignment with epistasis
 # Specifically, this simulates
 #    1) an alignment without epistatic interactions,
@@ -32,6 +32,8 @@ epistasis_d <- 1
 source("simulation_study/preliminary/0_setup/src/simulation/epistatic_doublet_model_stub.Rev")
 # Simulate the pieces to make 100 epistatic alignments
 for (i in 1:100) {
+  # New doublet stationary frequencies
+  df.redraw()
   # Simulate the non-epistatic portion of the alignment
   seq_iid ~ dnPhyloCTMC(tree=phy,Q=Q_iid,siteRates=gamma_cats,nSites=nsites_iid,type="DNA")
   # simulate epistatic alignment

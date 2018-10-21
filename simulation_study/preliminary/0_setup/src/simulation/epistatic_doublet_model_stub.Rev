@@ -8,7 +8,7 @@ S := fnFreeSymmetricRateMatrix(er,rescaled=false)
 
 # Stationary frequencies of the doublets
 # We draw from a Dirchlet(alpha=2) instead of the Dirchlet(alpha=1) originally used to make frequencies somewhat more even
-df ~ dnDirichlet(rep(1,16))
+df ~ dnDirichlet(rep(2,16))
 
 # To help us navigate making the Q matrix
 d1 <- v(1,1,1,1,2,2,2,2,3,3,3,3,4,4,4,4)
