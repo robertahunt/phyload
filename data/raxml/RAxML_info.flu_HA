@@ -1,0 +1,100 @@
+
+
+Using BFGS method to optimize GTR rate parameters, to disable this specify "--no-bfgs" 
+
+
+
+This is RAxML version 8.2.12 released by Alexandros Stamatakis on May 2018.
+
+With greatly appreciated code contributions by:
+Andre Aberer      (HITS)
+Simon Berger      (HITS)
+Alexey Kozlov     (HITS)
+Kassian Kobert    (HITS)
+David Dao         (KIT and HITS)
+Sarah Lutteropp   (KIT and HITS)
+Nick Pattengale   (Sandia)
+Wayne Pfeiffer    (SDSC)
+Akifumi S. Tanabe (NRIFS)
+Charlie Taylor    (UF)
+
+
+Alignment has 498 distinct alignment patterns
+
+Proportion of gaps and completely undetermined characters in this alignment: 0.05%
+
+RAxML rapid hill-climbing mode
+
+Using 1 distinct models/data partitions with joint branch length optimization
+
+
+Executing 10 inferences on the original alignment using 10 distinct randomized MP trees
+
+All free model parameters will be estimated by RAxML
+GAMMA model of rate heterogeneity, ML estimate of alpha-parameter
+
+GAMMA Model parameters will be estimated up to an accuracy of 0.1000000000 Log Likelihood units
+
+Partition: 0
+Alignment Patterns: 498
+Name: No Name Provided
+DataType: DNA
+Substitution Matrix: GTR
+Base frequencies: ML estimate
+
+
+
+
+RAxML was called as follows:
+
+raxml -s ../flu_HA.fasta -p 8472 -n flu_HA -mGTRGAMMAX -# 10 
+
+
+Partition: 0 with name: No Name Provided
+Initial base frequencies, prior to ML estimate: 0.250 0.250 0.250 0.250 
+
+Inference[0]: Time 3.388360 GAMMA-based likelihood -8613.867225, best rearrangement setting 5
+alpha[0]: 0.440837 rates[0] ac ag at cg ct gt: 1.905914 7.072621 0.928092 0.505297 7.843874 1.000000 ML estimate base freqs[0]: 0.340565 0.190393 0.225405 0.243637 
+Inference[1]: Time 3.917362 GAMMA-based likelihood -8613.882438, best rearrangement setting 5
+alpha[0]: 0.440705 rates[0] ac ag at cg ct gt: 1.825504 6.797231 0.888946 0.483715 7.466342 1.000000 ML estimate base freqs[0]: 0.340600 0.190867 0.224916 0.243617 
+Inference[2]: Time 3.331392 GAMMA-based likelihood -8613.873205, best rearrangement setting 5
+alpha[0]: 0.440936 rates[0] ac ag at cg ct gt: 1.924044 7.154296 0.936467 0.508031 7.894953 1.000000 ML estimate base freqs[0]: 0.340323 0.190498 0.225329 0.243850 
+Inference[3]: Time 3.275046 GAMMA-based likelihood -8613.881752, best rearrangement setting 5
+alpha[0]: 0.440967 rates[0] ac ag at cg ct gt: 1.942865 7.211057 0.946077 0.512699 7.956060 1.000000 ML estimate base freqs[0]: 0.340198 0.190458 0.225429 0.243916 
+Inference[4]: Time 3.845321 GAMMA-based likelihood -8613.866390, best rearrangement setting 5
+alpha[0]: 0.440775 rates[0] ac ag at cg ct gt: 1.859441 6.904837 0.904411 0.490496 7.610667 1.000000 ML estimate base freqs[0]: 0.340539 0.190693 0.225121 0.243647 
+Inference[5]: Time 3.880828 GAMMA-based likelihood -8613.865981, best rearrangement setting 5
+alpha[0]: 0.440894 rates[0] ac ag at cg ct gt: 1.882161 7.009179 0.914813 0.495852 7.666181 1.000000 ML estimate base freqs[0]: 0.340152 0.190828 0.225045 0.243974 
+Inference[6]: Time 3.748182 GAMMA-based likelihood -8613.870288, best rearrangement setting 5
+alpha[0]: 0.440856 rates[0] ac ag at cg ct gt: 1.908296 7.132517 0.930188 0.506750 7.840515 1.000000 ML estimate base freqs[0]: 0.340284 0.190636 0.225166 0.243913 
+Inference[7]: Time 4.721270 GAMMA-based likelihood -8613.869454, best rearrangement setting 5
+alpha[0]: 0.440812 rates[0] ac ag at cg ct gt: 1.908743 7.126650 0.934008 0.506350 7.857841 1.000000 ML estimate base freqs[0]: 0.340406 0.190593 0.225223 0.243779 
+Inference[8]: Time 4.781630 GAMMA-based likelihood -8613.871940, best rearrangement setting 5
+alpha[0]: 0.440886 rates[0] ac ag at cg ct gt: 1.921472 7.154679 0.934886 0.509476 7.883978 1.000000 ML estimate base freqs[0]: 0.340372 0.190549 0.225184 0.243896 
+Inference[9]: Time 4.610884 GAMMA-based likelihood -8613.868327, best rearrangement setting 5
+alpha[0]: 0.440881 rates[0] ac ag at cg ct gt: 1.914308 7.121760 0.932100 0.506218 7.848610 1.000000 ML estimate base freqs[0]: 0.340361 0.190528 0.225258 0.243853 
+
+
+Conducting final model optimizations on all 10 trees under GAMMA-based models ....
+
+Inference[0] final GAMMA-based Likelihood: -8613.868180 tree written to file /home/andy/git_repos/phyload/data/raxml/RAxML_result.flu_HA.RUN.0
+Inference[1] final GAMMA-based Likelihood: -8613.868179 tree written to file /home/andy/git_repos/phyload/data/raxml/RAxML_result.flu_HA.RUN.1
+Inference[2] final GAMMA-based Likelihood: -8613.868975 tree written to file /home/andy/git_repos/phyload/data/raxml/RAxML_result.flu_HA.RUN.2
+Inference[3] final GAMMA-based Likelihood: -8613.868977 tree written to file /home/andy/git_repos/phyload/data/raxml/RAxML_result.flu_HA.RUN.3
+Inference[4] final GAMMA-based Likelihood: -8613.868179 tree written to file /home/andy/git_repos/phyload/data/raxml/RAxML_result.flu_HA.RUN.4
+Inference[5] final GAMMA-based Likelihood: -8613.868179 tree written to file /home/andy/git_repos/phyload/data/raxml/RAxML_result.flu_HA.RUN.5
+Inference[6] final GAMMA-based Likelihood: -8613.868977 tree written to file /home/andy/git_repos/phyload/data/raxml/RAxML_result.flu_HA.RUN.6
+Inference[7] final GAMMA-based Likelihood: -8613.868180 tree written to file /home/andy/git_repos/phyload/data/raxml/RAxML_result.flu_HA.RUN.7
+Inference[8] final GAMMA-based Likelihood: -8613.868179 tree written to file /home/andy/git_repos/phyload/data/raxml/RAxML_result.flu_HA.RUN.8
+Inference[9] final GAMMA-based Likelihood: -8613.868179 tree written to file /home/andy/git_repos/phyload/data/raxml/RAxML_result.flu_HA.RUN.9
+
+
+Starting final GAMMA-based thorough Optimization on tree 5 likelihood -8613.868179 .... 
+
+Final GAMMA-based Score of best tree -8613.868188
+
+Program execution info written to /home/andy/git_repos/phyload/data/raxml/RAxML_info.flu_HA
+Best-scoring ML tree written to: /home/andy/git_repos/phyload/data/raxml/RAxML_bestTree.flu_HA
+
+Overall execution time: 41.684425 secs or 0.011579 hours or 0.000482 days
+
