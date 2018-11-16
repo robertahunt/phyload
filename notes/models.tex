@@ -1,0 +1,130 @@
+% Use only LaTeX2e, calling the article.cls class and 12-point type.
+
+\documentclass[11pt]{article}
+
+\usepackage[round,semicolon]{natbib}
+\usepackage{etoolbox}
+\AtBeginEnvironment{quote}{\singlespacing\tiny}
+% Use times if you have the font installed; otherwise, comment out the
+% following line.
+
+\usepackage{times}
+\usepackage{amssymb}
+\usepackage{amsmath}
+
+% for adjustwidth
+\usepackage{changepage}
+
+% The following parameters seem to provide a reasonable page setup.
+
+\topmargin 0.0cm
+\oddsidemargin 1cm
+\textwidth 15cm 
+\textheight 21cm
+\footskip 1.0cm
+
+\usepackage{newfloat}
+\usepackage{amsmath}
+\usepackage[labelfont=bf]{caption}
+\usepackage{nameref}
+\usepackage{rotating}
+\usepackage{color}
+\usepackage{float}
+
+\usepackage[dvipsnames]{xcolor}
+
+\newcommand\skhcomment[1]{{\color{violet}[#1]}}
+\newcommand\wdcomment[1]{{\color{orange}[#1]}}
+\newcommand\amcomment[1]{{\color{teal}[#1]}}
+
+
+\usepackage{hyperref}
+\hypersetup{colorlinks,citecolor=blue,linkcolor=blue,urlcolor=blue}
+\hypersetup{colorlinks,citecolor=blue,linkcolor=blue,urlcolor=blue}
+
+\title{Models} 
+
+\author{Will DeWitt, Sarah Hilton, Andy Magee}
+
+% Include the date command, but leave its argument blank.
+\date{}
+\usepackage{setspace}
+\onehalfspacing
+
+%%% Beginning of the Document
+\begin{document} 
+\maketitle 
+
+\section*{Goal and Housekeeping} 
+
+Andy re-implemented the model from \cite{nasrallah2013phylogenetic}, which models pair-wise epistasis due to RNA secondary structure. 
+Below is the model as Andy implemented it in \texttt{RevBayes}. 
+\skhcomment{Comments from Sarah look like this.}
+\wdcomment{Comments from Will look like this.}
+\amcomment{Comments from Andy look like this.}
+
+\section*{RNA epistasis model}
+
+Here is the model from \cite{nasrallah2013phylogenetic}. 
+\skhcomment{I am just copying over what is found in the paper. We should change this around in an order we like and with notation we like.}
+
+$\boldsymbol{Q}$ is the instantaneous rate matrix describing changes from doublet $\boldsymbol{x}$ to doublet $\boldsymbol{y}$.  
+For $\boldsymbol{x} = (x_1, x_2)$, $x_1$ is the 5' nucleotide and $x_2$ is the 3' nucleotide. 
+\begin{equation}
+\label{eq:Q}
+\boldsymbol{Q} = 
+\begin{cases}
+   \xi \pi_y S_{x_1, y_1} & \mbox{if single substitution at the 5' site,} \\
+   \xi \pi_y S_{x_2, y_2} & \mbox{if single substitution at the 3' site,} \\
+   \xi \pi_y S_{x_1, y_1} S_{x_2, y_2} d & \mbox{if double substitution where $x$ and $y$ $\in W$,} \\
+   0 & \mbox{if any other double substitution,} \\
+   - \sum_{y \ne x} q_{xy}& \mbox{if $x$ = $y$} \\
+   \end{cases}
+\end{equation}
+$\boldsymbol{S}$ is the GTR exchangeability matrix \citep{tavare1986some},  
+$W = {AT, CG, GC, TA}$ is the set of Watson-Crick pairs, 
+$\boldsymbol{\pi} = (\pi_{AA}, \pi_{AC}, ..., \pi_{TT})$ are the stationary state frequencies of the 16 possible doublet states, 
+$d$ is the relative rate of double to single mutations between doublets, 
+and $\xi$ is the rate-scaling factor. 
+
+\subsection*{Points to clarify}
+
+\subsubsection*{How do we interpret $d$?}
+
+$d$ is the relative rate of double to single mutations between doublets or the "strength" of epistatic interactions. 
+
+Here is a copy of table 1 from \cite{nasrallah2013phylogenetic}: 
+
+\begin{tabular}{ |p{1cm}|p{5cm}|p{5cm}|  }
+ \hline
+& $\pi_y = \pi_{y_1}\pi_{y_2}$&$\pi_y \ne \pi_{y_1}\pi_{y_2}$\\
+ \hline
+$d=0$  & Independent and nonepistatic & Model inadequacy \\
+\hline
+ $d > 0$  & Dependent but nonepistatic & Dependent and epistatic\\
+ \hline
+\end{tabular}
+
+\skhcomment{We talked about this last time but I want to make sure I totally understand. When we are simulating with $d=0$, we are actually in the ``model inadequacy" quadrant?}
+
+\subsubsection*{How do we normalize $\boldsymbol{Q}$ ($\xi$)?}
+
+\skhcomment{From slack: 0.5 * Pr(single) + Pr(double) }
+
+\subsubsection*{Given the fit parameter values for a GTR model, how do we simulate under this model?}
+
+\skhcomment{From github, ``
+This is the tree inferred under GTR+GAMMA using RAxML version 8.2.12. Inferred model parameters
+
+alpha shape parameter = 0.440894
+relative exchange rates (ac ag at cg ct gt) = 1.882161 7.009179 0.914813 0.495852 7.666181 1.000000
+base frequencies = 0.340152 0.190828 0.225045 0.243974"}
+
+\clearpage 
+\bibliographystyle{mbe}
+{\small
+\bibliography{references.bib}
+}
+
+
+\end{document}
