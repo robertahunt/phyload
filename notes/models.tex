@@ -11,6 +11,7 @@
 % \usepackage{times} AFM: I can't tell bold from not bold in things like x and y in Times font, disabling for now
 \usepackage{amssymb}
 \usepackage{amsmath}
+\usepackage{bbm}
 
 % for adjustwidth
 \usepackage{changepage}
@@ -128,6 +129,19 @@ Thus it seems that the appropriate normalization should be defined by,
 \end{align*}
 This \textit{should} recognize the fact that single substitutions change only one site in the pair.
 We have to do this normalization ourselves, and can't just make RevBayes do it for us, but that's more me whining than anything important.}
+
+\wdcomment{
+Looking at the NH paper, the $\xi$ ``scaling factor'' is a unified rate parameter for both $Q$ and $Q^*$, but for $Q$ the worry is that it's controlling expected numbers of events on pairs of sites, not on individual sites like for $Q^*$.
+To sort out what's up with $\xi$ it I was thinking we'd want to compute the expected number of single subs per site in a pair as
+\[
+\mathbbm{E}_\mathbf{Q}[\text{number of pair events}]\left(\frac{1}{2}\mathbbm{P}(\text{single sub})+\mathbbm{P}(\text{double sub})\right),
+\]
+then demand that this equals the expected number of subs per site for the null model
+\[
+\mathbbm{E}_\mathbf{Q^*}[\text{number of events}].
+\]
+Oh that's exactly what SKH has above, but I needed to get there myself ;).
+}
 
 
 \subsubsection*{Given the fit parameter values for a GTR model, how do we simulate under this model?}
