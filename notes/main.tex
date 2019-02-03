@@ -1,0 +1,204 @@
+\documentclass[11pt]{article}
+
+\usepackage{fullpage}
+\usepackage[round,semicolon]{natbib}
+\usepackage{amssymb}
+\usepackage{amsmath}
+\usepackage{bbm}
+
+\usepackage{hyperref}
+
+% NOTE: one sentence per line for nice git diffs
+% WD: I'm a fan of source comments like this, instead of the colory ones in the pdf
+
+\title{Phyload: a story of paired sites finding their way in an unpaired model space}
+
+% WD: this alphabetical author list is copied from the previous version, not meant to indicate priority
+\author{
+William DeWitt$^{1\ast}$, Sarah Hilton$^{1\ast}$, and Andrew Magee$^{2\ast}$\\
+\small{Departments of $^1$Genome Sciences and $^2$Biology, University of Washington, Seattle, USA}\\
+\small{$^\ast$ Equal contribution}
+}
+% \author[1]{Sarah Hilton}
+% \author[2]{Andy Magee}
+
+% \affil[1]{Department of Genome Sciences, University of Washington, Seattle, USA}
+% \affil[2]{Department of Biology, University of Washington, Seattle, USA}
+
+\begin{document}
+
+\maketitle
+
+\begin{abstract}
+Phylogenetic inference relies on probabilistic models of character state change along tree branches in which sites in the alignment are statistically independent.
+This severely restrictive assumption facilitates computational tractability, but cannot accommodate epistatic coupling of sites during the evolution of functional sequences that arise from structural and functional constraints on the encoded molecule.
+We consider the effect of this misspecification error on the accuracy of phylogenetic reconstruction in a setting of pairwise epistasis.
+We show that including epistatically coupled sites in an alignment improves reconstruction accuracy and we introduce an alignment test statistic that is diagnostic for epistasis and can be used in poster predictive checks.
+\end{abstract}
+
+\section*{{Introduction}\label{sec:intro}}
+
+Look at all the dumb shit physics/math/CS people have been saying about inferring phylogenies being impossible because selection.
+Will's pal (who will remain unnamed) deigned to opine, but upon further discussion revealed that he doesn't know what a codon is, or a synonymous mutation.
+We will crush them.
+
+It would be nice to write an intro to phylo modeling that builds up complexity, mentioning GTR+$\Gamma$ and ExpCMs, then the \cite{nasrallah2013phylogenetic} stuff.
+
+\section*{Model\label{sec:Model}}
+
+\subsection*{Goal and Housekeeping}
+
+Andy re-implemented the model from \cite{nasrallah2013phylogenetic}, which models pair-wise epistasis due to RNA secondary structure.
+Below is the model as Andy implemented it in \texttt{RevBayes}.
+
+\subsection*{RNA epistasis model}
+
+Here is the model from \cite{nasrallah2013phylogenetic}.
+We should change this around in an order we like and with notation we like.
+
+$\boldsymbol{Q}$ is the instantaneous rate matrix describing changes from doublet $\boldsymbol{x}$ to doublet $\boldsymbol{y}$.
+For $\boldsymbol{x} = (x_1, x_2)$, $x_1$ is the 5' nucleotide and $x_2$ is the 3' nucleotide.
+\begin{equation}
+\label{eq:Q}
+\boldsymbol{Q} = \xi \times
+\begin{cases}
+   \pi_{\boldsymbol{y}} S_{x_1, y_1} & \mbox{if single substitution at the 5' site,} \\
+   \pi_{\boldsymbol{y}} S_{x_2, y_2} & \mbox{if single substitution at the 3' site,} \\
+   \pi_{\boldsymbol{y}} S_{x_1, y_1} S_{x_2, y_2} d & \mbox{if double substitution where ${\boldsymbol{x}}$ and ${\boldsymbol{y}}$ $\in {\boldsymbol{W}}$,} \\
+   0 & \mbox{if any other double substitution,} \\
+   - \sum_{\boldsymbol{x} \ne \boldsymbol{y}} Q_{\boldsymbol{x},\boldsymbol{y}}& \mbox{if $\boldsymbol{x}$ = $\boldsymbol{y}$} \\
+   \end{cases}
+\end{equation}
+$\boldsymbol{S}$ is the GTR exchangeability matrix \citep{tavare1986some} and $S_{x_i,y_i}$ is understood to be the element in $S$ governing the rate of exchangeability between nucleotide $x_i$ and $y_i$ (by definition, $S_{x_i,y_i} = S_{y_i,x_i}$),
+${\boldsymbol{W}} = {AT, CG, GC, TA}$ is the set of Watson-Crick pairs,
+$\boldsymbol{\pi} = (\pi_{AA}, \pi_{AC}, ..., \pi_{TT})$ are the stationary state frequencies of the 16 possible doublet states,
+$d$ controls rate of double to single mutations between doublets,
+and $\xi$ is the rate-scaling factor.
+
+\paragraph{Points to clarify}
+\begin{itemize}
+\item How do we interpret $d$? $d$ is the relative rate of double to single mutations between doublets or the ``strength" of epistatic interactions.
+
+Nasrallah says relative proportion, we've been saying relative rate.
+Are these the same?
+
+Here is a copy of table 1 from \cite{nasrallah2013phylogenetic}:
+
+\begin{tabular}{ |p{1cm}|p{5cm}|p{5cm}|  }
+ \hline
+& $\pi_{\boldsymbol{y}} = \pi_{y_1}\pi_{y_2}$&$\pi_{\boldsymbol{y}} \ne \pi_{y_1}\pi_{y_2}$\\
+ \hline
+$d=0$  & Independent and nonepistatic & Model inadequacy \\
+\hline
+ $d > 0$  & Dependent but nonepistatic & Dependent and epistatic\\
+ \hline
+\end{tabular}
+
+\item How do we normalize $\boldsymbol{Q}$ ($\xi$)?
+
+From slack: 0.5 * Pr(single) + Pr(double)
+
+It is not completely clear how $\xi$ is defined in the paper.
+Assuming it's defined in the usual way (which RevBayes can do for us), simply take a weighted sum of the off-diagonal elements $\xi^{-1} = \sum_{\boldsymbol{x}} \sum_{\boldsymbol{y} \ne \boldsymbol{x}} \pi_{\boldsymbol{x}} Q_{\boldsymbol{x},\boldsymbol{y}}$.
+However, this normalizes the rate matrix on paired sites, which would count both doublet substitutions and single-substitutions equally.
+This formulation does not guarantee that the number of expected substitutions per unpaired epistatic site is the same as per non-epistatic site.
+Thus it seems that the appropriate normalization should be defined by,
+\begin{align*}
+\xi^{-1} = \sum_{\boldsymbol{x}} \sum_{\boldsymbol{y} \ne \boldsymbol{x}} \pi_{\boldsymbol{x}} \times
+\begin{cases}
+   \frac{1}{2}Q_{\boldsymbol{x},\boldsymbol{y}} & \mbox{if single substitution,} \\
+   Q_{\boldsymbol{x},\boldsymbol{y}} & \mbox{if double substitution of the allowed type,} \\
+   \end{cases}
+\end{align*}
+This \textit{should} recognize the fact that single substitutions change only one site in the pair.
+We have to do this normalization ourselves, and can't just make RevBayes do it for us, but that's more me whining than anything important.
+
+Looking at the NH paper, the $\xi$ ``scaling factor'' is a unified rate parameter for both $Q$ and $Q^*$, but for $Q$ the worry is that it's controlling expected numbers of events on pairs of sites, not on individual sites like for $Q^*$.
+To sort out what's up with $\xi$ it we'd want to compute the expected number of single subs per site in a pair as
+\[
+\mathbbm{E}_\mathbf{Q}[\text{number of pair events}]\left(\frac{1}{2}\mathbbm{P}(\text{single sub})+\mathbbm{P}(\text{double sub})\right),
+\]
+then demand that this equals the expected number of subs per site for the null model
+\[
+\mathbbm{E}_\mathbf{Q^*}[\text{number of events}].
+\]
+
+
+\item Given the fit parameter values for a GTR model, how do we simulate under this model?
+
+From github, ``
+This is the tree inferred under GTR+GAMMA using RAxML version 8.2.12.
+Inferred model parameters
+
+alpha shape parameter = 0.440894
+
+relative exchange rates (ac ag at cg ct gt) = 1.882161 7.009179 0.914813 0.495852 7.666181 1.000000
+
+base frequencies = 0.340152 0.190828 0.225045 0.243974"
+
+Under the parameterization in the paper (standard MrBayes/RevBayes parameterization), we first take the RER and simplex them, yielding $\boldsymbol{r} = (0.0992,0.3695,0.0482,0.0261,0.4042,0.0527)$.
+Then we make the symmetric GTR rate matrix $\boldsymbol{S}$ from the relative rates (for entirely too much detail, we put the elements of $\boldsymbol{r}$ into the upper diagonal of $\boldsymbol{S}$ row-wise, and the lower-diagonal column-wise, to make the symmetric exchangeability matrix).
+Then we draw the doublet stationary frequencies $\boldsymbol{\pi}$ from a Dirichlet(2,...,2) distribution.
+Then we assemble an unscaled version of 16 x 16 matrix $\boldsymbol{Q}$ as described \ref{eq:Q}, while calculating $\xi$.
+Then we normalize $\boldsymbol{Q}$, tell RevBayes that's our rate matrix on the flu tree, and draw from the induced phylogenetic CTMC distribution.
+Rev simulates these as characters 0,1,2,...,D,E,F.
+We also simulate the non-epistatic sites, and with an R script we turn the 16-state characters into pairs of sites, and add them to the nonepistatic sites.
+
+\end{itemize}
+
+\section*{Indices}
+
+\subsection*{Excess statistical coupling of site patterns}
+
+In the absence of epistasis, pairs of sites will have dependence structure induced by the phylogeny.
+With pair-wise epistasis, we expect excess coupling between epistatically paired sites.
+We don't know which sites are paired, but we can calculate the mutual information for all pairs of sites.
+The skew of this MI distribution is a measure of the effects of a subset of sites with pairwise epistasis.
+Denote the length $\ell$ alignment of $n$ taxa by the $n\times\ell$ character state matrix $D$, where $D_{ij}\in\mathcal{A}$.
+The character states $\mathcal{A}$ are probably nucleotides.
+Let $f_i(a)$ denote the relative frequency of character $a$ at site $i$, and $f_{ij}(a,b)$ denote the relative joint frequency of character $a$ at site $i$ and character $b$ at site $j$:
+\[
+f_i(a) = \frac{1}{n}\sum_{k=1}^{n}\boldsymbol{1}_{\{D_{ki}\}}(a),
+\]
+\[
+f_{ij}(a,b) = \frac{1}{n}\sum_{k=1}^{n}\boldsymbol{1}_{\{D_{ki}\}}(a) \boldsymbol{1}_{\{D_{kj}\}}(b)
+\]
+The mutual information between sites $i$ and $j$ is then
+\[
+I_{ij} = \sum_{(a,b)\in\mathcal{A}^2}f_{ij}(a,b)\log\left(\frac{f_{ij}(a,b)}{f_i(a)f_j(b)}\right)
+\]
+
+Direct coupling analysis (\url{https://en.wikipedia.org/wiki/Direct_coupling_analysis}) would be a nice way to go too.
+Although in our simulations there are only mated pairwise interactions (so mutual information should be sufficient and DCA is overkill), it should do just as well here and be more generalizable to more complicated epistasis.
+We also score hipster points, and get to say impressive things like ``Ising model".
+
+For DCA, Kristian recommends the code from Deb Marks' group: \url{https://github.com/debbiemarkslab/plmc} and \url{https://github.com/debbiemarkslab/EVcouplings}
+
+In any case, some scalar like the skewness on either MI or the coupling terms in DCA should be sensitive to epistasis.
+The number of couplings is $\frac{\ell(\ell-1)}{2}$.
+
+
+\section*{Results\label{sec:results}}
+
+Do we need results?
+
+\section*{Discussion\label{sec:discussion}}
+
+We win, they lose.
+
+\section*{Supplementary Material}
+
+
+
+\section*{Acknowledgments}
+
+
+\bibliographystyle{plainnat}
+\bibliography{refs}
+
+
+
+
+
+
+\end{document}

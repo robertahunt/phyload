@@ -1,9 +1,2 @@
-*.aux
-*.bbl
-*.dvi
-*.log
-*.out
-*.synctex.gz
-*.blg
-*_temp_*
-*.tex-e
+.sconsign.dblite
+_build
