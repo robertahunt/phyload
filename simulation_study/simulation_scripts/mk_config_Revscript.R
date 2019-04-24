@@ -5,7 +5,7 @@
 # arg4: seed
 # arg5: path to output alignments (relative to location of phyload repository)
 
-# Call this script from the top level of the phyload repository
+# Call this script from phyload/simulation_study
 
 # Get arguments
 args = commandArgs(trailingOnly=TRUE)
@@ -22,9 +22,6 @@ out.file  <- args[5]
 
 # Directory that we're outputting our Revscript to (to pass to Revscript)
 out.dir <- dirname(out.file)
-
-# Script to pool alignments
-source("simulation_scripts/merge_alignments.R")
 
 # Get Rev source script
 revscript <- scan("simulation_scripts/rev_model_template.Rev",sep="\n",what="character",strip.white=FALSE)
