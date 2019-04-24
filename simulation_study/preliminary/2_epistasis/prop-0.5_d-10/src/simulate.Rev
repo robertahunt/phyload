@@ -1,4 +1,4 @@
-seed(8481)
+seed(8472)
 ## This script will allow simulation of an alignment with epistasis
 # Specifically, this simulates
 #    1) an alignment without epistatic interactions,
@@ -9,16 +9,22 @@ nsites <- 1496
 # Get the topology for simulating
 phy <- readTrees("simulation_study/preliminary/0_setup/src/simulation/simulation_tree.tre",treetype="non-clock")[1]
 # The underlying GTR model exchange rates, shared across all models
-# These parameters are estimated from the flu dataset in phyload/data
-er <- simplex(v(1.882161, 7.009179, 0.914813, 0.495852, 7.666181, 1.000000))
+## These parameters are estimated from the flu dataset in phyload/data
+#er <- simplex(v(1.882161, 7.009179, 0.914813, 0.495852, 7.666181, 1.000000))
+# These parameters are what Nasrallah et al used
+er <- simplex(v(1,2,1,1,2,1))
 # Underlying GTR model stationary frequencies
-# These parameters are estimated from the flu dataset in phyload/data
-bf <- simplex(v(0.340152, 0.190828, 0.225045, 0.243974))
+## These parameters are estimated from the flu dataset in phyload/data
+#bf <- simplex(v(0.340152, 0.190828, 0.225045, 0.243974))
+# These parameters are the ones Nasrallah et al used
+bf <- simplex(v(0.31, 0.24, 0.23, 0.22))
 # The non-epistatic substitution rate matrix
 Q_iid := fnGTR(er,bf)
 # Gamma-distributed rate heterogeneity
-# These parameters are estimated from the flu dataset in phyload/data
-alpha <- 0.440894
+## These parameters are estimated from the flu dataset in phyload/data
+#alpha <- 0.440894
+# These parameters are the ones Nasrallah et al used
+alpha <- 0.5
 gamma_cats := fnDiscretizeGamma(alpha,alpha,4)
 # What proportion of sites are from the epistatic model?
 prop_epi <- 0.5
@@ -32,8 +38,8 @@ epistasis_d <- 10
 source("simulation_study/preliminary/0_setup/src/simulation/epistatic_doublet_model_stub.Rev")
 # Simulate the pieces to make 100 epistatic alignments
 for (i in 1:100) {
-  # New doublet stationary frequencies
-  df.redraw()
+  ## New doublet stationary frequencies
+  #df.redraw()
   # Simulate the non-epistatic portion of the alignment
   seq_iid ~ dnPhyloCTMC(tree=phy,Q=Q_iid,siteRates=gamma_cats,nSites=nsites_iid,type="DNA")
   # simulate epistatic alignment

@@ -24,10 +24,10 @@ this.seed <- args[6]
 
 
 # Script to pool alignments
-source("simulation_study/simulation_scripts/merge_alignments.R")
+source("simulation_scripts/merge_alignments.R")
 
 # Get Rev source script
-revscript <- scan("simulation_study/simulation_scripts/rev_model_template.Rev",sep="\n",what="character",strip.white=FALSE)
+revscript <- scan("simulation_scripts/rev_model_template.Rev",sep="\n",what="character",strip.white=FALSE)
 
 # Make it a length 1 character vector
 revscript <- paste0(revscript,collapse="\n")
@@ -49,13 +49,15 @@ this.revscript <- gsub("<<TARGET_DIRECTORY>>",out.dir,this.revscript)
 
 cat(this.revscript,file=paste0(out.dir,"/simulate_alignments.Rev"))
 
-# Script simulates two components of the alignment, the site-IID sites and epistatic sites
-system2(command=as.character(rb.path),args=paste0(out.dir,"/simulate_alignments.Rev"))
+# Currently disabling simulation, just outputting files
 
-# Put the alignments into the one we'll analyze
-for (rep in 1:100) {
-  system2("mv",args=c(paste0(out.dir,"/base_alignment_",rep,".nex"),paste0(out.dir,"/",rep,".nex")))
-}
-
-# Remove the unneeded alignments
-system2("rm",paste0(out.dir,"/epistatic_alignment_*"))
+# # Script simulates two components of the alignment, the site-IID sites and epistatic sites
+# system2(command=as.character(rb.path),args=paste0(out.dir,"/simulate_alignments.Rev"))
+# 
+# # Put the alignments into the one we'll analyze
+# for (rep in 1:100) {
+#   system2("mv",args=c(paste0(out.dir,"/base_alignment_",rep,".nex"),paste0(out.dir,"/",rep,".nex")))
+# }
+# 
+# # Remove the unneeded alignments
+# system2("rm",paste0(out.dir,"/epistatic_alignment_*"))

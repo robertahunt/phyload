@@ -10,7 +10,7 @@ seed(<<SEED>>)
 nsites <- <<NSITES>>
 
 # Get the topology for simulating
-phy <- readTrees("simulation_study/simulation_scripts/simulation_tree.tre",treetype="non-clock")[1]
+phy <- readTrees("simulation_scripts/simulation_tree.tre",treetype="non-clock")[1]
 
 # The underlying GTR model exchange rates, shared across all models
 ## These parameters are estimated from the flu dataset in phyload/data
@@ -47,7 +47,7 @@ nsites_iid <- (1 - prop_epi) * nsites
 epistasis_d <- <<EPISTASIS_D>>
 
 # Get epistatic model
-source("simulation_study/simulation_scripts/epistatic_doublet_model_stub.Rev")
+source("simulation_scripts/epistatic_doublet_model_stub.Rev")
 
 # Simulate the pieces to make 100 epistatic alignments
 for (i in 1:100) {
