@@ -2,26 +2,26 @@
 # arg1: number of total sites
 # arg2: proportion of epistatic sites
 # arg3: d parameter for model
-# arg4: path to output alignments (relative to location of phyload repository)
-# arg5: path to installed version of RevBayes (can be "rb" if installed)
-# arg6: seed
+# arg4: seed
+# arg5: path to output alignments (relative to location of phyload repository)
 
 # Call this script from the top level of the phyload repository
 
 # Get arguments
 args = commandArgs(trailingOnly=TRUE)
 
-if (!length(args) == 6) {
-  stop("This script requires 6 arguments")
+if (!length(args) == 5) {
+  stop("This script requires 5 arguments")
 }
 
 nsites    <- args[1]
 prop.epi  <- args[2]
 this.d    <- args[3]
-out.dir   <- args[4]
-rb.path   <- args[5]
-this.seed <- args[6]
+this.seed <- args[4]
+out.file  <- args[5]
 
+# Directory that we're outputting our Revscript to (to pass to Revscript)
+out.dir <- dirname(out.file)
 
 # Script to pool alignments
 source("simulation_scripts/merge_alignments.R")
@@ -35,11 +35,6 @@ revscript <- paste0(revscript,collapse="\n")
 # Things that will be the same for all simulations
 revscript <- gsub("<<NSITES>>",as.character(nsites),revscript)
 
-# Make sure we have somewhere to write to
-if (!file.exists(out.dir)) {
-  dir.create(out.dir)
-}
-
 # Fill out the rev template for this simulation cell
 this.revscript <- revscript
 this.revscript <- gsub("<<SEED>>",this.seed,this.revscript)
@@ -49,7 +44,9 @@ this.revscript <- gsub("<<TARGET_DIRECTORY>>",out.dir,this.revscript)
 
 cat(this.revscript,file=paste0(out.dir,"/simulate_alignments.Rev"))
 
-# Currently disabling simulation, just outputting files
+
+
+# Simulation will be handled elsewhere, here we are just outputting files
 
 # # Script simulates two components of the alignment, the site-IID sites and epistatic sites
 # system2(command=as.character(rb.path),args=paste0(out.dir,"/simulate_alignments.Rev"))
