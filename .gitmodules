@@ -1,0 +1,3 @@
+[submodule "revbayes"]
+	path = revbayes
+	url = https://github.com/revbayes/revbayes
