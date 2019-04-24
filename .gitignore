@@ -145,3 +145,6 @@ vignettes/*.pdf
 rsconnect/
 
 .DS_Store
+
+simulation_study/_output
+simulation_study/.sconsign.dblite

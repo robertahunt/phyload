@@ -1,0 +1,44 @@
+#! /usr/bin/env python
+# -*- coding: utf-8 -*-
+
+"""Projection analysis for specific triplet mutation spectra"""
+
+import os
+import glob
+import sys
+# import sconsutils
+from warnings import warn
+from SCons.Script import Environment, AddOption
+
+# this is where we'd define qsub commands
+# sconsutils
+
+# Set up SCons environment
+environ = os.environ.copy()
+env = Environment(ENV=environ)
+
+# command line arguments
+# AddOption('--metadata',
+#           dest='metadata',
+#           type='str',
+#           metavar='<metadata file>',
+#           help='path to test population sample metadata excel file containing bam file names, sample ids, lat, lon, age, etc.')
+# metadata = GetOption('metadata')
+
+n_sites = 800
+revconfig_list = []
+output = '_output'
+replicates = 100
+rev_path = 'foo'
+for d in [0, 1, 2, 5, 10]:
+    for prop_epi in [0.25, 0.5, 0.75, 1.]:
+        replicate_list = []
+        for replicate in range(1, replicates + 1):
+            new_target = env.Command(f'_output/{d}/{prop_epi}/{replicate}/config.rev',
+                                     None,
+                                     f'Rscript simulation_scripts/mk_config_Revscript.R {n_sites} {prop_epi} {d} {replicate} $TARGET')
+            # new_sim = env.Command([],
+            #                       new_config,
+            #                       f'{rev_path} ')
+
+            # replicate_list.append(new_target)
