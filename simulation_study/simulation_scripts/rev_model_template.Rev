@@ -10,7 +10,7 @@ seed(<<SEED>>)
 nsites <- <<NSITES>>
 
 # Get the topology for simulating
-phy <- readTrees("simulation_study/preliminary/0_setup/src/simulation/simulation_tree.tre",treetype="non-clock")[1]
+phy <- readTrees("simulation_study/simulation_scripts/simulation_tree.tre",treetype="non-clock")[1]
 
 # The underlying GTR model exchange rates, shared across all models
 ## These parameters are estimated from the flu dataset in phyload/data
@@ -47,7 +47,7 @@ nsites_iid <- (1 - prop_epi) * nsites
 epistasis_d <- <<EPISTASIS_D>>
 
 # Get epistatic model
-source("simulation_study/preliminary/0_setup/src/simulation/epistatic_doublet_model_stub.Rev")
+source("simulation_study/simulation_scripts/epistatic_doublet_model_stub.Rev")
 
 # Simulate the pieces to make 100 epistatic alignments
 for (i in 1:100) {
@@ -60,8 +60,8 @@ for (i in 1:100) {
   # simulate epistatic alignment
   seq_epi ~ dnPhyloCTMC(tree=phy,Q=Q_epi,rootFrequencies=df,siteRates=gamma_cats,nSites=nsites_epi,type="Standard")
 
-  writeNexus(file="<<TARGET_DIRECTORY>>/data/base_alignment_" + i + ".nex",seq_iid)
-  writeNexus(file="<<TARGET_DIRECTORY>>/data/epistatic_alignment_" + i + ".nex",seq_epi)
+  writeNexus(file="<<TARGET_DIRECTORY>>/base_alignment_" + i + ".nex",seq_iid)
+  writeNexus(file="<<TARGET_DIRECTORY>>/epistatic_alignment_" + i + ".nex",seq_epi)
 }
 
 q()

@@ -1,3 +1,61 @@
+allMI <- function(phydat,exclude.invariant=TRUE) {
+  # recover()
+  
+  # For ease of grepping, we make the alignment columns into lowercase strings
+  aln_mat <- tolower(as.character(phydat))
+  
+  if (exclude.invariant) {
+    aln_mat <- aln_mat[,!(lengths(apply(aln_mat,2,table)) == 1)]
+  }
+  
+  A <- c("a","c","g","t")
+  AA <- c("aa","ac","ag","at",
+          "ca","cc","cg","ct",
+          "ga","gc","gg","gt",
+          "ta","tc","tg","tt")
+  n <- dim(aln_mat)[1]
+  
+  # All sites' independent distributions
+  p_x <- apply(aln_mat,2,function(x){
+    sapply(A,function(a){
+      sum(x == a)/n
+    })
+  })
+  
+  # joint distributions and MI
+  mi <- sapply(1:(dim(aln_mat)[2]-1),function(i){
+    sapply((i+1):dim(aln_mat)[2],function(j){
+      # Exploit matrix math to get joint distribution
+      # Makes a matrix where the rows are state in aln site j, cols in site i
+      q_xy <- p_x[,j] %*% t(p_x[,i])
+      
+      # Flattens by column, so this puts aa, ac, ag, ...
+      dim(q_xy) <- NULL
+      
+      # This produces p_xy in the same column vs row orientation as q
+      p_xy <- sapply(A,function(ai){
+        sapply(A,function(aj){
+          sum((aln_mat[,i] == ai) & (aln_mat[,j] == aj))/n
+        })
+      })
+
+      dim(p_xy) <- NULL
+      
+      # ij <- apply(aln_mat[,c(i,j)],1,paste0,collapse="")
+      # p_xy <- sapply(AA,function(aa){
+      #   sum(ij == aa)/n
+      # })
+      
+      I_xy <- sum((p_xy * log(p_xy/q_xy))[!(p_xy == 0)])
+      
+      
+      return(I_xy)
+      
+    })
+  })
+  return(unlist(mi))
+}
+
 TajimaD <- function(phydat) {
   # recover()
   
@@ -187,10 +245,11 @@ skew <- function(x) {
   return(sk)
 }
 
-dir1 <- "simulation_study/preliminary/2_epistasis/prop-0.5_d-10/data"
-dir2 <- "simulation_study/preliminary/1_decreasing_site_counts/frac-1/data"
-dir3 <- "simulation_study/preliminary/2_epistasis/prop-0.5_d-10/old_data"
+dir1 <- "simulation_study/preliminary/1_decreasing_site_counts/frac-0/data"
+dir2 <- "simulation_study/preliminary/2_epistasis/prop-0.5_d-0/data"
+dir3 <- "simulation_study/preliminary/2_epistasis/prop-0.5_d-10/data"
 
+true.tree <- read.tree("data/flu_HA.tre")
 
 aln1 <- lapply(list.files(dir1,full.names=TRUE),function(aln){
   read.phyDat(aln,"nexus")
@@ -204,46 +263,51 @@ aln3 <- lapply(list.files(dir3,full.names=TRUE),function(aln){
   read.phyDat(aln,"nexus")
 })
 
-nulldist <- unlist(lapply(aln2,function(aln){
-  TajimaD(aln)
+
+nulldist <- unlist(lapply(aln1,function(aln){
+  fitch(true.tree,aln)
 }))
 
-epidist <- unlist(lapply(aln1,function(aln){
-  TajimaD(aln)
+epidist <- unlist(lapply(aln2,function(aln){
+  fitch(true.tree,aln)
 }))
+
+epidist2 <- unlist(lapply(aln3,function(aln){
+  fitch(true.tree,aln)
+}))
+
 
 range(nulldist)
 range(epidist)
 
-br <- seq(0,0.04,0.0025)
 
-hist(nulldist,col="#66666690",breaks=br,main="",xlab="test statistic")
-hist(epidist,col="#FF000090",breaks=br,add=TRUE)
-
-legend("topright",legend=c("all IID sites","50% epistatic, d=10"),fill=c("#66666690","#FF000090"),bty="n",border=NA)
-
-(sum(epidist > quantile(nulldist,0.975)) + sum(epidist < quantile(nulldist,0.025)))/length(epidist)
+allbeans <- list(non_epistatic=nulldist,
+                 prop_0.5_d_0=epidist,
+                 prop.0.5_d_10=epidist2)
+beanplot(allbeans,cutmin=0,what=c(0,1,1,0),col=list("#66666690","#FF000090","#0000FF90"),ylab="Fitch score of alignment")
 
 
-reg.lb <- lapply(aln2,function(aln){
+
+reg.lb <- lapply(aln1,function(aln){
   doLewisBins(as.character(aln),15)
 })
 reg.lb <- do.call(rbind,reg.lb)
 
-epi.lb <- lapply(aln1,function(aln){
+epi.lb <- lapply(aln2,function(aln){
   doLewisBins(as.character(aln),15)
 })
 epi.lb <- do.call(rbind,epi.lb)
 
-bad.lb <- lapply(aln3,function(aln){
+epi2.lb <- lapply(aln3,function(aln){
   doLewisBins(as.character(aln),15)
 })
-bad.lb <- do.call(rbind,bad.lb)
+epi2.lb <- do.call(rbind,epi2.lb)
 
 
 colMeans(reg.lb)
 colMeans(epi.lb)
-colMeans(bad.lb)
+colMeans(epi2.lb)
+
 
 rlb <- vector("list",15)
 for (i in 1:15) {
@@ -255,25 +319,19 @@ for (i in 1:15) {
   elb[[i]] <- epi.lb[,i]
 }
 
-blb <- vector("list",15)
+elb2 <- vector("list",15)
 for (i in 1:15) {
-  blb[[i]] <- bad.lb[,i]
+  elb2[[i]] <- epi2.lb[,i]
 }
 
-allbeans <- vector("list",30)
-for (i in 1:15) {
-  allbeans[[2*i-1]] <- rlb[[i]]
-  allbeans[[2*i]]   <- elb[[i]]
-}
-
-beanplot(allbeans,cutmin=0,what=c(0,1,1,0),col=list("#66666690","#FF000090"))
 
 reg.reduced.lb <- cbind(rowSums(reg.lb[,1:4]),rowSums(reg.lb[,5:10]),rowSums(reg.lb[,11:14]),reg.lb[,15])
 epi.reduced.lb <- cbind(rowSums(epi.lb[,1:4]),rowSums(epi.lb[,5:10]),rowSums(epi.lb[,11:14]),epi.lb[,15])
-bad.reduced.lb <- cbind(rowSums(bad.lb[,1:4]),rowSums(bad.lb[,5:10]),rowSums(bad.lb[,11:14]),bad.lb[,15])
+epi2.reduced.lb <- cbind(rowSums(epi2.lb[,1:4]),rowSums(epi2.lb[,5:10]),rowSums(epi2.lb[,11:14]),epi2.lb[,15])
 
 colMeans(reg.reduced.lb)
 colMeans(epi.reduced.lb)
+colMeans(epi2.reduced.lb)
 
 rrlb <- vector("list",4)
 for (i in 1:4) {
@@ -285,15 +343,22 @@ for (i in 1:4) {
   erlb[[i]] <- epi.reduced.lb[,i]
 }
 
-allrbeans <- vector("list",8)
+e2rlb <- vector("list",4)
 for (i in 1:4) {
-  allrbeans[[2*i-1]] <- rrlb[[i]]
-  allrbeans[[2*i]]   <- erlb[[i]]
+  e2rlb[[i]] <- epi2.reduced.lb[,i]
 }
-names(allrbeans) <- c(1,1,2,2,3,3,4,4)
 
-beanplot(allrbeans,cutmin=0,what=c(0,1,1,0),col=list("#66666690","#FF000090"),xlab="# distinct nucleotides at a site")
-legend("topright",legend=c("all IID sites","50% epistatic, d=10"),fill=c("#66666690","#FF000090"),bty="n",border=NA)
+
+allrbeans <- vector("list",12)
+for (i in 1:4) {
+  allrbeans[[3*i-2]] <- rrlb[[i]]
+  allrbeans[[3*i-1]]   <- erlb[[i]]
+  allrbeans[[3*i]]   <- e2rlb[[i]]
+}
+names(allrbeans) <- c(1,1,1,2,2,2,3,3,3,4,4,4)
+
+beanplot(allrbeans,cutmin=0,what=c(0,1,1,0),col=list("#66666690","#FF000090","#0000FF90"),xlab="# distinct nucleotides at a site")
+legend("topright",legend=c("all IID sites","50% epistatic, d=0","50% epistatic, d=10"),fill=c("#66666690","#FF000090","#0000FF90"),bty="n",border=NA)
 
 
 
