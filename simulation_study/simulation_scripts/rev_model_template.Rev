@@ -27,7 +27,7 @@ gamma_cats := fnDiscretizeGamma(alpha,alpha,4)
 
 # Number of sites we need to simulate is half that given by the proportion
 # This is because one simulated site is a pair of interacting sites
-nsites_epi <- N_IID / 2
+nsites_epi <- <<N_EPI>> / 2
 
 nsites_iid <- <<N_IID>>
 
