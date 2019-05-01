@@ -21,7 +21,7 @@ AddOption('--revpath',
           type='str',
           metavar='<path to RevBayes>',
           help='path to RevBayes',
-          default='revbayes/projects/cmake/rb')
+          default='../revbayes/projects/cmake/rb')
 revpath = GetOption('revpath')
 
 AddOption('--replicates',
@@ -33,7 +33,6 @@ AddOption('--replicates',
 replicates = GetOption('replicates')
 
 output = '_output'
-rev_path = 'foo'
 for d in (1,):
     for n_epi in range(10, 110, 10):
         if n_epi % 2 != 0:
@@ -45,7 +44,7 @@ for d in (1,):
                 epi_aln_file = outbase + 'epi_aln.nex'
                 new_target = env.Command(outbase + 'aln.nex',
                                          None,
-                                         f'Rscript simulation_scripts/mk_config_Revscript_call_Rev.R {n_iid} {n_epi} {d} {replicate} {rev_path} {outbase} && simulation_scripts/merge_alignments.R {outbase} && rm {iid_aln_file} {epi_aln_file}')
+                                         f'Rscript simulation_scripts/mk_config_Revscript_call_Rev.R {n_iid} {n_epi} {d} {replicate} {outbase} {revpath} && simulation_scripts/merge_alignments.R {outbase} && rm {iid_aln_file} {epi_aln_file}')
             # new_sim = env.Command([],
             #                       new_config,
             #                       f'{rev_path} ')
