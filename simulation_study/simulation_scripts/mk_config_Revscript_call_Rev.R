@@ -4,6 +4,7 @@
 # arg3: d parameter for model
 # arg4: seed
 # arg5: path to output alignments (relative to location of phyload repository)
+# arg6: path to RevBayes
 
 # Call this script from phyload/simulation_study
 
@@ -19,6 +20,7 @@ prop.epi  <- args[2]
 this.d    <- args[3]
 this.seed <- args[4]
 out.file  <- args[5]
+rb.path   <- args[6]
 
 # Directory that we're outputting our Revscript to (to pass to Revscript)
 out.dir <- dirname(out.file)
@@ -43,15 +45,13 @@ cat(this.revscript,file=paste0(out.dir,"/simulate_alignments.Rev"))
 
 
 
-# Simulation will be handled elsewhere, here we are just outputting files
+# Script simulates two components of the alignment, the site-IID sites and epistatic sites
+system2(command=as.character(rb.path),args=paste0(out.dir,"/simulate_alignments.Rev"))
 
-# # Script simulates two components of the alignment, the site-IID sites and epistatic sites
-# system2(command=as.character(rb.path),args=paste0(out.dir,"/simulate_alignments.Rev"))
-# 
-# # Put the alignments into the one we'll analyze
-# for (rep in 1:100) {
-#   system2("mv",args=c(paste0(out.dir,"/base_alignment_",rep,".nex"),paste0(out.dir,"/",rep,".nex")))
-# }
-# 
-# # Remove the unneeded alignments
-# system2("rm",paste0(out.dir,"/epistatic_alignment_*"))
+# Put the alignments into the one we'll analyze
+for (rep in 1:100) {
+  system2("mv",args=c(paste0(out.dir,"/base_alignment_",rep,".nex"),paste0(out.dir,"/",rep,".nex")))
+}
+
+# Remove the unneeded alignments
+system2("rm",paste0(out.dir,"/epistatic_alignment_*"))
