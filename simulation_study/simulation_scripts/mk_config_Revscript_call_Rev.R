@@ -11,8 +11,8 @@
 # Get arguments
 args = commandArgs(trailingOnly=TRUE)
 
-if (!length(args) == 5) {
-  stop("This script requires 5 arguments")
+if (!length(args) == 6) {
+  stop("This script requires 6 arguments")
 }
 
 nsites    <- args[1]
