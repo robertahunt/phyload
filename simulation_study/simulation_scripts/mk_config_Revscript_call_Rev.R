@@ -48,10 +48,3 @@ cat(this.revscript,file=paste0(out.dir,"/simulate_alignments.Rev"))
 # Script simulates two components of the alignment, the site-IID sites and epistatic sites
 system2(command=as.character(rb.path),args=paste0(out.dir,"/simulate_alignments.Rev"))
 
-# Put the alignments into the one we'll analyze
-for (rep in 1:100) {
-  system2("mv",args=c(paste0(out.dir,"/base_alignment_",rep,".nex"),paste0(out.dir,"/",rep,".nex")))
-}
-
-# Remove the unneeded alignments
-system2("rm",paste0(out.dir,"/epistatic_alignment_*"))
