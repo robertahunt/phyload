@@ -19,9 +19,9 @@ delete     <- args[2]
 
 replicate <- basename(dirname(out.dir))
 
-iid.aln  <- paste0(out.dir,"/base_alignment_",replicate,".nex")
-epi.aln  <- paste0(out.dir,"/epistatic_alignment_",replicate,".nex")
-out.file <- paste0(out.dir,"/",replicate,".nex")
+iid.aln  <- paste0(out.dir,"/iid_aln.nex")
+epi.aln  <- paste0(out.dir,"/epi_aln.nex")
+out.file <- paste0(out.dir,"/aln.nex")
 
 # Call merge function
 mergeAlignments(iid.aln,epi.aln,out.file)

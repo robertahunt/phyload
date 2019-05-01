@@ -7,8 +7,6 @@
 S := fnFreeSymmetricRateMatrix(er,rescaled=false)
 
 # Stationary frequencies of the doublets
-## We draw from a Dirchlet(alpha=2) instead of the Dirchlet(alpha=1) originally used to make frequencies somewhat more even
-#df ~ dnDirichlet(rep(2,16))
 # These are the frequencies that Nasrallah et al used
 df <- simplex(v(0.015, 0.025, 0.011, 0.15, 0.0175, 0.019, 0.175, 0.014,0.014, 0.22, 0.01, 0.06, 0.14, 0.04, 0.065, 0.0245))
 
