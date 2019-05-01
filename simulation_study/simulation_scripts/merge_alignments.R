@@ -1,3 +1,35 @@
+# Function to pool alignments
+source("simulation_scripts/merge_alignments.R")
+
+# This is designed to be called with Rscript with several arguments
+# arg1: the (relative) file path to directory we're simulating in
+# arg2: do we want to delete the component alignments?
+
+# Call this script from phyload/simulation_study
+
+# Get arguments
+args = commandArgs(trailingOnly=TRUE)
+
+if (!length(args) >= 1) {
+  stop("This script requires at least 1 argument")
+}
+
+out.dir <- args[1]
+
+if (length(args) == 2) {
+  delete <- args[2]  
+} else {
+  delete <- FALSE
+}
+
+
+replicate <- basename(dirname(out.dir))
+
+iid.aln  <- paste0(out.dir,"/iid_aln.nex")
+epi.aln  <- paste0(out.dir,"/epi_aln.nex")
+out.file <- paste0(out.dir,"/aln.nex")
+
+# Function for merging
 mergeAlignments <- function(regular,epistatic,out.file) {
   # Get both alignments
   reg <- scan(regular,what=character(),sep="\n")
@@ -74,4 +106,12 @@ mergeAlignments <- function(regular,epistatic,out.file) {
   
   cat(reg,file=out.file,sep="\n")
   
+}
+
+# Call merge function
+mergeAlignments(iid.aln,epi.aln,out.file)
+
+if (delete) {
+  system2("rm",iid.aln)
+  system2("rm",epi.aln)
 }
