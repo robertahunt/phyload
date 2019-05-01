@@ -1,0 +1,42 @@
+seed(8472)
+
+# Initialize workspace iterators
+mvi = 0
+mni = 0
+
+# Get character data
+data_iid = readDiscreteCharacterData("empirical_analysis/data/loop.nex")
+data_epi = readDiscreteCharacterData("empirical_analysis/data/pair.nex")
+
+taxa = data_iid.taxa()
+num_taxa = taxa.size()
+num_branches = 2 * num_taxa - 3
+
+# Tree model
+phy ~ dnUniformTopologyBranchLength(taxa,dnExponential(10))
+
+moves[++mvi] = mvNNI(phy,weight=num_branches/2.0)
+moves[++mvi] = mvSPR(phy,weight=num_branches/10.0)
+moves[++mvi] = mvBranchLengthScale(phy,weight=num_branches)
+
+tree_length := phy.treeLength()
+
+# Site models
+source("empirical_analysis/src/iid_model.Rev")
+source("empirical_analysis/src/epistatic_doublet_model.Rev")
+
+# Monitors
+monitors[++mni] = mnScreen(printgen=100)
+monitors[++mni] = mnModel(filename="empirical_analysis/output/tunicates_rel_rate.log",printgen=10)
+monitors[++mni] = mnFile(phy,filename="empirical_analysis/output/tunicates_rel_rate.trees",printgen=10)
+
+# MCMC
+mymodel = model(Q_epi)
+
+mymcmc = mcmc(mymodel,monitors,moves)
+
+mymcmc.burnin(generations=1000, tuningInterval=50)
+mymcmc.operatorSummary()
+mymcmc.run(generations=20000)
+
+q()

@@ -1,0 +1,23 @@
+# The underlying GTR model exchange rates, shared across all models
+er ~ dnDirichlet(rep(1,6))
+
+moves[++mvi] = mvBetaSimplex(er,weight=1.0)
+moves[++mvi] = mvDirichletSimplex(er,weight=1.0)
+
+# Underlying GTR model stationary frequencies
+bf ~ dnDirichlet(rep(1,4))
+
+moves[++mvi] = mvBetaSimplex(bf,weight=1.0)
+moves[++mvi] = mvDirichletSimplex(bf,weight=1.0)
+
+# The non-epistatic substitution rate matrix
+Q_iid := fnGTR(er,bf)
+
+# Gamma-distributed rate heterogeneity
+alpha ~ dnExponential(1)
+gamma_cats := fnDiscretizeGamma(alpha,alpha,4)
+moves[++mvi] = mvScaleBactrian(alpha,weight=1.0)
+
+# Simulate the non-epistatic portion of the alignment
+seq_iid ~ dnPhyloCTMC(tree=phy,Q=Q_iid,siteRates=gamma_cats,type="DNA")
+seq_iid.clamp(data_iid)
