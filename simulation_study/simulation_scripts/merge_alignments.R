@@ -14,7 +14,7 @@ if (!length(args) >= 1) {
 out.dir <- args[1]
 
 if (length(args) == 2) {
-  delete <- args[2]  
+  delete <- args[2]
 } else {
   delete <- FALSE
 }
@@ -31,15 +31,15 @@ mergeAlignments <- function(regular,epistatic,out.file) {
   # Get both alignments
   reg <- scan(regular,what=character(),sep="\n")
   epi <- scan(epistatic,what=character(),sep="\n")
-  
+
   # recover()
-  
+
   # Turn Rev's "standard" datatype into doublets
   epi_aln_start <- grep("Matrix",epi)+1
   epi_aln_end <- grep(";",epi)
   epi_aln_end <- min(epi_aln_end[epi_aln_end > epi_aln_start]) - 1
   epi_aln_lines <- epi_aln_start:epi_aln_end
-  
+
   for (i in epi_aln_lines) {
     tmp <- strsplit(epi[i]," ")[[1]]
     nspaces <- length(grep("^$",tmp)) + 1 # We split on space, so between two spaces is a blank
@@ -78,11 +78,11 @@ mergeAlignments <- function(regular,epistatic,out.file) {
         doublets[j] <- "TG"
       } else if ( doublets[j] == "F" ) {
         doublets[j] <- "TT"
-      } 
+      }
     }
     epi[i] <- paste0(taxon,paste0(rep(" ",nspaces),collapse=""),paste0(doublets,collapse=""))
   }
-  
+
   # Put them together (shove epistasis alignment lines after regular ones), amend number of characters
   # Turn Rev's "standard" datatype into doublets
   reg_aln_start <- grep("Matrix",reg)+1
@@ -91,18 +91,18 @@ mergeAlignments <- function(regular,epistatic,out.file) {
   reg_last_lines <- reg[(reg_aln_end + 1):length(reg)]
   reg <- reg[1:reg_aln_end]
   reg <- c(reg,epi[epi_aln_lines],reg_last_lines)
-  
+
   reg_char_line <- grep("nchar",reg)
   reg_nchar <- reg[reg_char_line]
   reg_nchar <- strsplit(reg_nchar,"nchar=")[[1]]
   total_nchar <- as.numeric(gsub(";","",reg_nchar[2])) + 2 * length(doublets)
   total_nchar <- paste0(reg_nchar[1],"nchar=",total_nchar,";")
   reg[reg_char_line] <- total_nchar
-  
+
   reg <- gsub("Format ","Format interleave=yes ",reg)
-  
+
   cat(reg,file=out.file,sep="\n")
-  
+
 }
 
 # Call merge function
