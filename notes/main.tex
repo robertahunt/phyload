@@ -29,6 +29,8 @@ William DeWitt$^{1\ast}$, Sarah Hilton$^{1\ast}$, and Andrew Magee$^{2\ast}$\\
 
 \maketitle
 
+\amcomment{We should take the time to consider clearing up our nomenclature. Sites, site pairs, epistatic sites, iid sites, all of these are things that could easily get us into trouble when writing/communicating our results to people.}
+
 \begin{abstract}
 Phylogenetic inference relies on probabilistic models of character state change along tree branches in which sites in the alignment are statistically independent.
 This severely restrictive assumption facilitates computational tractability, but cannot accommodate epistatic coupling of sites during the evolution of functional sequences that arise from structural and functional constraints on the encoded molecule.
@@ -37,6 +39,40 @@ We show that including epistatically coupled sites in an alignment improves reco
 \end{abstract}
 
 \section*{{Introduction}\label{sec:intro}}
+
+Epistasis is $<$definition$>$
+This phenomenon is pervasive in datasets for phylogenetic inference $<$citations$>$
+
+Phylogenetic models of epistasis have a long history... we should be sure to emphasize here that most of these are pair models.
+$<$We need to talk up the NH model here a decent bit$>$
+\amcomment{We also need to be clear if we're going to discuss it as a model that has both iid and interacting sites or not, so we can be clear about our terminology when we set up our grid}
+
+However, phylogenetic models of epistasis are not without drawbacks.
+When applying these models in practice, most require that a user specify \textit{a priori} all pairs of sites that are interacting $<$cite doublet models, NH model, pre-RJ Salamin models, others if we come across them$>$.
+In some cases such as identifying pairs of stem sites in ribosomal RNA (rRNA), this is possible, if difficult $<$citations on the shitshow of annotating things? maybe some of the databases?$>$.
+Even these models of epistasis are more computationally demanding than models that assume all sites are iid by increasing the size of the rate matrix from $4 \times 4$ to $16 \times 16$ and thus
+Nonetheless, in many cases there is no hope for pre-defining pairs of interacting sites, which lead \cite{meyer2019simultaneous} to develop a suitable extension of epistatic models for the case where interacting sites must be inferred.
+The cost of their approach is that the dimensionality of the parameter space is both drastically increased and variable, requiring reversible-jump MCMC \citep{green1995reversible} to sample from the posterior distribution of the assignments of sites to interacting pairs.
+
+In parallel to the literature on phylogenetic models of epistasis, a literature on detecting epistasis in phylogenetic datasets.
+$<$Citations and some literature reviewing$>$
+Something something but this literature has mostly been confined to detecting the presence of epistatic interactions in datasets, and decoupled from either modeling these interactions or asking whether they exert a notable effect on phylogenetic inference.
+Mumble mumble they should have been doing posterior-predictive testing, or at least using alignment-based summary statistics because those are better because reasons.
+
+Given the difficulties involved in applying epistatic phylogenetic models to real datasets, whether broadly applicable \citep{meyer2019simultaneous} or more specific to the dataset at hand $<$doublet and NH citations$>$, we seek to answer three questions involving the use of misspecified (site-iid) models for dataset where epistasis exists.
+First and foremost, what is the effect of including epistatically paired sites in inference?
+Secondly, can we detect the presence of epistatic interactions in datasets using posterior-predictive simulations?
+Thirdly, is there a test-statistic or set of test-statistics that allow researchers to detect the presence of specifically problematic epistasis?
+That is, if there is epistasis in a dataset and failing to model is is causing poor or inadequate phylogenetic inference, is there a way to know we are in this regime?
+
+To address these questions, we perform a simulation study using the epistatic model of \cite{nasrallah2013phylogenetic}, which has a single parameter, $d$ \amcomment{okay but can we rename this, d is such a poor choice of letter and is so confusing to talk about} that controls the strength of epistatic interactions.
+We simulate alignments on a 3-dimensional grid, defined by the number of sites in the alignment that site-iid, the number of sites(not site-pairs) that are drawn from a paired model, and the value of $d$.
+Our grid thus includes a variety of alignment sizes.
+This allows us to answer our first question and determine whether the inclusion of epistatic sites in an alignment improves or worsens phylogenetic estimates by tracing a line (for a fixed value of $d$) of increasing numbers of epistatic sites for a fixed value of iid sites.
+We define a set of test statistics, including several new ones designed to pick up on patterns of epistasis, and several previously described more general test statistics.
+By comparing across levels of epistasis in our simulated alignments, and by their use in posterior predictive checks, we address whether epistasis can be detected directly from alignments, answering our second question.
+By combining the posterior-predictive analyses used to answer question 2 and the accuracy results used to answer question 1, we can address whether we can detect problematic epistasis, answering our third question.
+
 
 Look at all the dumb shit physics/math/CS people have been saying about inferring phylogenies being impossible because selection.
 Will's pal (who will remain unnamed) deigned to opine, but upon further discussion revealed that he doesn't know what a codon is, or a synonymous mutation.
