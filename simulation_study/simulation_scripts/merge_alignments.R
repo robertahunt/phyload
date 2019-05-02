@@ -1,6 +1,3 @@
-# Function to pool alignments
-source("simulation_scripts/merge_alignments.R")
-
 # This is designed to be called with Rscript with several arguments
 # arg1: the (relative) file path to directory we're simulating in
 # arg2: do we want to delete the component alignments?
