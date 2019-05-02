@@ -44,7 +44,9 @@ for d in (1,):
                 epi_aln_file = outbase + 'epi_aln.nex'
                 new_target = env.Command(outbase + 'aln.nex',
                                          None,
-                                         f'Rscript simulation_scripts/mk_config_Revscript_call_Rev.R {n_iid} {n_epi} {d} {replicate} {outbase} {revpath} && simulation_scripts/merge_alignments.R {outbase} && rm {iid_aln_file} {epi_aln_file}')
+                                         f'Rscript simulation_scripts/mk_config_Revscript_call_Rev.R {n_iid} {n_epi} {d} {replicate} {outbase} {revpath} && '
+                                          'Rscript simulation_scripts/merge_alignments.R {outbase} && '
+                                          'rm {iid_aln_file} {epi_aln_file}')
             # new_sim = env.Command([],
             #                       new_config,
             #                       f'{rev_path} ')
