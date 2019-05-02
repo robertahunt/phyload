@@ -39,14 +39,20 @@ for d in (1,):
             raise ValueError(f'{n_epi} must be even!')
         for n_iid in range(10, 110, 10):
             for replicate in range(1, replicates + 1):
-                outbase = f'_output/{d}/{n_iid}/{n_epi}/{replicate}/'
-                iid_aln_file = outbase + 'iid_aln.nex'
-                epi_aln_file = outbase + 'epi_aln.nex'
-                new_target = env.Command(outbase + 'aln.nex',
-                                         None,
-                                         f'Rscript simulation_scripts/mk_config_Revscript_call_Rev.R {n_iid} {n_epi} {d} {replicate} {outbase} {revpath} && '
-                                          'Rscript simulation_scripts/merge_alignments.R {outbase} && '
-                                          'rm {iid_aln_file} {epi_aln_file}')
+                outbase = f'_output/{d}/{n_iid}/{n_epi}/{replicate}'
+                # iid and epistatic alignments
+                alns = env.Command([f'{outbase}/iid_aln.nex',
+                                    f'{outbase}/epi_aln.nex'],
+                                   None,
+                                   'Rscript simulation_scripts/mk_alns.R '
+                                   f'{n_iid} {n_epi} {d} {replicate} {outbase}'
+                                   f' {revpath} > {outbase}/mk_alns.log')
+                # concatentate the iid and epistatic alignments into one
+                aln = env.Command(f'{outbase}/aln.nex',
+                                  alns,
+                                  'Rscript simulation_scripts/merge_alns.R '
+                                  '$SOURCES 1> $TARGET '
+                                  f' 2> {outbase}/merge_alns.log')
             # new_sim = env.Command([],
             #                       new_config,
             #                       f'{rev_path} ')
