@@ -1,19 +1,20 @@
 # This is designed to be called with Rscript with several arguments
 # arg1: alignment 1 path
 # arg2: alignment 2 path
+# arg3: output alignment path
 
-# This script concatenates two nexus alignments and prints the concatenated
-# alignment to standard out
+# This script concatenates two nexus alignments and outputs the concatenated
+# alignment
 
 # Get arguments
 args = commandArgs(trailingOnly=TRUE)
 
-if (!length(args) == 2) {
+if (!length(args) == 3) {
   stop("This script requires 2 arguments")
 }
 
 # Function for merging
-mergeAlignments <- function(regular, epistatic) {
+mergeAlignments <- function(regular, epistatic, output) {
   # Get both alignments
   reg <- scan(regular,what=character(),sep="\n")
   epi <- scan(epistatic,what=character(),sep="\n")
@@ -87,9 +88,9 @@ mergeAlignments <- function(regular, epistatic) {
 
   reg <- gsub("Format ","Format interleave=yes ",reg)
 
-  cat(reg, file=stdout(), sep="\n")
+  cat(reg, file=output, sep="\n")
 
 }
 
 # Call merge function
-mergeAlignments(args[1], args[2])
+mergeAlignments(args[1], args[2], args[3])

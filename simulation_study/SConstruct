@@ -46,13 +46,13 @@ for d in (1,):
                                    None,
                                    'Rscript simulation_scripts/mk_alns.R '
                                    f'{n_iid} {n_epi} {d} {replicate} {outbase}'
-                                   f' {revpath} > {outbase}/mk_alns.log')
+                                   f' {revpath} &> {outbase}/mk_alns.log')
                 # concatentate the iid and epistatic alignments into one
                 aln = env.Command(f'{outbase}/aln.nex',
                                   alns,
                                   'Rscript simulation_scripts/merge_alns.R '
-                                  '$SOURCES 1> $TARGET '
-                                  f' 2> {outbase}/merge_alns.log')
+                                  '$SOURCES $TARGET '
+                                  f' &> {outbase}/merge_alns.log')
             # new_sim = env.Command([],
             #                       new_config,
             #                       f'{rev_path} ')
