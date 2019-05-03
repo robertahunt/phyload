@@ -20,7 +20,7 @@ AddOption('--revpath',
           dest='revpath',
           type='str',
           metavar='<path to RevBayes>',
-          help='path to RevBayes',
+          help='path to RevBayes (if not in $PATH)',
           default='rb')
 revpath = GetOption('revpath')
 

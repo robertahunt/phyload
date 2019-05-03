@@ -1,24 +1,68 @@
 # phyload simulation study
 Can epistasis break phylogenetic models? If so, where?
 
-## [`simulation_scripts`](simulation_scripts)
-Scripts needed to simulate a single cell in the simulation study, and a master script to use them, `simulate_grid_cell.R`.
+## Dependencies
+- [Conda](https://conda.io/):
+After installing Conda, we recommend setting up an environment named _phyload_ with the required version of Python as follows:
+```bash
+conda create -n phyload python=3.7
+conda activate phyload
+```
+- [Biopython](https://biopython.org)
+```bash
+conda install -c conda-forge biopython
+```
+- [SCons](https://scons.org)
+```bash
+conda install scons
+```
+- [RevBayes](https://revbayes.github.io/software)
+Follow the install instructions.
 
-To simulate a cell, from top level of phyload repository, use `Rscript simulate_grid_cell.R nsites prop_epi d "relative/output/path" "path/to/rb" seed`.
+## SCons pipeline: [SConstruct](SConstruct)
+Perform the simulation with default parameters by running
+```bash
+$ scons
+```
+For help on command line arguments, run
+```bash
+$ scons -h
+```
+and note `Local Options` at the bottom.
+
+## [`simulation_scripts/`](simulation_scripts)
+Scripts needed to simulate a single cell in the simulation study.
+
+### [`mk_alns.R`](simulation_scripts/mk_alns.R)
+
+To perform a single simulation, use
+```bash
+$ Rscript simulation_scripts/mk_alns.R <n_iid> <n_epi> <d> <seed> <outbase> <revpath>
+```
+Separate iid and epistatic alignments will be written in nexus format to `<outbase>/iid_aln.nex` and `<outbase>/epi_aln.nex`.
 
 The arguments are
-- nsites: number of total sites
-- prop_epi: proportion of nsites that are part of paired epistatic interactions
-- d: d parameter for Nasrallah-Huelsenbeck model
-- "relative/output/path": path to output alignments (relative to location of phyload repository)
-- "path/to/rb": absolute file path to installed version of RevBayes (can be "rb" if it is installed)
-- seed: seed passed to RevBayes
+- `n_iid`: number of iid sites
+- `n_epi`: number of epistatically paired sites (must be even)
+- `d`: *d* parameter for Nasrallah-Huelsenbeck model
+- `seed`: random seed passed to RevBayes
+- `outbase`: path to write output alignments
+- `revpath`: path to installed version of RevBayes (can be `rb` if it is on `$PATH`)
 
-The other files in this folder are required for the above to work, and any change to file names will cause the setup to break.
-- [`simulation_scripts/epistatic_doublet_model_stub.Rev`](simulation_scripts/epistatic_doublet_model_stub.Rev) Core Rev script for the epistatic model.
-- [`simulation_scripts/merge_alignments.R`](simulation_scripts/merge_alignments.R) The actual simulation produces two alignments, one with (1 - prop_epi) sites from a plain GTR model, one with 0.5 * prop_epi sites, each of which is a pair of interacting sites. This script unfolds the pairs into sites and makes a single alignment out of everything
-- [`simulation_scripts/rev_model_template.Rev`](simulation_scripts/rev_model_template.Rev) A template for a Rev script to simulate 100 alignments, missing key parameters.
-- [`simulation_scripts/simulation_tree.tre`](simulation_scripts/simulation_tree.tre) The treefile used for simulating alignments.
+### Utilities
+
+- [`merge_alns.R`](simulation_scripts/merge_alns.R)
+Merge an iid nexus alignment `<iid_aln>` and and epistatic nexus alignment `<epi_aln>` (as produced by `mk_alns.R`) and write to a new nexus alignment `<merged_aln>` with
+```bash
+$ Rscript simulation_scripts/merge_alns.R <iid_aln> <epi_aln> <merged_aln>
+```
+- [`epistatic_doublet_model_stub.Rev`](simulation_scripts/epistatic_doublet_model_stub.Rev) Core Rev script for the epistatic model.
+- [`rev_model_template.Rev`](simulation_scripts/rev_model_template.Rev) A template for a Rev script to simulate 100 alignments, missing key parameters.
+- [`simulation_tree.tre`](simulation_scripts/simulation_tree.tre) The treefile used for simulating alignments.
+
+
+
+
 
 ## [`preliminary`](preliminary)
 This is for our rough, first-pass simulation attack
