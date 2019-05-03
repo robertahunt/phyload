@@ -21,7 +21,7 @@ AddOption('--revpath',
           type='str',
           metavar='<path to RevBayes>',
           help='path to RevBayes',
-          default='../revbayes/projects/cmake/rb')
+          default='rb')
 revpath = GetOption('revpath')
 
 AddOption('--replicates',
