@@ -222,6 +222,7 @@ In the absence of epistasis, pairs of sites will have dependence structure induc
 With pair-wise epistasis, we expect excess coupling between epistatically paired sites.
 We don't know which sites are paired, but we can calculate the mutual information for all pairs of sites.
 The skew of this MI distribution is a measure of the effects of a subset of sites with pairwise epistasis.
+\wdcomment{Notation here, especially $\ell$, is inconsistent with Andy's $S$.}
 Denote the length $\ell$ alignment of $n$ taxa by the $n\times\ell$ character state matrix $D$, where $D_{ij}\in\mathcal{A}$.
 The character states $\mathcal{A}$ are probably nucleotides.
 Let $f_i(a)$ denote the relative frequency of character $a$ at site $i$, and $f_{ij}(a,b)$ denote the relative joint frequency of character $a$ at site $i$ and character $b$ at site $j$:
@@ -247,10 +248,12 @@ The number of couplings is $\frac{\ell(\ell-1)}{2}$.
 
 \subsubsection*{Shared differences}
 The next statistic is a statistic on comparisons of three taxa.
+\wdcomment{The following sentence didn't do anything for me. Gesticulation and beer please.}
 If pairwise epistasis exists in an alignment, where two taxa differ from a third, they should tend to have the differences more often at the same site than at different sites.
 We can thus explicitly average over all three-taxon comparisons with taxa $i$, $j$, and $k$.
 In this regime, we are looking for the proportion of sites (out of all sites at which either $i$ or $j$ differ from $k$) at which $i$ and $j$ have the same state.
 We call this the Average Proportion of Shared Differences (APSD), and it can be calculated as,
+\wdcomment{I started trying to simplify this notation, even though I don't yet understand it. But then I gave up. Definitely will require gesticulation and beer.}
 \[
 APSD = \frac{1}{\binom{n}{2}(n-3)} \sum_{i=1}^{n-1} \sum_{j=i+1}^n \sum_{k != i,j} \frac{D_S}{D}
 \]
