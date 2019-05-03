@@ -6,6 +6,13 @@
 \usepackage{amsmath}
 \usepackage{bbm}
 
+\newcommand{\pr}{\text{Pr}}
+
+\newcommand{\ETAL}{\textit{et al.}}
+\newcommand{\EG}{\textit{e.g.}}
+\newcommand{\IE}{\textit{i.e.}}
+\newcommand{\CF}{\textit{c.f.}}
+
 \usepackage{hyperref}
 
 % NOTE: one sentence per line for nice git diffs
@@ -196,7 +203,7 @@ In the following sections, we describe two test statistics designed to capture f
 These measures are all inspired by the idea of compensatory substitutions: in a pairwise epistatic interaction, when one site is changed, the other site will most likely change as well.
 This idea underlies the parameter $d$ in both the model of \cite{nasrallah2013phylogenetic} and the model of \cite{meyer2019simultaneous}.
 There are two approaches which can be taken to detect signatures of epistasis: one can look for the induced correlations in site patterns (sitewise measures), or one can look for evidence of substitutions co-localized to a branch (branchwise measures).
-Our approaches include one sitewise and two branchwise measures, and we also apply the more general test statistic introduced by \cite{goldman1993statistical} as a general test of model adequacy.
+Our approaches include one sitewise and three branchwise measures, and we also apply the more general test statistic introduced by \cite{goldman1993statistical} as a general test of model adequacy.
 
 
 \subsubsection*{Excess statistical coupling of site patterns}
@@ -267,7 +274,19 @@ While this is a crude approximation to marginalizing over the reference taxon, i
 
 
 \subsubsection*{Singleton mutations}
-Our last posterior predictive approach to detecting epistasis requires a tree with branch lengths, but for that tree should produce a value that has a known distribution and thus we can calculate a p-value against the hypothesis of a non-epistatic model.
+Our last posterior predictive approach to detecting epistasis requires a tree with branch lengths, which we will assume to be known for the purposes of describing the measure.
+Given an edge $e$ in a phylogeny of length $l$ (measured in the expected number of substitutions per site) the number of changes along that branch is (approximately) distributed Poisson($e$).
+Given two branches, $e_i$ and $e_j$, the total number of changes is (approximately) distributed Poisson($e_i + e_j$).
+More importantly, we can compute the probability $\pr(i \mid c)$ that, given that there is a single change, it occurs on $e_i$: $\pr(i \mid c) = \frac{e_i}{e_i + e_j}$.
+More generally, for a vector of branches $\boldsymbol{e}$, $\pr(i \mid c) = \frac{e_i}{\sum_j e_j}$.
+\amcommment{It seems possible that this probability statement is better behaved than the Poisson approximation given that we are making the same approximation in the numerator and the denominator and both edges are evolving under the same CTMC. If Will is looking for fun things to prove.}
+
+% Thus, a vector $\boldsymbol{E}$ of observed changes on edges $\boldsymbol{e}$ should be distributed Multinomial($\frac{1}{\sum_i e_i} \boldsymbol{e}$).
+% Any process that affects the CTMC that generates $\boldsymbol{E}$ will affect this expectation.
+
+
+
+but for that tree should produce a value that has a known distribution and thus we can calculate a p-value against the hypothesis of a non-epistatic model.
 As we in practice do not know the tree or its branch lengths, we calculate this statistic for each posterior sample and examine the posterior distribution on p-values.
 
 On an edge $e$ of length $l$ in a phylogeny, the expected number of changes is $l$ at a single site.
