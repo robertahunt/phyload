@@ -182,9 +182,24 @@ We also simulate the non-epistatic sites, and with an R script we turn the 16-st
 
 \end{itemize}
 
-\section*{Indices}
 
-\subsection*{Excess statistical coupling of site patterns}
+\section*{Methods}
+We sconsed the shit out of our simulation study. Also we used RevBayes for things.
+
+\subsection*{Posterior predictive assessments}
+
+One of our key questions is, can the presence of unmodeled epistatic interactions be detected with posterior predictive checks?
+$<$ Explain posterior predictive stuff here $>$
+
+As epistasis has yet to be studied from a posterior predictive perspective \amcomment{if we can't get this alliteration in the final paper I'll be very sad}, there are currently no test posterior preictive approaches designed explicitly to detect it.
+In the following sections, we describe two test statistics designed to capture features of epistatis, and a frequentist test for which we calculate the posterior distribution on p-values.
+These measures are all inspired by the idea of compensatory substitutions: in a pairwise epistatic interaction, when one site is changed, the other site will most likely change as well.
+This idea underlies the parameter $d$ in both the model of \cite{nasrallah2013phylogenetic} and the model of \cite{meyer2019simultaneous}.
+There are two approaches which can be taken to detect signatures of epistasis: one can look for the induced correlations in site patterns (sitewise measures), or one can look for evidence of substitutions co-localized to a branch (branchwise measures).
+Our approaches include one sitewise and two branchwise measures, and we also apply the more general test statistic introduced by \cite{goldman1993statistical} as a general test of model adequacy.
+
+
+\subsubsection*{Excess statistical coupling of site patterns}
 
 In the absence of epistasis, pairs of sites will have dependence structure induced by the phylogeny.
 With pair-wise epistasis, we expect excess coupling between epistatically paired sites.
@@ -213,6 +228,53 @@ For DCA, Kristian recommends the code from Deb Marks' group: \url{https://github
 In any case, some scalar like the skewness on either MI or the coupling terms in DCA should be sensitive to epistasis.
 The number of couplings is $\frac{\ell(\ell-1)}{2}$.
 
+\subsubsection*{Shared differences}
+The next statistic is a statistic on comparisons of three taxa.
+If pairwise epistasis exists in an alignment, where two taxa differ from a third, they should tend to have the differences more often at the same site than at different sites.
+We can thus explicitly average over all three-taxon comparisons with taxa $i$, $j$, and $k$.
+In this regime, we are looking for the proportion of sites (out of all sites at which either $i$ or $j$ differ from $k$) at which $i$ and $j$ have the same state.
+We call this the Average Proportion of Shared Differences (APSD), and it can be calculated as,
+\[
+APSD = \frac{1}{\binom{n}{2}(n-3)} \sum_{i=1}^{n-1} \sum_{j=i+1}^n \sum_{k != i,j} \frac{D_S}{D}
+\]
+with
+\[
+D_S = \sum_{s=1}^S \mathbb{I}(A_{i,s} = A_{j,s} \neq A_{k,s})
+\]
+and
+\[
+D = \sum_{s=1}^S \mathbb{I}(A_{k,s} \neq A_{i,s},A_{j,s}).
+\]
+Where $A$ is the $n \times S$ alignment, $i$, $j$, and $k$ index the rows of the taxa being compared, and $\mathbb{I}$ is the indicator function.
+For a given pair of taxa ($i$ and $j$), we count $D$ the number of sites in the alignment where either differs from the reference taxon ($k$).
+We also count $D_S$ the number of these sites where $i$ and $j$ share a state, and divide by $D$ to calculate the proportion of shared differences.
+We then average over all pairs of taxa and all reference taxa possible for each pair.
+
+\subsubsection*{Shared polymorphisms}
+However, the above calculation cubic in the number of taxa in the alignment, which while not prohibitively slow is certainly not fast.
+One way to reduce the complexity is to avoid the sum over all reference taxa $t_j$.
+How can this be done quickly?
+If we restrict the summation to only occur over polymorphic sites (non-invariant sites) in the alignment, then we count the proportion of sites where $t_i$ and $t_j$ share a state and at least one differs from another taxon.
+In this case, there is no explicitly defined third taxon for the comparison and we can simply average over pairwise comparisons.
+We call this statistic the average proportion of shared polymorphic sites, or APSPS.
+This can be calculated as,
+\[
+APSPS = \frac{1}{\binom{n}{2}} \sum_{i=1}^{n-1} \sum_{j=i+1}^n \frac{1}{P} \sum_{s=1}^P \mathbb{I}(A_{i,s} = A_{j,s})
+\]
+Where $A$ is the $n \times S$ alignment, $P$ is the number of polymorphic sites in $A$, $i$ and $j$ index the rows of the taxa being compared, and $\mathbb{I}$ is the indicator function.
+For a given pair of taxa, we sum the number of polymorphic sites for which they share the same state and divide by the number of polymorphic sites to get a proportion, and we then take the average of this value.
+While this is a crude approximation to marginalizing over the reference taxon, it is $O(n^2P)$ instead of $O(n^3S)$ ($P \leq S$).
+
+
+\subsubsection*{Singleton mutations}
+Our last posterior predictive approach to detecting epistasis requires a tree with branch lengths, but for that tree should produce a value that has a known distribution and thus we can calculate a p-value against the hypothesis of a non-epistatic model.
+As we in practice do not know the tree or its branch lengths, we calculate this statistic for each posterior sample and examine the posterior distribution on p-values.
+
+On an edge $e$ of length $l$ in a phylogeny, the expected number of changes is $l$ at a single site.
+
+Let $e_i$ be a pendant (terminal, has a leaf as a child) edge in the phlogeny with length $l_i$, with the vector of all pendant edges $\boldsymbol{e}$ and all lengths $\boldsymbol{l}$.
+
+
 
 \section*{Results\label{sec:results}}
 
@@ -227,7 +289,7 @@ We win, they lose.
 
 
 \section*{Acknowledgments}
-
+We thank the physicists for being obnoxious enough to motivate us to do this project.
 
 \bibliographystyle{plainnat}
 \bibliography{refs}
