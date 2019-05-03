@@ -16,7 +16,15 @@
 \usepackage{hyperref}
 
 % NOTE: one sentence per line for nice git diffs
-% WD: I'm a fan of source comments like this, instead of the colory ones in the pdf
+% WD: I'm a fan of source comments like this, instead of the colory ones in the pdf. But Ok fine, have it your way!
+\usepackage{color}
+% Will comments
+\newcommand{\wdcomment}[1]{{\color{magenta}{(\textbf{WD's comment:} #1)}}}
+% Andy comments
+\newcommand{\amcomment}[1]{{\color{blue}{(\textbf{AM's comment:} #1)}}}
+% Sarah comments
+\newcommand{\shcomment}[1]{{\color{red}{(\textbf{SH's comment:} #1)}}}
+
 
 \title{Phyload: a story of paired sites finding their way in an unpaired model space}
 
@@ -36,7 +44,7 @@ William DeWitt$^{1\ast}$, Sarah Hilton$^{1\ast}$, and Andrew Magee$^{2\ast}$\\
 
 \maketitle
 
-%\amcomment{We should take the time to consider clearing up our nomenclature. Sites, site pairs, epistatic sites, iid sites, all of these are things that could easily get us into trouble when writing/communicating our results to people.}
+\amcomment{We should take the time to consider clearing up our nomenclature. Sites, site pairs, epistatic sites, iid sites, all of these are things that could easily get us into trouble when writing/communicating our results to people.}
 
 \begin{abstract}
 Phylogenetic inference relies on probabilistic models of character state change along tree branches in which sites in the alignment are statistically independent.
@@ -52,7 +60,7 @@ This phenomenon is pervasive in datasets for phylogenetic inference $<$citations
 
 Phylogenetic models of epistasis have a long history... we should be sure to emphasize here that most of these are pair models.
 $<$We need to talk up the NH model here a decent bit$>$
-%\amcomment{We also need to be clear if we're going to discuss it as a model that has both iid and interacting sites or not, so we can be clear about our terminology when we set up our grid}
+\amcomment{We also need to be clear if we're going to discuss it as a model that has both iid and interacting sites or not, so we can be clear about our terminology when we set up our grid}
 
 However, phylogenetic models of epistasis are not without drawbacks.
 When applying these models in practice, most require that a user specify \textit{a priori} all pairs of sites that are interacting $<$cite doublet models, NH model, pre-RJ Salamin models, others if we come across them$>$.
@@ -72,7 +80,7 @@ Secondly, can we detect the presence of epistatic interactions in datasets using
 Thirdly, is there a test-statistic or set of test-statistics that allow researchers to detect the presence of specifically problematic epistasis?
 That is, if there is epistasis in a dataset and failing to model is is causing poor or inadequate phylogenetic inference, is there a way to know we are in this regime?
 
-%\amcomment{okay but can we rename this, d is such a poor choice of letter and is so confusing to talk about} 
+\amcomment{okay but can we rename this, d is such a poor choice of letter and is so confusing to talk about}
 To address these questions, we perform a simulation study using the epistatic model of \cite{nasrallah2013phylogenetic}, which has a single parameter, $d$ that controls the strength of epistatic interactions.
 We simulate alignments on a 3-dimensional grid, defined by the number of sites in the alignment that site-iid, the number of sites(not site-pairs) that are drawn from a paired model, and the value of $d$.
 Our grid thus includes a variety of alignment sizes.
@@ -199,7 +207,7 @@ We sconsed the shit out of our simulation study. Also we used RevBayes for thing
 One of our key questions is, can the presence of unmodeled epistatic interactions be detected with posterior predictive checks?
 $<$ Explain posterior predictive stuff here $>$
 
-%\amcomment{if we can't get this alliteration in the final paper I'll be very sad}
+\amcomment{if we can't get this alliteration in the final paper I'll be very sad}
 As epistasis has yet to be studied from a posterior predictive perspective, there are currently no test posterior preictive approaches designed explicitly to detect it.
 In the following sections, we describe two test statistics designed to capture features of epistatis, and a frequentist test for which we calculate the posterior distribution on p-values.
 These measures are all inspired by the idea of compensatory substitutions: in a pairwise epistatic interaction, when one site is changed, the other site will most likely change as well.
