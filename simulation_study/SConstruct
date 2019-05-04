@@ -53,6 +53,11 @@ for d in (1,):
                                   'Rscript simulation_scripts/merge_alns.R '
                                   '$SOURCES $TARGET '
                                   f' &> {outbase}/merge_alns.log')
+                # column mutual information matrix
+                mi = env.Command([f'{outbase}/aln.nex.mi.png',
+                                  f'{outbase}/aln.nex.mi.txt'],
+                                 aln,
+                                 'python indices/align_mi.py $SOURCE')
             # new_sim = env.Command([],
             #                       new_config,
             #                       f'{rev_path} ')
