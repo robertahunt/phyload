@@ -6,7 +6,7 @@
 
 import os
 # import sconsutils
-from SCons.Script import Environment, AddOption
+from SCons.Script import Environment, AddOption, GetOption
 
 # sconsutils
 # ^ see this dir in gctree for slurm job submission utils
@@ -23,6 +23,8 @@ AddOption('--revpath',
           help='path to RevBayes (if not in $PATH)',
           default='rb')
 revpath = GetOption('revpath')
+if not os.path.exists(revpath):
+    raise ValueError(f'RevBayes path \"{revpath}\" not recognized')
 
 AddOption('--replicates',
           dest='replicates',
@@ -32,7 +34,14 @@ AddOption('--replicates',
           default=1)
 replicates = GetOption('replicates')
 
-output = '_output'
+AddOption('--output',
+          dest='output',
+          type='str',
+          metavar='<output dir>',
+          help='output directory path',
+          default='scons_output')
+output = GetOption('output')
+
 for d in (1,):
     for n_epi in range(10, 110, 10):
         if n_epi % 2 != 0:
