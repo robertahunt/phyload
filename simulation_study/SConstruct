@@ -42,13 +42,13 @@ AddOption('--output',
           default='scons_output')
 output = GetOption('output')
 
-for d in (1,):
+for d in (1, 10):
     for n_epi in range(10, 110, 10):
         if n_epi % 2 != 0:
             raise ValueError(f'{n_epi} must be even!')
         for n_iid in range(10, 110, 10):
             for replicate in range(1, replicates + 1):
-                outbase = f'_output/{d}/{n_iid}/{n_epi}/{replicate}'
+                outbase = f'{output}/{d}/{n_iid}/{n_epi}/{replicate}'
                 # iid and epistatic alignments
                 alns = env.Command([f'{outbase}/iid_aln.nex',
                                     f'{outbase}/epi_aln.nex'],
