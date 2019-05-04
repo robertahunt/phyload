@@ -23,8 +23,6 @@ AddOption('--revpath',
           help='path to RevBayes (if not in $PATH)',
           default='rb')
 revpath = GetOption('revpath')
-if not os.path.exists(revpath):
-    raise ValueError(f'RevBayes path \"{revpath}\" not recognized')
 
 AddOption('--replicates',
           dest='replicates',
@@ -42,6 +40,11 @@ AddOption('--output',
           default='scons_output')
 output = GetOption('output')
 
+# check that RevBayes path is valid by attempting to access its help
+rb_check = env.Command(f'{output}/scons.log',
+                       None,
+                       f'{revpath} -h > $TARGET')
+
 for d in (1, 10):
     for n_epi in range(10, 110, 10):
         if n_epi % 2 != 0:
@@ -56,6 +59,7 @@ for d in (1, 10):
                                    'Rscript simulation_scripts/mk_alns.R '
                                    f'{n_iid} {n_epi} {d} {replicate} {outbase}'
                                    f' {revpath} &> {outbase}/mk_alns.log')
+                env.Depends(alns, rb_check)
                 # concatentate the iid and epistatic alignments into one
                 aln = env.Command(f'{outbase}/aln.nex',
                                   alns,
