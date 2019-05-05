@@ -21,24 +21,24 @@ env = Environment(ENV=environ)
 AddOption('--revpath',
           dest='revpath',
           type='str',
-          metavar='<path to RevBayes>',
-          help='path to RevBayes (if not in $PATH)',
+          metavar='<PATH>',
+          help='path to RevBayes if not in $PATH (default "rb")',
           default='rb')
 revpath = GetOption('revpath')
 
 AddOption('--replicates',
           dest='replicates',
           type='int',
-          metavar='<replicates>',
-          help='number replicates in each grid cell',
+          metavar='<N>',
+          help='N replicates in each grid cell (default 1)',
           default=1)
 replicates = GetOption('replicates')
 
 AddOption('--output',
           dest='output',
           type='str',
-          metavar='<output dir>',
-          help='output directory path',
+          metavar='<PATH>',
+          help='output directory path (default "scons_output")',
           default='scons_output')
 output = GetOption('output')
 
