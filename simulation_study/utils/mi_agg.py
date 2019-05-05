@@ -1,11 +1,11 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import numpy as np
 from matplotlib import pyplot as plt
 import seaborn as sns
 import pandas as pd
 from glob import glob
+
 
 def main():
     '''usage: python mi_agg.py -h'''
@@ -22,6 +22,9 @@ def main():
 
     paths = glob(f'{args.nest_dir}/*/*/*/*/aln.nex.mi.summary.txt')
     d, n_iid, n_epi = zip(*[path.split('/')[1:4] for path in paths])
+    d = [float(d) for d in d]
+    n_iid = [int(n_iid) for n_iid in n_iid]
+    n_epi = [int(n_epi) for n_epi in n_epi]
 
     df_meta = pd.DataFrame({'$d$': d, '$n_i$': n_iid,
                             '$n_e$': n_epi})
