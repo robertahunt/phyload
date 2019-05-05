@@ -6,6 +6,7 @@ from matplotlib import pyplot as plt
 import seaborn as sns
 from Bio import AlignIO
 from io import StringIO  # needed to deal with issue NOTE below
+from scipy.stats import describe
 
 
 class AlignMI():
@@ -55,7 +56,6 @@ class AlignMI():
 
     def plot(self, outfile=None) -> plt.Figure:
         '''plot heatmap of MI, optionally writing to file'''
-        # colors = ['blue'] * 100 + ['red'] * 100
         fig = plt.figure(figsize=(10, 10))
         sns.heatmap(self.mi, square=True)
         if outfile is not None:
@@ -65,6 +65,19 @@ class AlignMI():
     def write(self, outfile) -> None:
         '''write MI matrix to outfile'''
         np.savetxt(outfile, self.mi)
+
+    def write_summary(self, outfile) -> None:
+        '''write summary stats of the MI matrix to file'''
+        values = self.mi.flatten()
+        values = values[~np.isnan(values)]
+        stats = describe(values, nan_policy='omit')
+        with open(outfile, 'w') as f:
+            print('\t'.join(['min', 'max', 'mean', 'variance', 'skewness',
+                             'kurtosis']),
+                  file=f)
+            print(f'{stats.minmax[0]}\t{stats.minmax[1]}\t{stats.mean}\t'
+                  f'{stats.variance}\t{stats.skewness}\t{stats.kurtosis}',
+                  file=f)
 
 
 def main():
@@ -85,6 +98,7 @@ def main():
     align_mi = AlignMI(args.aln_file, args.format)
     align_mi.plot(f'{args.aln_file}.mi.png')
     align_mi.write(f'{args.aln_file}.mi.txt')
+    align_mi.write_summary(f'{args.aln_file}.mi.summary.txt')
 
 
 if __name__ == '__main__':

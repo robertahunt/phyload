@@ -3,10 +3,12 @@
 
 """Simulate alignments with varying degrees of pairwise epistasis
 """
-
+import numpy as np
 import os
 # import sconsutils
 from SCons.Script import Environment, AddOption, GetOption
+from nestly import Nest
+from nestly.scons import SConsWrap
 
 # sconsutils
 # ^ see this dir in gctree for slurm job submission utils
@@ -40,37 +42,69 @@ AddOption('--output',
           default='scons_output')
 output = GetOption('output')
 
+nest = SConsWrap(Nest(), output, alias_environment=env)
+
 # check that RevBayes path is valid by attempting to access its help
 rb_check = env.Command(f'{output}/scons.log',
                        None,
                        f'{revpath} -h > $TARGET')
 
-for d in (1, 10):
-    for n_epi in range(10, 110, 10):
-        if n_epi % 2 != 0:
-            raise ValueError(f'{n_epi} must be even!')
-        for n_iid in range(10, 110, 10):
-            for replicate in range(1, replicates + 1):
-                outbase = f'{output}/{d}/{n_iid}/{n_epi}/{replicate}'
-                # iid and epistatic alignments
-                alns = env.Command([f'{outbase}/iid_aln.nex',
-                                    f'{outbase}/epi_aln.nex'],
-                                   None,
-                                   'Rscript simulation_scripts/mk_alns.R '
-                                   f'{n_iid} {n_epi} {d} {replicate} {outbase}'
-                                   f' {revpath} &> {outbase}/mk_alns.log')
-                env.Depends(alns, rb_check)
-                # concatentate the iid and epistatic alignments into one
-                aln = env.Command(f'{outbase}/aln.nex',
-                                  alns,
-                                  'Rscript simulation_scripts/merge_alns.R '
-                                  '$SOURCES $TARGET '
-                                  f' &> {outbase}/merge_alns.log')
-                # column mutual information matrix
-                mi = env.Command([f'{outbase}/aln.nex.mi.png',
-                                  f'{outbase}/aln.nex.mi.txt'],
-                                 aln,
-                                 'python indices/align_mi.py $SOURCE')
-            # new_sim = env.Command([],
-            #                       new_config,
-            #                       f'{rev_path} ')
+# aggregators perform analysis on a nest
+# this one will collect the mutual information matrices
+nest.add_aggregate('mi_agg', list)
+
+# nests define parameter sweeps
+nest.add('d', (1, 10))
+nest.add('n_iid', range(10, 110, 10))
+n_epi_range = np.array(range(10, 110, 10))
+if any(n_epi_range % 2 != 0):
+    raise ValueError('n_epi must be even!')
+nest.add('n_epi', n_epi_range)
+nest.add('replicate', range(1, replicates + 1))
+
+
+@nest.add_target()
+def alns(outdir, c):
+    '''iid and epistatic alignments'''
+    alns = env.Command([f'{outdir}/iid_aln.nex',
+                        f'{outdir}/epi_aln.nex'],
+                       None,
+                       'Rscript simulation_scripts/mk_alns.R '
+                       f'{c["n_iid"]} {c["n_epi"]} {c["d"]} {c["replicate"]} '
+                       f'{outdir} {revpath} &> {outdir}/mk_alns.log')
+    env.Depends(alns, rb_check)
+    return alns
+
+
+@nest.add_target()
+def aln(outdir, c):
+    '''concatentate the iid and epistatic alignments into one'''
+    return env.Command(f'{outdir}/aln.nex',
+                       c['alns'],
+                       'Rscript simulation_scripts/merge_alns.R '
+                       '$SOURCES $TARGET '
+                       f' &> {outdir}/merge_alns.log')
+
+
+@nest.add_target()
+def mi(outdir, c):
+    '''column mutual information matrix'''
+    mi = env.Command([f'{outdir}/aln.nex.mi.png',
+                      f'{outdir}/aln.nex.mi.txt',
+                      f'{outdir}/aln.nex.mi.summary.txt'],
+                     c['aln'],
+                     'python indices/align_mi.py $SOURCE')
+    c['mi_agg'].append(mi[2])
+    return mi
+
+
+# pop to the top level to aggregate
+nest.pop('d')
+
+
+@nest.add_target()
+def mi_agg(outdir, c):
+    '''aggregate mutual infomation matrices'''
+    return env.Command(f'{outdir}/mi_agg.skewness.pdf',
+                       c['mi_agg'],
+                       f'python utils/mi_agg.py {outdir}')

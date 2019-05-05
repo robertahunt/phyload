@@ -16,6 +16,10 @@ conda install -c conda-forge biopython
 ```bash
 conda install scons
 ```
+- [Nestly](https://nestly.readthedocs.io/en/latest/)
+```bash
+pip install nestly
+```
 - [RevBayes](https://revbayes.github.io/software)
 Follow the install instructions.
 
