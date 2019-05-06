@@ -93,11 +93,15 @@ def main():
                         type=str,
                         help='alignment file format (default nexus)',
                         default='nexus')
+    parser.add_argument('--plot',
+                        action='store_true',
+                        default=False)
     args = parser.parse_args()
 
     align_mi = AlignMI(args.aln_file, args.format)
-    align_mi.plot(f'{args.aln_file}.mi.png')
-    align_mi.write(f'{args.aln_file}.mi.txt')
+    if args.plot:
+        align_mi.plot(f'{args.aln_file}.mi.png')
+        align_mi.write(f'{args.aln_file}.mi.txt')
     align_mi.write_summary(f'{args.aln_file}.mi.summary.txt')
 
 
