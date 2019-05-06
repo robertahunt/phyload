@@ -88,13 +88,11 @@ def aln(outdir, c):
 
 @nest.add_target()
 def mi(outdir, c):
-    '''column mutual information matrix'''
-    mi = env.Command([f'{outdir}/aln.nex.mi.png',
-                      f'{outdir}/aln.nex.mi.txt',
-                      f'{outdir}/aln.nex.mi.summary.txt'],
-                     c['aln'],
-                     'python indices/align_mi.py $SOURCE')
-    c['mi_agg'].append(mi[2])
+    '''column mutual information matrix summary stats'''
+    mi = env.Command(f'{outdir}/aln.nex.mi.summary.txt',
+                     [c['aln'], c['d'], c['n_iid'], c['n_epi']],
+                     'python indices/align_mi.py $SOURCES[0]')
+    c['mi_agg'].append(mi)
     return mi
 
 
