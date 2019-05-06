@@ -3,18 +3,14 @@ Can epistasis break phylogenetic models? If so, where?
 
 ## Dependencies
 - [Conda](https://conda.io/):
-After installing Conda, we recommend setting up an environment named _phyload_ with the required version of Python as follows:
+After installing Conda, we recommend setting up an environment named _phyload_ with the required version of Python and R as follows:
 ```bash
-conda create -n phyload python=3.7
+conda create -n phyload python=3.7 r-essentials r-base
 conda activate phyload
 ```
-- [Biopython](https://biopython.org)
+- [SCons](https://scons.org), [biopython](https://biopython.org), and [seaborn](https://seaborn.pydata.org)
 ```bash
-conda install -c conda-forge biopython
-```
-- [SCons](https://scons.org)
-```bash
-conda install scons
+conda install scons biopython seaborn
 ```
 - [Nestly](https://nestly.readthedocs.io/en/latest/)
 ```bash
