@@ -89,10 +89,11 @@ def aln(outdir, c):
 @nest.add_target()
 def mi(outdir, c):
     '''column mutual information matrix summary stats'''
-    mi = env.Command(f'{outdir}/aln.nex.mi.summary.txt',
+    mi = env.Command(f'{outdir}/aln.nex.mi.summary.tsv',
                      c['aln'],
                      'python indices/align_mi.py $SOURCES')
-    c['mi_agg'].append(mi)
+    c['mi_agg'].append({'d': c['d'], 'n_iid': c['n_iid'], 'n_epi': c['n_epi'],
+                        'tgt': mi})
     return mi
 
 
@@ -101,8 +102,22 @@ nest.pop('d')
 
 
 @nest.add_target()
+def mi_agg_input(outdir, c):
+    '''some scons ninjutsu for building a file of mi paths with associated args
+    '''
+    # first the header line
+    cmds = ['echo -e \'d\\tn_iid\\tn_epi\\tpath\' > $TARGET']
+    sources = []
+    for i, mi in enumerate(c['mi_agg']):
+        sources.append(mi['tgt'])
+        cmds.append(f'echo -e \'{mi["d"]}\\t{mi["n_iid"]}\\t{mi["n_epi"]}\\t${{SOURCES[{i}]}}\' >> $TARGET')
+    cmd = ' && '.join(cmds)
+    return env.Command(f'{outdir}/mi_agg.input.tsv', sources, cmd)
+
+
+@nest.add_target()
 def mi_agg(outdir, c):
     '''aggregate mutual infomation matrices'''
     return env.Command(f'{outdir}/mi_agg.skewness.pdf',
-                       c['mi_agg'],
-                       f'python utils/mi_agg.py {outdir}')
+                       c['mi_agg_input'],
+                       f'python utils/mi_agg.py $SOURCE {outdir}')
