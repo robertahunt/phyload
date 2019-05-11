@@ -5,13 +5,12 @@
 """
 import numpy as np
 import os
-# import sconsutils
+import sconsutils
 from SCons.Script import Environment, AddOption, GetOption
 from nestly import Nest
 from nestly.scons import SConsWrap
 
-# sconsutils
-# ^ see this dir in gctree for slurm job submission utils
+sconsutils
 
 # Set up SCons environment
 environ = os.environ.copy()
@@ -19,7 +18,6 @@ env = Environment(ENV=environ)
 
 # command line arguments
 AddOption('--revpath',
-          dest='revpath',
           type='str',
           metavar='<PATH>',
           help='path to RevBayes if not in $PATH (default "rb")',
@@ -27,7 +25,6 @@ AddOption('--revpath',
 revpath = GetOption('revpath')
 
 AddOption('--replicates',
-          dest='replicates',
           type='int',
           metavar='<N>',
           help='N replicates in each grid cell (default 1)',
@@ -35,19 +32,26 @@ AddOption('--replicates',
 replicates = GetOption('replicates')
 
 AddOption('--output',
-          dest='output',
           type='str',
           metavar='<PATH>',
           help='output directory path (default "scons_output")',
           default='scons_output')
 output = GetOption('output')
 
+AddOption('--scons',
+          action='store_true',
+          help='submit commands to slurm cluster (default False)')
+if GetOption('scons'):
+    Command = env.SRun
+else:
+    Command = env.Command
+
 nest = SConsWrap(Nest(), output, alias_environment=env)
 
 # check that RevBayes path is valid by attempting to access its help
-rb_check = env.Command(f'{output}/scons.log',
-                       None,
-                       f'{revpath} -h > $TARGET')
+rb_check = Command(f'{output}/scons.log',
+                   None,
+                   f'{revpath} -h > $TARGET')
 
 # aggregators perform analysis on a nest
 # this one will collect the mutual information matrices
@@ -66,12 +70,12 @@ nest.add('replicate', range(1, replicates + 1))
 @nest.add_target()
 def alns(outdir, c):
     '''iid and epistatic alignments'''
-    alns = env.Command([f'{outdir}/iid_aln.nex',
-                        f'{outdir}/epi_aln.nex'],
-                       None,
-                       'Rscript simulation_scripts/mk_alns.R '
-                       f'{c["n_iid"]} {c["n_epi"]} {c["d"]} {c["replicate"]} '
-                       f'{outdir} {revpath} &> {outdir}/mk_alns.log')
+    alns = Command([f'{outdir}/iid_aln.nex',
+                    f'{outdir}/epi_aln.nex'],
+                   None,
+                   'Rscript simulation_scripts/mk_alns.R '
+                   f'{c["n_iid"]} {c["n_epi"]} {c["d"]} {c["replicate"]} '
+                   f'{outdir} {revpath} &> {outdir}/mk_alns.log')
     env.Depends(alns, rb_check)
     return alns
 
@@ -79,19 +83,19 @@ def alns(outdir, c):
 @nest.add_target()
 def aln(outdir, c):
     '''concatentate the iid and epistatic alignments into one'''
-    return env.Command(f'{outdir}/aln.nex',
-                       c['alns'],
-                       'Rscript simulation_scripts/merge_alns.R '
-                       '$SOURCES $TARGET '
-                       f' &> {outdir}/merge_alns.log')
+    return Command(f'{outdir}/aln.nex',
+                   c['alns'],
+                   'Rscript simulation_scripts/merge_alns.R '
+                   '$SOURCES $TARGET '
+                   f' &> {outdir}/merge_alns.log')
 
 
 @nest.add_target()
 def mi(outdir, c):
     '''column mutual information matrix summary stats'''
-    mi = env.Command(f'{outdir}/aln.nex.mi.summary.tsv',
-                     c['aln'],
-                     'python indices/align_mi.py $SOURCES')
+    mi = Command(f'{outdir}/aln.nex.mi.summary.tsv',
+                 c['aln'],
+                 'python indices/align_mi.py $SOURCES')
     c['mi_agg'].append({'d': c['d'], 'n_iid': c['n_iid'], 'n_epi': c['n_epi'],
                         'tgt': mi})
     return mi
@@ -110,14 +114,15 @@ def mi_agg_input(outdir, c):
     sources = []
     for i, mi in enumerate(c['mi_agg']):
         sources.append(mi['tgt'])
-        cmds.append(f'echo -e \'{mi["d"]}\\t{mi["n_iid"]}\\t{mi["n_epi"]}\\t${{SOURCES[{i}]}}\' >> $TARGET')
+        cmds.append(f'echo -e \'{mi["d"]}\\t{mi["n_iid"]}\\t{mi["n_epi"]}'
+                    '\\t${{SOURCES[{i}]}}\' >> $TARGET')
     cmd = ' && '.join(cmds)
-    return env.Command(f'{outdir}/mi_agg.input.tsv', sources, cmd)
+    return Command(f'{outdir}/mi_agg.input.tsv', sources, cmd)
 
 
 @nest.add_target()
 def mi_agg(outdir, c):
     '''aggregate mutual infomation matrices'''
-    return env.Command(f'{outdir}/mi_agg.skewness.pdf',
-                       c['mi_agg_input'],
-                       f'python utils/mi_agg.py $SOURCE {outdir}')
+    return Command(f'{outdir}/mi_agg.skewness.pdf',
+                   c['mi_agg_input'],
+                   f'python utils/mi_agg.py $SOURCE {outdir}')
