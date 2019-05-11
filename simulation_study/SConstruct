@@ -38,10 +38,10 @@ AddOption('--output',
           default='scons_output')
 output = GetOption('output')
 
-AddOption('--scons',
+AddOption('--slurm',
           action='store_true',
           help='submit commands to slurm cluster (default False)')
-if GetOption('scons'):
+if GetOption('slurm'):
     Command = env.SRun
 else:
     Command = env.Command
