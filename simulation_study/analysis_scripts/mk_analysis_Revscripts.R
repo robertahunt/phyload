@@ -8,16 +8,13 @@
 # Get arguments
 args = commandArgs(trailingOnly=TRUE)
 
-if (!length(args) == 5) {
-  stop("This script requires 5 arguments")
+if (!length(args) == 3) {
+  stop("This script requires 3 arguments")
 }
 
 nscripts  <- args[1]
 this.seed <- args[2]
-out.file  <- args[3]
-
-# Directory that we're outputting our Revscript to (to pass to Revscript)
-out.dir <- dirname(out.file)
+out.dir  <- args[3]
 
 # Get Rev source script
 revscript <- scan("simulation_scripts/analysis_template.Rev",sep="\n",what="character",strip.white=FALSE)
