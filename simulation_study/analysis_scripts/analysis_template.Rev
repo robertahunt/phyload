@@ -69,7 +69,8 @@ monitors[mni++] = mnModel(filename="analysis.log", printgen=10)
 
 # run the analysis
 mymcmc = mcmc(mymodel, moves, monitors, nruns=2)
-mymcmc.burnin(generations=2000,tuningInterval=100)
-mymcmc.run(generations=20000)
+#mymcmc.burnin(generations=2000,tuningInterval=100)
+#mymcmc.run(generations=20000)
 
+mymcmc.run(generations=1)
 q()
