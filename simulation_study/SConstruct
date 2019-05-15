@@ -90,6 +90,17 @@ def aln(outdir, c):
                    f' &> {outdir}/merge_alns.log')
 
 
+# targets don't seem to be working
+@nest.add_target()
+def tree(outdir, c):
+    '''tree inference'''
+    return Command([f'{outdir}/analysis.Rev', f'{outdir}/analysis.log',
+                    f'{outdir}/analysis.trees'],
+                   c["aln"],
+                   f'Rscript analysis_scripts/run_Rev.R {c["replicate"]} '
+                   f'{outdir} {revpath}')
+
+
 @nest.add_target()
 def mi(outdir, c):
     '''column mutual information matrix summary stats'''
