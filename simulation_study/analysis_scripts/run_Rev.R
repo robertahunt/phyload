@@ -18,7 +18,7 @@ rb.path   <- args[3]
 
 
 # Get Rev source script
-revscript <- scan("simulation_scripts/analysis_template.Rev",sep="\n",what="character",strip.white=FALSE)
+revscript <- scan("analysis_scripts/analysis_template.Rev",sep="\n",what="character",strip.white=FALSE)
 
 # Make it a length 1 character vector
 revscript <- paste0(revscript,collapse="\n")
@@ -33,4 +33,3 @@ cat(this.revscript,file=paste0(out.dir,"/analyze.Rev"))
 
 # Run revscript
 system2(command=as.character(rb.path),args=paste0(out.dir,"/analyze.Rev"))
-
