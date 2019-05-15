@@ -1,6 +1,23 @@
 library(phangorn)
 library(coda)
 
+# This is designed to be called with Rscript with several arguments
+# arg1: path to directory to where Rev analyses live
+
+# Call this script from phyload/simulation_study
+
+# This prints two convergence diagnostics (ASDSF and tree length PSRF) to stdout
+
+# Get arguments
+args = commandArgs(trailingOnly=TRUE)
+
+if (!length(args) == 1) {
+  stop("This script requires 1 arguments")
+}
+
+out.dir   <- args[1]
+
+
 # Estimates the average standard deviation of split frequencies for multiple chains of trees
 # Arguments:
 #   chains: all chains as a list (need not be multiphylo class)
@@ -155,3 +172,10 @@ treeLengthPSRF <- function(chains,split.chains=TRUE) {
   
 }
 
+run1 <- read.tree(paste0(out.dir,"/analysis_run_1.trees"))
+run2 <- read.tree(paste0(out.dir,"/analysis_run_1.trees"))
+
+asdsf <- ASDSF(list(run1,run2))
+psrf  <- treeLengthPSRF(list(run1,run2))
+
+cat(asdsf,psrf,file=stdout())
