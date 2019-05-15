@@ -39,10 +39,10 @@ Q := fnGTR(er,pi)
 ##############
 
 # Prior distribution on the tree topology
-psi ~ dnUniformTopologyBranchLengths(taxa,dnExponential(10))
-moves[mvi++] = mvNNI(topology, weight=num_taxa/2.0)
-moves[mvi++] = mvSPR(topology, weight=num_taxa/10.0)
-moves[++mvi] = mvBranchLengthScale(psi,weight=num_branches)
+psi ~ dnUniformTopologyBranchLength(taxa, dnExponential(10))
+moves[mvi++] = mvNNI(psi, weight=num_taxa/2.0)
+moves[mvi++] = mvSPR(psi, weight=num_taxa/10.0)
+moves[mvi++] = mvBranchLengthScale(psi,weight=num_branches)
 
 TL := psi.treeLength()
 
