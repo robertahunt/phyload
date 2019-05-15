@@ -28,6 +28,7 @@ revscript <- paste0(revscript,collapse="\n")
 # Fill out the rev template for this simulation cell
 this.revscript <- revscript
 this.revscript <- gsub("<<SEED>>",this.seed,this.revscript)
+this.revscript <- gsub("<<TARGET_DIRECTORY>>",out.dir,this.revscript)
 
 cat(this.revscript,file=paste0(out.dir,"/analyze.Rev"))
 
