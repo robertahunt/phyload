@@ -36,6 +36,7 @@ To perform a single simulation, use
 $ Rscript simulation_scripts/mk_alns.R <n_iid> <n_epi> <d> <seed> <outbase> <revpath>
 ```
 Separate iid and epistatic alignments will be written in nexus format to `<outbase>/iid_aln.nex` and `<outbase>/epi_aln.nex`.
+NOTE: The epistatic alignment are not DNA but characters 0-F, where 0=AA, 1=AC, ..., F=TT.
 
 The arguments are
 - `n_iid`: number of iid sites
@@ -52,6 +53,34 @@ Merge an iid nexus alignment `<iid_aln>` and and epistatic nexus alignment `<epi
 ```bash
 $ Rscript simulation_scripts/merge_alns.R <iid_aln> <epi_aln> <merged_aln>
 ```
+This script will replace the 0-F characters in `<epi_aln>` with paired sites in `<merged_aln>`.
 - [`epistatic_doublet_model_stub.Rev`](simulation_scripts/epistatic_doublet_model_stub.Rev) Core Rev script for the epistatic model.
-- [`rev_model_template.Rev`](simulation_scripts/rev_model_template.Rev) A template for a Rev script to simulate 100 alignments, missing key parameters.
+- [`rev_model_template.Rev`](simulation_scripts/rev_model_template.Rev) A template for a Rev script to simulate an alignment in two parts, part epistatic and part purely iid sites, missing key parameters.
 - [`simulation_tree.tre`](simulation_scripts/simulation_tree.tre) The treefile used for simulating alignments.
+Rev points to this automatically for simulating.
+
+## [`analysis_scripts/`](analysis_scripts)
+Scripts needed to run a RevBayes analysis on a single cell in the simulation study.
+
+### [`run_Rev.R`](analysis_scripts/mk_alns.R)
+
+To analyze a single simulation, use
+```bash
+$ Rscript simulation_scripts/mk_alns.R <seed> <outbase> <revpath>
+```
+First makes a RevScript to analyze the simulation, then calls RevBayes on it to run the analysis.
+This step is not computationally trivial.
+
+The arguments are
+- `seed`: random seed passed to RevBayes
+- `outbase`: path to write output alignments
+- `revpath`: path to installed version of RevBayes (can be `rb` if it is on `$PATH`)
+
+### Utilities
+
+- [`diagnose_convergence.R`](analysis_scripts/diagnose_convergence.R)
+Prints to stdout two convergence diagnostics for to filter out any analyses where MCMC convergence is suspect. Prints in order ASDSF (average standard deviation of split frequencies between two chains, split in half, ignoring splits of total frequency < 5%), PSRF (potential scale reduction factor between two chains, split in half, on the tree length). Run with,
+```bash
+$ Rscript analysis_scripts/diagnose_convergence.R <dir>
+```
+- [`analysis_template.Rev`](analysis_scripts/epistatic_doublet_model_stub.Rev) A template for a Rev script to analyze an alignment, missing key parameters.
