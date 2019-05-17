@@ -93,11 +93,20 @@ def aln(outdir, c):
 @nest.add_target()
 def trees(outdir, c):
     '''MCMC tree inference'''
-    return Command([f'{outdir}/analysis.Rev', f'{outdir}/analysis.log',
-                    f'{outdir}/analysis.trees', f'{outdir}/run_Rev.log'],
+    return Command([f'{outdir}/analysis.Rev', f'{outdir}/analysis_run_1.trees',
+                    f'{outdir}/analysis_run_2.trees', f'{outdir}/run_Rev.log'],
                    c['aln'],
                    f'Rscript analysis_scripts/run_Rev.R {c["replicate"]} '
                    f'$SOURCE {revpath} > ${{TARGETS[3]}}')
+
+
+@nest.add_target()
+def convergence(outdir, c):
+    '''convergence checks'''
+    return Command(f'{outdir}/diagnose_convergence.log',
+                   c['trees'],
+                   f'Rscript analysis_scripts/diagnose_convergence.R '
+                   f'${{SOURCES[1]}} ${{SOURCES[2]}} > $TARGET')
 
 
 @nest.add_target()
@@ -122,7 +131,8 @@ def mi_agg_input(outdir, c):
     # first the header line
     lines = ['d\tn_iid\tn_epi\tpath']
     for mi in c['mi_agg']:
-        lines.append(f"{mi['d']}\t{mi['n_iid']}\t{mi['n_epi']}\t{File(mi['tgt'][0])}")
+        lines.append(f"{mi['d']}\t{mi['n_iid']}\t{mi['n_epi']}"
+                     f"\t{File(mi['tgt'][0])}")
     mi_input = env.Textfile(f'{outdir}/mi_agg.input.tsv', lines)
     # env.Depends(mi_input, Flatten(mi['tgt']))
     return mi_input
