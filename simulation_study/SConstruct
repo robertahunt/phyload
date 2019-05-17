@@ -110,14 +110,12 @@ def mi_agg_input(outdir, c):
     '''some scons ninjutsu for building a file of mi paths with associated args
     '''
     # first the header line
-    cmds = ['echo -e \'d\\tn_iid\\tn_epi\\tpath\' > $TARGET']
-    sources = []
-    for i, mi in enumerate(c['mi_agg']):
-        sources.append(mi['tgt'])
-        cmds.append(f'echo -e \'{mi["d"]}\\t{mi["n_iid"]}\\t{mi["n_epi"]}'
-                    '\\t${{SOURCES[{i}]}}\' >> $TARGET')
-    cmd = ' && '.join(cmds)
-    return Command(f'{outdir}/mi_agg.input.tsv', sources, cmd)
+    lines = ['d\tn_iid\tn_epi\tpath']
+    for mi in c['mi_agg']:
+        lines.append(f"{mi['d']}\t{mi['n_iid']}\t{mi['n_epi']}\t{File(mi['tgt'][0])}")
+    mi_input = env.Textfile(f'{outdir}/mi_agg.input.tsv', lines)
+    # env.Depends(mi_input, Flatten(mi['tgt']))
+    return mi_input
 
 
 @nest.add_target()
