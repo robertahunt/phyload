@@ -13,12 +13,13 @@ if (!length(args) == 3) {
 }
 
 this.seed <- args[1]
-out.dir   <- args[2]
+input.aln <- args[2]
+out.dir   <- dirname(input.aln)
 rb.path   <- args[3]
 
 
 # Get Rev source script
-revscript <- scan("analysis_scripts/analysis_template.Rev",sep="\n",what="character",strip.white=FALSE)
+revscript <- scan("analysis_scripts/analysis_template.Rev",sep="\n",what="character",strip.white=FALSE, quiet=TRUE)
 
 # Make it a length 1 character vector
 revscript <- paste0(revscript,collapse="\n")
@@ -28,9 +29,10 @@ revscript <- paste0(revscript,collapse="\n")
 # Fill out the rev template for this simulation cell
 this.revscript <- revscript
 this.revscript <- gsub("<<SEED>>",this.seed,this.revscript)
-this.revscript <- gsub("<<TARGET_DIRECTORY>>",out.dir,this.revscript)
+this.revscript <- gsub("<<TARGET_DIRECTORY>>", out.dir, this.revscript)
+this.revscript <- gsub("<<TARGET_ALN>>", input.aln, this.revscript)
 
-cat(this.revscript,file=paste0(out.dir,"/analyze.Rev"))
+cat(this.revscript,file=paste0(out.dir,"/analysis.Rev"))
 
 # Run revscript
-system2(command=as.character(rb.path),args=paste0(out.dir,"/analyze.Rev"))
+system2(command=as.character(rb.path),args=paste0(out.dir,"/analysis.Rev"))
