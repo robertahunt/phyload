@@ -177,4 +177,5 @@ treeLengthPSRF <- function(chains,split.chains=TRUE) {
 asdsf <- ASDSF(list(run1, run2))
 psrf  <- treeLengthPSRF(list(run1, run2))
 
-cat(asdsf, psrf, file=stdout())
+cat("asdsf", "psrf\n", file=stdout(), sep="\t")
+cat(asdsf, psrf, file=stdout(), sep="\t")

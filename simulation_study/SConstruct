@@ -103,10 +103,10 @@ def trees(outdir, c):
 @nest.add_target()
 def convergence(outdir, c):
     '''convergence checks'''
-    return Command(f'{outdir}/diagnose_convergence.log',
+    return Command([f'{outdir}/diagnose_convergence.tsv', f'{outdir}/diagnose_convergence.log'],
                    c['trees'],
                    f'Rscript analysis_scripts/diagnose_convergence.R '
-                   f'${{SOURCES[1]}} ${{SOURCES[2]}} &> $TARGET')
+                   f'${{SOURCES[1]}} ${{SOURCES[2]}} 1> ${{TARGETS[0]}} 2> ${{TARGETS[1]}}')
 
 
 @nest.add_target()
