@@ -59,8 +59,8 @@ nest.add_aggregate('mi_agg', list)
 
 # nests define parameter sweeps
 nest.add('d', (1, 10))
-nest.add('n_iid', range(10, 110, 10))
-n_epi_range = np.array(range(10, 110, 10))
+nest.add('n_iid', range(10, 30, 10))
+n_epi_range = np.array(range(10, 30, 10))
 if any(n_epi_range % 2 != 0):
     raise ValueError('n_epi must be even!')
 nest.add('n_epi', n_epi_range)
@@ -106,7 +106,7 @@ def convergence(outdir, c):
     return Command(f'{outdir}/diagnose_convergence.log',
                    c['trees'],
                    f'Rscript analysis_scripts/diagnose_convergence.R '
-                   f'${{SOURCES[1]}} ${{SOURCES[2]}} > $TARGET')
+                   f'${{SOURCES[1]}} ${{SOURCES[2]}} &> $TARGET')
 
 
 @nest.add_target()
