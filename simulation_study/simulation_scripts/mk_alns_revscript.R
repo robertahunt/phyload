@@ -37,9 +37,3 @@ this.revscript <- gsub("<<EPISTASIS_D>>",this.d,this.revscript)
 this.revscript <- gsub("<<TARGET_DIRECTORY>>",out.dir,this.revscript)
 
 cat(this.revscript,file=paste0(out.dir,"/sim_aln.Rev"))
-
-
-
-# Script simulates two components of the alignment, the site-IID sites and epistatic sites
-system2(command=as.character(rb.path),args=paste0(out.dir,"/sim_aln.Rev"))
-

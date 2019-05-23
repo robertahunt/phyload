@@ -59,8 +59,8 @@ nest.add_aggregate('mi_agg', list)
 
 # nests define parameter sweeps
 nest.add('d', (1, 10))
-nest.add('n_iid', range(10, 110, 10))
-n_epi_range = np.array(range(10, 110, 10))
+nest.add('n_iid', range(10, 30, 10))
+n_epi_range = np.array(range(10, 30, 10))
 if any(n_epi_range % 2 != 0):
     raise ValueError('n_epi must be even!')
 nest.add('n_epi', n_epi_range)
@@ -68,14 +68,22 @@ nest.add('replicate', range(1, replicates + 1))
 
 
 @nest.add_target()
+def revscript(outdir, c):
+    '''make RevBayes script from template'''
+    return Command(f'{outdir}/sim_aln.Rev',
+                   None,
+                   'Rscript simulation_scripts/mk_alns_revscript.R '
+                   f'{c["n_iid"]} {c["n_epi"]} {c["d"]} {c["replicate"]} '
+                   f'{outdir} {revpath} &> {outdir}/mk_alns_revscript.log')
+
+
+@nest.add_target()
 def alns(outdir, c):
     '''iid and epistatic alignments'''
-    alns = Command([f'{outdir}/iid_aln.nex',
+    return Command([f'{outdir}/iid_aln.nex',
                     f'{outdir}/epi_aln.nex'],
-                   None,
-                   'Rscript simulation_scripts/mk_alns.R '
-                   f'{c["n_iid"]} {c["n_epi"]} {c["d"]} {c["replicate"]} '
-                   f'{outdir} {revpath} &> {outdir}/mk_alns.log')
+                   c['revscript'],
+                   f'{revpath} $SOURCE &> {outdir}/revscript.log')
     env.Depends(alns, rb_check)
     return alns
 
