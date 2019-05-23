@@ -102,7 +102,7 @@ def main():
     if args.plot:
         align_mi.plot(f'{args.aln_file}.mi.png')
         align_mi.write(f'{args.aln_file}.mi.txt')
-    align_mi.write_summary(f'{args.aln_file}.mi.summary.txt')
+    align_mi.write_summary(f'{args.aln_file}.mi.summary.tsv')
 
 
 if __name__ == '__main__':

@@ -99,6 +99,25 @@ def aln(outdir, c):
 
 
 @nest.add_target()
+def trees(outdir, c):
+    '''MCMC tree inference'''
+    return Command([f'{outdir}/analysis.Rev', f'{outdir}/analysis_run_1.trees',
+                    f'{outdir}/analysis_run_2.trees', f'{outdir}/run_Rev.log'],
+                   c['aln'],
+                   f'Rscript analysis_scripts/run_Rev.R {c["replicate"]} '
+                   f'$SOURCE {revpath} > ${{TARGETS[3]}}')
+
+
+@nest.add_target()
+def convergence(outdir, c):
+    '''convergence checks'''
+    return Command([f'{outdir}/diagnose_convergence.tsv', f'{outdir}/diagnose_convergence.log'],
+                   c['trees'],
+                   f'Rscript analysis_scripts/diagnose_convergence.R '
+                   f'${{SOURCES[1]}} ${{SOURCES[2]}} 1> ${{TARGETS[0]}} 2> ${{TARGETS[1]}}')
+
+
+@nest.add_target()
 def mi(outdir, c):
     '''column mutual information matrix summary stats'''
     mi = Command(f'{outdir}/aln.nex.mi.summary.tsv',
@@ -118,14 +137,13 @@ def mi_agg_input(outdir, c):
     '''some scons ninjutsu for building a file of mi paths with associated args
     '''
     # first the header line
-    cmds = ['echo -e \'d\\tn_iid\\tn_epi\\tpath\' > $TARGET']
-    sources = []
-    for i, mi in enumerate(c['mi_agg']):
-        sources.append(mi['tgt'])
-        cmds.append(f'echo -e \'{mi["d"]}\\t{mi["n_iid"]}\\t{mi["n_epi"]}'
-                    '\\t${{SOURCES[{i}]}}\' >> $TARGET')
-    cmd = ' && '.join(cmds)
-    return Command(f'{outdir}/mi_agg.input.tsv', sources, cmd)
+    lines = ['d\tn_iid\tn_epi\tpath']
+    for mi in c['mi_agg']:
+        lines.append(f"{mi['d']}\t{mi['n_iid']}\t{mi['n_epi']}"
+                     f"\t{File(mi['tgt'][0])}")
+    mi_input = env.Textfile(f'{outdir}/mi_agg.input.tsv', lines)
+    # env.Depends(mi_input, Flatten(mi['tgt']))
+    return mi_input
 
 
 @nest.add_target()
