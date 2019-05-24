@@ -6,7 +6,7 @@
 import numpy as np
 import os
 import sconsutils
-from SCons.Script import Environment, AddOption, GetOption
+from SCons.Script import Environment, AddOption, GetOption, File
 from nestly import Nest
 from nestly.scons import SConsWrap
 
@@ -74,7 +74,7 @@ def revscript(outdir, c):
                    None,
                    'Rscript simulation_scripts/mk_alns_revscript.R '
                    f'{c["n_iid"]} {c["n_epi"]} {c["d"]} {c["replicate"]} '
-                   f'{outdir} {revpath} &> {outdir}/mk_alns_revscript.log')
+                   f'{outdir} {revpath} > {outdir}/mk_alns_revscript.log')
 
 
 @nest.add_target()
@@ -83,7 +83,7 @@ def alns(outdir, c):
     return Command([f'{outdir}/iid_aln.nex',
                     f'{outdir}/epi_aln.nex'],
                    c['revscript'],
-                   f'{revpath} $SOURCE &> {outdir}/revscript.log')
+                   f'{revpath} $SOURCE > {outdir}/revscript.log')
     env.Depends(alns, rb_check)
     return alns
 
@@ -95,7 +95,7 @@ def aln(outdir, c):
                    c['alns'],
                    'Rscript simulation_scripts/merge_alns.R '
                    '$SOURCES $TARGET '
-                   f' &> {outdir}/merge_alns.log')
+                   f' > {outdir}/merge_alns.log')
 
 
 @nest.add_target()
