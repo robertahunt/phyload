@@ -142,13 +142,15 @@ def mi_agg_input(outdir, c):
         lines.append(f"{mi['d']}\t{mi['n_iid']}\t{mi['n_epi']}"
                      f"\t{File(mi['tgt'][0])}")
     mi_input = env.Textfile(f'{outdir}/mi_agg.input.tsv', lines)
-    # env.Depends(mi_input, Flatten(mi['tgt']))
+    env.Depends(mi_input, Flatten(mi['tgt']))
     return mi_input
 
 
 @nest.add_target()
 def mi_agg(outdir, c):
     '''aggregate mutual infomation matrices'''
-    return Command(f'{outdir}/mi_agg.skewness.pdf',
-                   c['mi_agg_input'],
-                   f'python utils/mi_agg.py $SOURCE {outdir}')
+    mi_agg = Command(f'{outdir}/mi_agg.skewness.pdf',
+                     c['mi_agg_input'],
+                     f'python utils/mi_agg.py $SOURCE {outdir}')
+    env.Depends(mi_agg, [x['tgt'] for x in c['mi_agg']])
+    return mi_agg
