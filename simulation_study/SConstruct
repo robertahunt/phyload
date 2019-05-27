@@ -9,6 +9,7 @@ import sconsutils
 from SCons.Script import Environment, AddOption, GetOption, File
 from nestly import Nest
 from nestly.scons import SConsWrap
+import random
 
 sconsutils
 
@@ -62,11 +63,13 @@ nest.add('replicate', range(1, replicates + 1))
 @nest.add_target()
 def revscript(outdir, c):
     '''make RevBayes script from template'''
-                   None,
-                   'Rscript simulation_scripts/mk_alns_revscript.R '
-                   f'{c["n_iid"]} {c["n_epi"]} {c["d"]} {c["replicate"]} '
-                   f'{outdir} {revpath} > {outdir}/mk_alns_revscript.log')
+    random.seed((c["d"], c["n_iid"], c["n_epi"], c["replicate"]))
+    seed = random.randint(0, 1000000000)
     return env.Command(f'{outdir}/sim_aln.Rev',
+                       None,
+                       'Rscript simulation_scripts/mk_alns_revscript.R '
+                       f'{c["n_iid"]} {c["n_epi"]} {c["d"]} {seed} '
+                       f'{outdir} {revpath} > {outdir}/mk_alns_revscript.log')
 
 
 @nest.add_target()
