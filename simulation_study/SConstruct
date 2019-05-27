@@ -38,14 +38,6 @@ AddOption('--output',
           default='scons_output')
 output = GetOption('output')
 
-AddOption('--slurm',
-          action='store_true',
-          help='submit commands to slurm cluster (default False)')
-if GetOption('slurm'):
-    Command = env.SRun
-else:
-    Command = env.Command
-
 nest = SConsWrap(Nest(), output, alias_environment=env)
 
 # check that RevBayes path is valid by attempting to access its help
@@ -70,20 +62,20 @@ nest.add('replicate', range(1, replicates + 1))
 @nest.add_target()
 def revscript(outdir, c):
     '''make RevBayes script from template'''
-    return Command(f'{outdir}/sim_aln.Rev',
                    None,
                    'Rscript simulation_scripts/mk_alns_revscript.R '
                    f'{c["n_iid"]} {c["n_epi"]} {c["d"]} {c["replicate"]} '
                    f'{outdir} {revpath} > {outdir}/mk_alns_revscript.log')
+    return env.Command(f'{outdir}/sim_aln.Rev',
 
 
 @nest.add_target()
 def alns(outdir, c):
     '''iid and epistatic alignments'''
-    return Command([f'{outdir}/iid_aln.nex',
-                    f'{outdir}/epi_aln.nex'],
-                   c['revscript'],
-                   f'{revpath} $SOURCE > {outdir}/revscript.log')
+    return env.SRun([f'{outdir}/iid_aln.nex',
+                     f'{outdir}/epi_aln.nex'],
+                    c['revscript'],
+                    f'{revpath} $SOURCE > {outdir}/revscript.log')
     env.Depends(alns, rb_check)
     return alns
 
@@ -91,38 +83,38 @@ def alns(outdir, c):
 @nest.add_target()
 def aln(outdir, c):
     '''concatentate the iid and epistatic alignments into one'''
-    return Command(f'{outdir}/aln.nex',
-                   c['alns'],
-                   'Rscript simulation_scripts/merge_alns.R '
-                   '$SOURCES $TARGET '
-                   f' > {outdir}/merge_alns.log')
+    return env.Command(f'{outdir}/aln.nex',
+                       c['alns'],
+                       'Rscript simulation_scripts/merge_alns.R '
+                       '$SOURCES $TARGET '
+                       f' > {outdir}/merge_alns.log')
 
 
 @nest.add_target()
 def trees(outdir, c):
     '''MCMC tree inference'''
-    return Command([f'{outdir}/analysis.Rev', f'{outdir}/analysis_run_1.trees',
-                    f'{outdir}/analysis_run_2.trees', f'{outdir}/run_Rev.log'],
-                   c['aln'],
-                   f'Rscript analysis_scripts/run_Rev.R {c["replicate"]} '
-                   f'$SOURCE {revpath} > ${{TARGETS[3]}}')
+    return env.SRun([f'{outdir}/analysis.Rev', f'{outdir}/analysis_run_1.trees',
+                     f'{outdir}/analysis_run_2.trees', f'{outdir}/run_Rev.log'],
+                    c['aln'],
+                    f'Rscript analysis_scripts/run_Rev.R {c["replicate"]} '
+                    f'$SOURCE {revpath} > ${{TARGETS[3]}}')
 
 
 @nest.add_target()
 def convergence(outdir, c):
     '''convergence checks'''
-    return Command([f'{outdir}/diagnose_convergence.tsv', f'{outdir}/diagnose_convergence.log'],
-                   c['trees'],
-                   f'Rscript analysis_scripts/diagnose_convergence.R '
-                   f'${{SOURCES[1]}} ${{SOURCES[2]}} 1> ${{TARGETS[0]}} 2> ${{TARGETS[1]}}')
+    return env.SRun([f'{outdir}/diagnose_convergence.tsv', f'{outdir}/diagnose_convergence.log'],
+                    c['trees'],
+                    f'Rscript analysis_scripts/diagnose_convergence.R '
+                    f'${{SOURCES[1]}} ${{SOURCES[2]}} 1> ${{TARGETS[0]}} 2> ${{TARGETS[1]}}')
 
 
 @nest.add_target()
 def mi(outdir, c):
     '''column mutual information matrix summary stats'''
-    mi = Command(f'{outdir}/aln.nex.mi.summary.tsv',
-                 c['aln'],
-                 'python indices/align_mi.py $SOURCES')
+    mi = env.SRun(f'{outdir}/aln.nex.mi.summary.tsv',
+                  c['aln'],
+                  'python indices/align_mi.py $SOURCES')
     c['mi_agg'].append({'d': c['d'], 'n_iid': c['n_iid'], 'n_epi': c['n_epi'],
                         'tgt': mi})
     return mi
@@ -149,8 +141,8 @@ def mi_agg_input(outdir, c):
 @nest.add_target()
 def mi_agg(outdir, c):
     '''aggregate mutual infomation matrices'''
-    mi_agg = Command(f'{outdir}/mi_agg.skewness.pdf',
-                     c['mi_agg_input'],
-                     f'python utils/mi_agg.py $SOURCE {outdir}')
+    mi_agg = env.SRun(f'{outdir}/mi_agg.skewness.pdf',
+                      c['mi_agg_input'],
+                      f'python utils/mi_agg.py $SOURCE {outdir}')
     env.Depends(mi_agg, [x['tgt'] for x in c['mi_agg']])
     return mi_agg
