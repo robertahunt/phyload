@@ -1,2 +1,4 @@
 scons_output*
 .sconsign.dblite
+sbatchme.out
+sbatchme.err
