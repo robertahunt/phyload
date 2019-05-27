@@ -9,7 +9,6 @@ import sconsutils
 from SCons.Script import Environment, AddOption, GetOption, File
 from nestly import Nest
 from nestly.scons import SConsWrap
-import random
 
 sconsutils
 
@@ -59,12 +58,13 @@ if any(n_epi_range % 2 != 0):
 nest.add('n_epi', n_epi_range)
 nest.add('replicate', range(1, replicates + 1))
 
+# a random seed for each grid cell will be needed for rev
+seed_dict = {(cell[1]['d'], cell[1]['n_iid'], cell[1]['n_epi'], cell[1]['replicate']):seed for seed, cell in enumerate(nest, 1)}
 
 @nest.add_target()
 def revscript(outdir, c):
     '''make RevBayes script from template'''
-    random.seed((c["d"], c["n_iid"], c["n_epi"], c["replicate"]))
-    seed = random.randint(0, 1000000000)
+    seed = seed_dict[(c["d"], c["n_iid"], c["n_epi"], c["replicate"])]
     return env.Command(f'{outdir}/sim_aln.Rev',
                        None,
                        'Rscript simulation_scripts/mk_alns_revscript.R '
