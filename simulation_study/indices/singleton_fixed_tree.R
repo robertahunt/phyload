@@ -16,7 +16,19 @@ if (!length(args) == 3) {
   stop("This script requires 3 arguments")
 }
 
-aln <- read.phyDat(args[1])
+file.format <- strsplit(basename(args[1]),".",fixed=TRUE)[[1]]
+file.format <- tolower(file.format[length(file.format)])
+if ( grepl("nex",file.format) ) {
+  file.format <- "nexus"
+} else if ( grepl("phy",file.format) ) {
+  file.format <- "phylip"
+} else if ( grepl("fa",file.format) ) {
+  file.format <- "fasta"
+} else {
+  stop("Unrecognized file format of alignment.")
+}
+
+aln <- read.phyDat(args[1],format=file.format)
 phy <- read.tree(args[2])
 
 out.file <- args[3]

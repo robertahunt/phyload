@@ -16,9 +16,33 @@ if (!length(args) == 2) {
 }
 
 if (file.exists(args[1])) {
-  alns <- list(read.phyDat(args[1]))
+  file.format <- strsplit(basename(args[1]),".",fixed=TRUE)[[1]]
+  file.format <- tolower(file.format[length(file.format)])
+  if ( grepl("nex",file.format) ) {
+    file.format <- "nexus"
+  } else if ( grepl("phy",file.format) ) {
+    file.format <- "phylip"
+  } else if ( grepl("fa",file.format) ) {
+    file.format <- "fasta"
+  } else {
+    stop("Unrecognized file format of alignment.")
+  }
+  alns <- list(read.phyDat(args[1],format=file.format))
 } else {
-  alns <- lapply(list.files(args[1],full.names=TRUE),read.phyDat)
+  alns <- lapply(list.files(args[1],full.names=TRUE),function(aln){
+    file.format <- strsplit(basename(aln),".",fixed=TRUE)[[1]]
+    file.format <- tolower(file.format[length(file.format)])
+    if ( grepl("nex",file.format) ) {
+      file.format <- "nexus"
+    } else if ( grepl("phy",file.format) ) {
+      file.format <- "phylip"
+    } else if ( grepl("fa",file.format) ) {
+      file.format <- "fasta"
+    } else {
+      stop("Unrecognized file format of alignment.")
+    }
+    read.phyDat(aln,format=file.format)
+  })
 }
 
 out.file <- args[2]
