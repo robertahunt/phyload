@@ -59,7 +59,9 @@ nest.add('n_epi', n_epi_range)
 nest.add('replicate', range(1, replicates + 1))
 
 # a random seed for each grid cell will be needed for rev
-seed_dict = {(cell[1]['d'], cell[1]['n_iid'], cell[1]['n_epi'], cell[1]['replicate']):seed for seed, cell in enumerate(nest, 1)}
+seed_dict = {(cell[1]['d'], cell[1]['n_iid'], cell[1]['n_epi'],
+              cell[1]['replicate']): seed for seed, cell in enumerate(nest, 1)}
+
 
 @nest.add_target()
 def revscript(outdir, c):
@@ -106,10 +108,12 @@ def trees(outdir, c):
 @nest.add_target()
 def convergence(outdir, c):
     '''convergence checks'''
-    return env.SRun([f'{outdir}/diagnose_convergence.tsv', f'{outdir}/diagnose_convergence.log'],
+    return env.SRun([f'{outdir}/diagnose_convergence.tsv',
+                     f'{outdir}/diagnose_convergence.log'],
                     c['trees'],
                     f'Rscript analysis_scripts/diagnose_convergence.R '
-                    f'${{SOURCES[1]}} ${{SOURCES[2]}} 1> ${{TARGETS[0]}} 2> ${{TARGETS[1]}}')
+                    f'${{SOURCES[1]}} ${{SOURCES[2]}} 1> ${{TARGETS[0]}}'
+                    f' 2> ${{TARGETS[1]}}')
 
 
 @nest.add_target()
@@ -144,8 +148,8 @@ def mi_agg_input(outdir, c):
 @nest.add_target()
 def mi_agg(outdir, c):
     '''aggregate mutual infomation matrices'''
-    mi_agg = env.SRun(f'{outdir}/mi_agg.skewness.pdf',
+    mi_agg = env.SRun(f'{outdir}/agg_skewness.pdf',
                       c['mi_agg_input'],
-                      f'python utils/mi_agg.py $SOURCE {outdir}')
+                      f'python utils/stats_agg.py $SOURCE {outdir}')
     env.Depends(mi_agg, [x['tgt'] for x in c['mi_agg']])
     return mi_agg
