@@ -7,7 +7,7 @@ import pandas as pd
 
 
 def main():
-    '''usage: python mi_agg.py -h'''
+    '''usage: python stats_agg.py -h'''
     import argparse
 
     parser = argparse.ArgumentParser(
@@ -23,16 +23,16 @@ def main():
     args = parser.parse_args()
 
     df_meta = pd.read_csv(args.input_list, sep='\t')
-    df_mi = pd.concat(pd.read_csv(path, sep='\t')
-                      for path in df_meta.path)
+    df_stat = pd.concat(pd.read_csv(path, sep='\t')
+                        for path in df_meta.path)
     # extract statistic name
-    metric = df_mi.columns.values
+    metric = df_stat.columns.values
     assert len(metric) == 1, f'Expected one column, found {len(metric)}'
     metric = metric[0]
-    df_mi.reset_index(inplace=True)
+    df_stat.reset_index(inplace=True)
 
     # note the groupby and mean below will average over replicates
-    df = pd.concat((df_meta, df_mi),
+    df = pd.concat((df_meta, df_stat),
                    axis=1).groupby(['d',
                                     'n_iid',
                                     'n_epi']).mean().reset_index()
@@ -52,7 +52,7 @@ def main():
                      # vmax=df.skewness.max(), cbar=False, cmap='Reds',
                      )
     fg.fig.suptitle(metric)
-    plt.savefig(f'{args.outdir}/mi_agg.{metric}.pdf')
+    plt.savefig(f'{args.outdir}/agg_{metric}.pdf')
 
 
 if __name__ == '__main__':
