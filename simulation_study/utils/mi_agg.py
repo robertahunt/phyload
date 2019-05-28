@@ -24,7 +24,13 @@ def main():
 
     df_meta = pd.read_csv(args.input_list, sep='\t')
     df_mi = pd.concat(pd.read_csv(path, sep='\t')
-                      for path in df_meta.path).reset_index()
+                      for path in df_meta.path)
+    # extract statistic name
+    metric = df_mi.columns.values
+    assert len(metric) == 1, f'Expected one column, found {len(metric)}'
+    metric = metric[0]
+    df_mi.reset_index(inplace=True)
+
     # note the groupby and mean below will average over replicates
     df = pd.concat((df_meta, df_mi),
                    axis=1).groupby(['d',
@@ -41,11 +47,12 @@ def main():
                                         values=args[2])
         sns.heatmap(data, **kwargs).invert_yaxis()
     fg = sns.FacetGrid(df, col='$d$', height=4)
-    fg.map_dataframe(draw_heatmap, '$n_i$', '$n_e$', 'skewness',
-                     square=True, vmin=df.skewness.min(),
+    fg.map_dataframe(draw_heatmap, '$n_i$', '$n_e$', metric,
+                     square=True, vmin=df[metric].min(),
                      # vmax=df.skewness.max(), cbar=False, cmap='Reds',
                      )
-    plt.savefig(f'{args.outdir}/mi_agg.skewness.pdf')
+    fg.fig.suptitle(metric)
+    plt.savefig(f'{args.outdir}/mi_agg.{metric}.pdf')
 
 
 if __name__ == '__main__':

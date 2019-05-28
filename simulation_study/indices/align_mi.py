@@ -79,6 +79,15 @@ class AlignMI():
                   f'{stats.variance}\t{stats.skewness}\t{stats.kurtosis}',
                   file=f)
 
+    def write_skewness(self, outfile) -> None:
+        '''write summary stats of the MI matrix to file'''
+        values = self.mi.flatten()
+        values = values[~np.isnan(values)]
+        stats = describe(values, nan_policy='omit')
+        with open(outfile, 'w') as f:
+            print('skewness', file=f)
+            print(f'{stats.skewness}', file=f)
+
 
 def main():
     '''usage: python align_mi.py -h'''
@@ -102,7 +111,7 @@ def main():
     if args.plot:
         align_mi.plot(f'{args.aln_file}.mi.png')
         align_mi.write(f'{args.aln_file}.mi.txt')
-    align_mi.write_summary(f'{args.aln_file}.mi.summary.tsv')
+    align_mi.write_skewness(f'{args.aln_file}.mi.summary.tsv')
 
 
 if __name__ == '__main__':
