@@ -48,6 +48,7 @@ rb_check = Command(f'{output}/scons.log',
 # aggregators perform analysis on a nest
 # this one will collect the mutual information matrices
 nest.add_aggregate('mi_agg', list)
+nest.add_aggregate('G93_agg', list)
 
 # nests define parameter sweeps
 nest.add('d', (.5, 2, 8))
@@ -127,13 +128,24 @@ def mi(outdir, c):
     return mi
 
 
+@nest.add_target()
+def G93(outdir, c):
+    '''multinomial likelihood summary stat from Goldman (1993)'''
+    G93 = env.SRun(f'{outdir}/aln.nex.G93.summary.tsv',
+                    c['aln'],
+                    'Rscript indices/goldman_yang_1993.R $SOURCE $TARGET')
+    c['G93_agg'].append({'d': c['d'], 'n_iid': c['n_iid'],
+                         'n_epi': c['n_epi'], 'tgt': G93})
+    return G93
+
+
 # pop to the top level to aggregate
 nest.pop('d')
 
 
 @nest.add_target()
 def mi_agg_input(outdir, c):
-    '''some scons ninjutsu for building a file of mi paths with associated args
+    '''some scons ninjutsu for building a file of mi paths w/ associated args
     '''
     # first the header line
     lines = ['d\tn_iid\tn_epi\tpath']
@@ -146,6 +158,20 @@ def mi_agg_input(outdir, c):
 
 
 @nest.add_target()
+def G93_agg_input(outdir, c):
+    '''some scons ninjutsu for building a file of G93 paths w/ associated args
+    '''
+    # first the header line
+    lines = ['d\tn_iid\tn_epi\tpath']
+    for mi in c['G93_agg']:
+        lines.append(f"{mi['d']}\t{mi['n_iid']}\t{mi['n_epi']}"
+                     f"\t{File(mi['tgt'][0])}")
+    G93_input = env.Textfile(f'{outdir}/G93_agg.input.tsv', lines)
+    env.Depends(G93_input, Flatten(mi['tgt']))
+    return G93_input
+
+
+@nest.add_target()
 def mi_agg(outdir, c):
     '''aggregate mutual infomation matrices'''
     mi_agg = env.SRun(f'{outdir}/agg_skewness.pdf',
@@ -153,3 +179,13 @@ def mi_agg(outdir, c):
                       f'python utils/stats_agg.py $SOURCE {outdir}')
     env.Depends(mi_agg, [x['tgt'] for x in c['mi_agg']])
     return mi_agg
+
+
+@nest.add_target()
+def G93_agg(outdir, c):
+    '''aggregate Goldman (1993) multinomial likelihood matrices'''
+    G93_agg = env.SRun(f'{outdir}/agg_G93.pdf',
+                       c['G93_agg_input'],
+                       f'python utils/stats_agg.py $SOURCE {outdir}')
+    env.Depends(G93_agg, [x['tgt'] for x in c['G93_agg']])
+    return G93_agg
