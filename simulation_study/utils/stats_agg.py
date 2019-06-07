@@ -11,8 +11,8 @@ def main():
     import argparse
 
     parser = argparse.ArgumentParser(
-                         description='utility script to aggregate mutual '
-                                     'information summary stats')
+                         description='utility script to aggregate summary'
+                                     'stats')
     parser.add_argument('input_list',
                         type=str,
                         help='path to file listing paths '
@@ -26,9 +26,6 @@ def main():
     df_stat = pd.concat(pd.read_csv(path, sep='\t')
                         for path in df_meta.path)
     # extract statistic name
-    metric = df_stat.columns.values
-    assert len(metric) == 1, f'Expected one column, found {len(metric)}'
-    metric = metric[0]
     df_stat.reset_index(inplace=True)
 
     # note the groupby and mean below will average over replicates
@@ -36,6 +33,8 @@ def main():
                    axis=1).groupby(['d',
                                     'n_iid',
                                     'n_epi']).mean().reset_index()
+    df = pd.melt(df, id_vars=['d', 'n_iid', 'n_epi', 'index'],
+                 var_name="metric", value_name="value")
 
     # fancier TeX column names for prettier plots
     df.rename(index=str,
@@ -46,13 +45,15 @@ def main():
         data = kwargs.pop('data').pivot(index=args[1], columns=args[0],
                                         values=args[2])
         sns.heatmap(data, **kwargs).invert_yaxis()
-    fg = sns.FacetGrid(df, col='$d$', height=4)
-    fg.map_dataframe(draw_heatmap, '$n_i$', '$n_e$', metric,
-                     square=True, vmin=df[metric].min(),
-                     # vmax=df.skewness.max(), cbar=False, cmap='Reds',
-                     )
-    fg.fig.suptitle(metric)
-    plt.savefig(f'{args.outdir}/agg_{metric}.pdf')
+    for metric, group in df.groupby("metric"):
+        print(group["value"].min())
+        fg = sns.FacetGrid(group, col='$d$', height=4)
+        fg.map_dataframe(draw_heatmap, '$n_i$', '$n_e$', "value",
+                         square=True, vmin=group["value"].min(),
+                         # vmax=df.skewness.max(), cbar=False, cmap='Reds',
+                         )
+        fg.fig.suptitle(metric)
+        plt.savefig(f'{args.outdir}/agg_{metric}.pdf')
 
 
 if __name__ == '__main__':
