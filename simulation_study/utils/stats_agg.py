@@ -4,6 +4,7 @@
 from matplotlib import pyplot as plt
 import seaborn as sns
 import pandas as pd
+from scipy.ndimage.filters import gaussian_filter
 
 
 def main():
@@ -20,6 +21,11 @@ def main():
     parser.add_argument('outdir',
                         type=str,
                         help='output directory')
+    parser.add_argument('--smooth',
+                        type=float,
+                        default=None,
+                        help='gaussian smooth the heatmap data with this '
+                             'bandwidth')
     args = parser.parse_args()
 
     df_meta = pd.read_csv(args.input_list, sep='\t')
@@ -41,12 +47,16 @@ def main():
               columns={'d': '$d$', 'n_iid': '$n_i$', 'n_epi': '$n_e$'},
               inplace=True)
 
-    def draw_heatmap(*args, **kwargs):
-        data = kwargs.pop('data').pivot(index=args[1], columns=args[0],
-                                        values=args[2])
+    def draw_heatmap(*these_args, **kwargs):
+        '''note: need "these_args" because "args" is already taken'''
+        data = kwargs.pop('data').pivot(index=these_args[1],
+                                        columns=these_args[0],
+                                        values=these_args[2])
+        if args.smooth is not None:
+            data.loc[:, :] = gaussian_filter(data, sigma=args.smooth)
         sns.heatmap(data, **kwargs).invert_yaxis()
+        
     for metric, group in df.groupby("metric"):
-        print(group["value"].min())
         fg = sns.FacetGrid(group, col='$d$', height=4)
         fg.map_dataframe(draw_heatmap, '$n_i$', '$n_e$', "value",
                          square=True, vmin=group["value"].min(),
@@ -54,6 +64,16 @@ def main():
                          )
         fg.fig.suptitle(metric)
         plt.savefig(f'{args.outdir}/agg_{metric}.pdf')
+
+    df['proportion epistatic'] = df['$n_e$'] / (df['$n_i$'] + df['$n_e$'])
+    max_iid = df['$n_i$'].max()
+    df_diag = df.loc[df['$n_i$'] + df['$n_e$'] == max_iid, :]
+    plt.figure()
+    sns.lmplot(x='proportion epistatic', y=metric, data=df_diag, col='$d$')
+    plt.xlim([0, 1])
+    plt.savefig(f'{args.outdir}/agg_{metric}.diagonal.pdf')
+
+
 
 
 if __name__ == '__main__':
