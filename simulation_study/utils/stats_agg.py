@@ -55,8 +55,9 @@ def main():
         if args.smooth is not None:
             data.loc[:, :] = gaussian_filter(data, sigma=args.smooth)
         sns.heatmap(data, **kwargs).invert_yaxis()
-        
+
     for metric, group in df.groupby("metric"):
+        # n_iid vs. n_epi plot
         fg = sns.FacetGrid(group, col='$d$', height=4)
         fg.map_dataframe(draw_heatmap, '$n_i$', '$n_e$', "value",
                          square=True, vmin=group["value"].min(),
@@ -65,15 +66,16 @@ def main():
         fg.fig.suptitle(metric)
         plt.savefig(f'{args.outdir}/agg_{metric}.pdf')
 
-    df['proportion epistatic'] = df['$n_e$'] / (df['$n_i$'] + df['$n_e$'])
-    max_iid = df['$n_i$'].max()
-    df_diag = df.loc[df['$n_i$'] + df['$n_e$'] == max_iid, :]
-    plt.figure()
-    sns.lmplot(x='proportion epistatic', y=metric, data=df_diag, col='$d$')
-    plt.xlim([0, 1])
-    plt.savefig(f'{args.outdir}/agg_{metric}.diagonal.pdf')
-
-
+        # prop epi plot
+        group = group.assign(**{"proportion epistatic":
+                             lambda x: x['$n_e$'] / (x['$n_i$'] + x['$n_e$'])})
+        max_iid = group['$n_i$'].max()
+        group_diag = group.loc[df['$n_i$'] + group['$n_e$'] == max_iid, :]
+        plt.figure()
+        sns.lmplot(x='proportion epistatic', y="value",
+                   data=group_diag, col='$d$')
+        plt.xlim([0, 1])
+        plt.savefig(f'{args.outdir}/agg_{metric}.diagonal.pdf')
 
 
 if __name__ == '__main__':
