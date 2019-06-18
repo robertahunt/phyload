@@ -15,35 +15,18 @@ if (!length(args) == 2) {
   stop("This script requires 2 arguments")
 }
 
-if (file.exists(args[1])) {
-  file.format <- strsplit(basename(args[1]),".",fixed=TRUE)[[1]]
-  file.format <- tolower(file.format[length(file.format)])
-  if ( grepl("nex",file.format) ) {
-    file.format <- "nexus"
-  } else if ( grepl("phy",file.format) ) {
-    file.format <- "phylip"
-  } else if ( grepl("fa",file.format) ) {
-    file.format <- "fasta"
-  } else {
-    stop("Unrecognized file format of alignment.")
-  }
-  alns <- list(read.phyDat(args[1],format=file.format))
+file.format <- strsplit(basename(args[1]),".",fixed=TRUE)[[1]]
+file.format <- tolower(file.format[length(file.format)])
+if ( grepl("nex",file.format) ) {
+  file.format <- "nexus"
+} else if ( grepl("phy",file.format) ) {
+  file.format <- "phylip"
+} else if ( grepl("fa",file.format) ) {
+  file.format <- "fasta"
 } else {
-  alns <- lapply(list.files(args[1],full.names=TRUE),function(aln){
-    file.format <- strsplit(basename(aln),".",fixed=TRUE)[[1]]
-    file.format <- tolower(file.format[length(file.format)])
-    if ( grepl("nex",file.format) ) {
-      file.format <- "nexus"
-    } else if ( grepl("phy",file.format) ) {
-      file.format <- "phylip"
-    } else if ( grepl("fa",file.format) ) {
-      file.format <- "fasta"
-    } else {
-      stop("Unrecognized file format of alignment.")
-    }
-    read.phyDat(aln,format=file.format)
-  })
+  stop("Unrecognized file format of alignment.")
 }
+aln <- list(read.phyDat(args[1],format=file.format))
 
 out.file <- args[2]
 
@@ -64,6 +47,6 @@ pairwiseVariance <- function(aln) {
   return(var(unlist(pairs)))
 }
 
-t.stats <- unlist(lapply(alns,pairwiseVariance))
+t.stat <- pairwiseVariance(aln)
 
-cat(t.stats,sep="\t",file=out.file)
+cat("PV","\n",t.stat,sep="",file=out.file)

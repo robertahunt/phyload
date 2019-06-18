@@ -27,6 +27,50 @@ $ scons -h
 ```
 and note `Local Options` at the bottom.
 
+## [`indices/`](indices)
+Scripts needed to calculate test statistics used in the study.
+
+### [`align_mi.py`](indices/align_mi.py)
+Calculates all mutual information for _all_ pairs of sites in the alignment and prints to a file.
+These are later summarized with <Insert method here> to turn into a single test statistic, like skewness.
+
+To process a single alignment, use
+```bash
+$ <Insert cmd here>
+```
+
+### [`goldman_yang_1993.R`](indices/goldman_yang_1993.R)
+Calculates the "unconstrained likelihood" test statistic of Goldman and Yang (1993).
+This statistic is max(lnL(alignment)) under a multinomial model where all columns are iid from a multinomial distribution on the 4^n_taxa site patterns possible (assuming DNA).
+
+Prints a file where the first line is "GY93" and the second line is the value of the test statistic for this alignment.
+
+To process a single alignment, use
+```bash
+$ Rscript indices/goldman_yang_1993.R <path_to_aln> <output_file>
+```
+
+### [`pairwise_variance.R`](indices/pairwise_variance.R)
+Calculates our new pairwise variance test statistic.
+This statistic is var(all_pairwise_hamming_distances), the variance of the hamming distance (number of differences) for all pairwise comparisons of taxa in the alignment.
+
+Prints a file where the first line is "PV" and the second line is the value of the test statistic for this alignment.
+
+To process a single alignment, use
+```bash
+$ Rscript indices/pairwise_variance.R <path_to_aln> <output_file>
+```
+### [`singleton_fixed_tree.R`](indices/singleton_fixed_tree.R)
+Calculates the p-value against the null hypothesis that all sites are iid (under some CTMC model of character evolution) on a given phylogeny.
+For details of this test, see the paper.
+
+Prints a file where the first line is "ST" and the second line is the p-value for this alignment.
+
+To process a single alignment, use
+```bash
+$ Rscript indices/singleton_fixed_tree.R <path_to_aln> <path_to_tree> <output_file>
+```
+
 ## [`simulation_scripts/`](simulation_scripts)
 Scripts needed to simulate a single cell in the simulation study.
 

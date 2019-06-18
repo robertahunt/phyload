@@ -1,7 +1,7 @@
 library(phangorn)
 
 # This is designed to be called with Rscript with several arguments
-# arg1: path to alignment (or folder with posterior predictive alignments)
+# arg1: path to alignment
 # arg2: path to desired output file
 
 # Call this script from phyload/simulation_study
@@ -15,35 +15,18 @@ if (!length(args) == 2) {
   stop("This script requires 2 arguments")
 }
 
-if (file.exists(args[1])) {
-  file.format <- strsplit(basename(args[1]),".",fixed=TRUE)[[1]]
-  file.format <- tolower(file.format[length(file.format)])
-  if ( grepl("nex",file.format) ) {
-    file.format <- "nexus"
-  } else if ( grepl("phy",file.format) ) {
-    file.format <- "phylip"
-  } else if ( grepl("fa",file.format) ) {
-    file.format <- "fasta"
-  } else {
-    stop("Unrecognized file format of alignment.")
-  }
-  alns <- list(read.phyDat(args[1],format=file.format))
+file.format <- strsplit(basename(args[1]),".",fixed=TRUE)[[1]]
+file.format <- tolower(file.format[length(file.format)])
+if ( grepl("nex",file.format) ) {
+  file.format <- "nexus"
+} else if ( grepl("phy",file.format) ) {
+  file.format <- "phylip"
+} else if ( grepl("fa",file.format) ) {
+  file.format <- "fasta"
 } else {
-  alns <- lapply(list.files(args[1],full.names=TRUE),function(aln){
-    file.format <- strsplit(basename(aln),".",fixed=TRUE)[[1]]
-    file.format <- tolower(file.format[length(file.format)])
-    if ( grepl("nex",file.format) ) {
-      file.format <- "nexus"
-    } else if ( grepl("phy",file.format) ) {
-      file.format <- "phylip"
-    } else if ( grepl("fa",file.format) ) {
-      file.format <- "fasta"
-    } else {
-      stop("Unrecognized file format of alignment.")
-    }
-    read.phyDat(aln,format=file.format)
-  })
+  stop("Unrecognized file format of alignment.")
 }
+aln <- list(read.phyDat(args[1],format=file.format))
 
 out.file <- args[2]
 
@@ -79,6 +62,6 @@ unconstrainedLikelihood <- function(aln,drop.ambiguous=FALSE) {
   return(T_of_X)
 }
 
-t.stats <- unlist(lapply(alns,unconstrainedLikelihood))
+t.stat <- unconstrainedLikelihood(aln)
 
-cat("G93", "\n", sep="", t.stats,file=out.file)
+cat("G93","\n",t.stat,sep="",file=out.file)

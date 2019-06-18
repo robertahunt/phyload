@@ -107,6 +107,6 @@ testSiteIID <- function(aln,phy) {
   return(p)
 }
 
-p.vals <- testSiteIID(aln,phy)
+p.val <- testSiteIID(aln,phy)
 
-cat(p.vals,sep="\t",file=out.file)
+cat("ST","\n",p.val,sep="",file=out.file)
