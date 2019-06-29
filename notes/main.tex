@@ -292,7 +292,42 @@ The addition of epistatic interactions should not in general change the expected
 I think that by inducing correlations we should change the variances $\text{Var}(N_i)$, and that is what we would detect.
 Either that or in a finite alignment the correlated deviations are enough to show up and deplete some branches of their rightful number of singletons.
 
+\subsubsection*{Goldman 1993 multinomial likelihood}
 
+\cite{goldman1993statistical}, $\hat{S_1} = \sum X_i \log{X_i} - n \log(n)$ where $n$ is the number of sites and $X_i$ is the number of occurrences of site pattern $i$. 
+
+In the following four taxa six site alignment, there are 3 observed site patterns. 
+[A, C, C, C] is observed two times, [C, C, C, C] is observed 3 times, and [C, C, C, A] is observed 1 time. 
+There are three distinct site patterns. 
+
+\begin{center}
+\begin{tabular}{ |c|c|c|c|c|c|} 
+ \hline
+A & A & C &  C & C & C \\ 
+C & C & C &  C & C & C \\ 
+C & C & C &  C & C & C \\ 
+C & C & C  &  C & C & A\\ 
+ \hline
+\end{tabular}
+\end{center}
+
+If we increase the amount of epistasis in the alignment by forcing perfect coupling between sites one and six, does the statistic necessarily change? 
+No! 
+
+In the following alignment, sites one and six are perfectly coupled. 
+[A, C, C, C] is observed two times, [C, C, C, C] is observed 3 times, and [C, A, A, A] is observed 1 time. 
+There are three distinct site patterns and therefore the G93 test statistic would not change. 
+
+\begin{center}
+\begin{tabular}{ |c|c|c|c|c|c|} 
+ \hline
+A & A & C &  C & C & C \\ 
+C & C & C &  C & C & A \\ 
+C & C & C &  C & C & A \\ 
+C & C & C  &  C & C & A\\ 
+ \hline
+\end{tabular}
+\end{center}
 
 \section*{Results\label{sec:results}}
 
