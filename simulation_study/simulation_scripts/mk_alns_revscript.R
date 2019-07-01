@@ -12,8 +12,8 @@
 # Get arguments
 args = commandArgs(trailingOnly=TRUE)
 
-if (!length(args) == 6) {
-  stop("This script requires 6 arguments")
+if (!length(args) == 7) {
+  stop("This script requires 7 arguments")
 }
 
 n.iid     <- args[1]
