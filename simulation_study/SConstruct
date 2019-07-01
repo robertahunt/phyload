@@ -17,6 +17,13 @@ environ = os.environ.copy()
 env = Environment(ENV=environ)
 
 # command line arguments
+
+AddOption('--treepath',
+          type='str',
+          metavar='<PATH>',
+          help='path to tree used for simulation')
+treepath = GetOption('treepath')
+
 AddOption('--revpath',
           type='str',
           metavar='<PATH>',
@@ -44,9 +51,6 @@ nest = SConsWrap(Nest(), output, alias_environment=env)
 rb_check = Command(f'{output}/scons.log',
                    None,
                    f'{revpath} -h > $TARGET')
-
-# tree path
-treepath = 'simulation_scripts/simulation_tree.tre'
 
 # aggregators perform analysis on a nest
 # these will collect the summary stat matrices
