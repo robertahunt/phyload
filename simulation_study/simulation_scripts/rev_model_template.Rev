@@ -7,7 +7,7 @@ seed(<<SEED>>)
 # These may then be woven together into epistatic and nonepistatic alignments of equal length
 
 # Get the topology for simulating
-phy <- readTrees("simulation_scripts/simulation_tree.tre",treetype="non-clock")[1]
+phy <- readTrees("<<TREE>>",treetype="non-clock")[1]
 
 # The underlying GTR model exchange rates, shared across all models
 # These parameters are estimated from the flu dataset in phyload/data
