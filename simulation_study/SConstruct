@@ -120,10 +120,18 @@ def trees_revscript(outdir, c):
 @nest.add_target()
 def trees(outdir, c):
     '''MCMC tree inference'''
+<<<<<<< HEAD
     return env.SRun([f'{outdir}/trees_run_1.trees',
                      f'{outdir}/trees_run_2.trees'],
                     c['trees_revscript'],
                     f'{revpath} $SOURCE > {outdir}/trees.log')
+=======
+    return env.SRun([f'{outdir}/analysis.Rev', f'{outdir}/analysis_run_1.trees',
+                     f'{outdir}/analysis_run_2.trees', f'{outdir}/run_Rev.log'],
+                    c['aln'],
+                    f'Rscript analysis_scripts/run_Rev.R {c["replicate"]} '
+                    f'$SOURCE {revpath} > ${{TARGETS[3]}}')
+>>>>>>> added in pairwise variance and singleton tree summary stats
 
 # calc summary stats
 @nest.add_target()
@@ -174,7 +182,11 @@ def pv(outdir, c):
 def st(outdir, c):
     '''singleton fixed tree summary stat'''
     st = env.SRun(f'{outdir}/aln.nex.ST.summary.tsv',
+<<<<<<< HEAD
                   [c['aln'], treepath],
+=======
+                  [c['aln'], 'simulation_scripts/simulation_tree.tre'],
+>>>>>>> added in pairwise variance and singleton tree summary stats
                   'Rscript indices/singleton_fixed_tree.R $SOURCES $TARGET')
     c['st_agg'].append({'d': c['d'], 'n_iid': c['n_iid'],
                         'n_epi': c['n_epi'], 'tgt': st})
@@ -267,8 +279,13 @@ def G93_agg(outdir, c):
 def pv_agg(outdir, c):
     '''aggregate pairwise variance matrices'''
     pv_agg = env.SRun(f'{outdir}/agg_PV.pdf',
+<<<<<<< HEAD
                       c['pv_agg_input'],
                       f'python utils/stats_agg.py $SOURCE {outdir}')
+=======
+                       c['pv_agg_input'],
+                       f'python utils/stats_agg.py $SOURCE {outdir}')
+>>>>>>> added in pairwise variance and singleton tree summary stats
     env.Depends(pv_agg, [x['tgt'] for x in c['pv_agg']])
     return pv_agg
 
@@ -277,7 +294,12 @@ def pv_agg(outdir, c):
 def st_agg(outdir, c):
     '''aggregate singleton fixed tree matrices'''
     st_agg = env.SRun(f'{outdir}/agg_ST.pdf',
+<<<<<<< HEAD
                       c['st_agg_input'],
                       f'python utils/stats_agg.py $SOURCE {outdir}')
+=======
+                       c['st_agg_input'],
+                       f'python utils/stats_agg.py $SOURCE {outdir}')
+>>>>>>> added in pairwise variance and singleton tree summary stats
     env.Depends(st_agg, [x['tgt'] for x in c['st_agg']])
     return st_agg
