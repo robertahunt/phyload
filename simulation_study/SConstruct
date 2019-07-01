@@ -17,6 +17,13 @@ environ = os.environ.copy()
 env = Environment(ENV=environ)
 
 # command line arguments
+
+AddOption('--treepath',
+          type='str',
+          metavar='<PATH>',
+          help='path to tree used for simulation')
+treepath = GetOption('treepath')
+
 AddOption('--revpath',
           type='str',
           metavar='<PATH>',
@@ -46,9 +53,11 @@ rb_check = Command(f'{output}/scons.log',
                    f'{revpath} -h > $TARGET')
 
 # aggregators perform analysis on a nest
-# this one will collect the mutual information matrices
+# these will collect the summary stat matrices
 nest.add_aggregate('mi_agg', list)
 nest.add_aggregate('G93_agg', list)
+nest.add_aggregate('pv_agg', list)
+nest.add_aggregate('st_agg', list)
 
 # nests define parameter sweeps
 nest.add('d', (.5, 2, 8))
@@ -72,7 +81,7 @@ def revscript(outdir, c):
                        None,
                        'Rscript simulation_scripts/mk_alns_revscript.R '
                        f'{c["n_iid"]} {c["n_epi"]} {c["d"]} {seed} '
-                       f'{outdir} {revpath} > {outdir}/mk_alns_revscript.log')
+                       f'{outdir} {revpath} {treepath} > {outdir}/mk_alns_revscript.log')
 
 
 @nest.add_target()
@@ -105,7 +114,7 @@ def trees(outdir, c):
                     f'Rscript analysis_scripts/run_Rev.R {c["replicate"]} '
                     f'$SOURCE {revpath} > ${{TARGETS[3]}}')
 
-
+# calc summary stats
 @nest.add_target()
 def convergence(outdir, c):
     '''convergence checks'''
@@ -139,10 +148,33 @@ def G93(outdir, c):
     return G93
 
 
+@nest.add_target()
+def pv(outdir, c):
+    '''pairwise variance summary stat'''
+    pv = env.SRun(f'{outdir}/aln.nex.PV.summary.tsv',
+                  c['aln'],
+                  'Rscript indices/pairwise_variance.R $SOURCE $TARGET')
+    c['pv_agg'].append({'d': c['d'], 'n_iid': c['n_iid'],
+                        'n_epi': c['n_epi'], 'tgt': pv})
+    return pv
+
+
+@nest.add_target()
+def st(outdir, c):
+    '''singleton fixed tree summary stat'''
+    st = env.SRun(f'{outdir}/aln.nex.ST.summary.tsv',
+                  [c['aln'], treepath],
+                  'Rscript indices/singleton_fixed_tree.R $SOURCES $TARGET')
+    c['st_agg'].append({'d': c['d'], 'n_iid': c['n_iid'],
+                        'n_epi': c['n_epi'], 'tgt': st})
+    return st
+
+
 # pop to the top level to aggregate
 nest.pop('d')
 
 
+# create input tsv with file paths
 @nest.add_target()
 def mi_agg_input(outdir, c):
     '''some scons ninjutsu for building a file of mi paths w/ associated args
@@ -172,6 +204,35 @@ def G93_agg_input(outdir, c):
 
 
 @nest.add_target()
+def pv_agg_input(outdir, c):
+    '''some scons ninjutsu for building a file of pv paths w/ associated args
+    '''
+    # first the header line
+    lines = ['d\tn_iid\tn_epi\tpath']
+    for mi in c['pv_agg']:
+        lines.append(f"{mi['d']}\t{mi['n_iid']}\t{mi['n_epi']}"
+                     f"\t{File(mi['tgt'][0])}")
+    pv_input = env.Textfile(f'{outdir}/PV_agg.input.tsv', lines)
+    env.Depends(pv_input, Flatten(mi['tgt']))
+    return pv_input
+
+
+@nest.add_target()
+def st_agg_input(outdir, c):
+    '''some scons ninjutsu for building a file of st paths w/ associated args
+    '''
+    # first the header line
+    lines = ['d\tn_iid\tn_epi\tpath']
+    for mi in c['st_agg']:
+        lines.append(f"{mi['d']}\t{mi['n_iid']}\t{mi['n_epi']}"
+                     f"\t{File(mi['tgt'][0])}")
+    st_input = env.Textfile(f'{outdir}/ST_agg.input.tsv', lines)
+    env.Depends(st_input, Flatten(mi['tgt']))
+    return st_input
+
+
+# aggregate stats
+@nest.add_target()
 def mi_agg(outdir, c):
     '''aggregate mutual infomation matrices'''
     mi_agg = env.SRun(f'{outdir}/agg_skewness.pdf',
@@ -189,3 +250,23 @@ def G93_agg(outdir, c):
                        f'python utils/stats_agg.py $SOURCE {outdir}')
     env.Depends(G93_agg, [x['tgt'] for x in c['G93_agg']])
     return G93_agg
+
+
+@nest.add_target()
+def pv_agg(outdir, c):
+    '''aggregate pairwise variance matrices'''
+    pv_agg = env.SRun(f'{outdir}/agg_PV.pdf',
+                       c['pv_agg_input'],
+                       f'python utils/stats_agg.py $SOURCE {outdir}')
+    env.Depends(pv_agg, [x['tgt'] for x in c['pv_agg']])
+    return pv_agg
+
+
+@nest.add_target()
+def st_agg(outdir, c):
+    '''aggregate singleton fixed tree matrices'''
+    st_agg = env.SRun(f'{outdir}/agg_ST.pdf',
+                       c['st_agg_input'],
+                       f'python utils/stats_agg.py $SOURCE {outdir}')
+    env.Depends(st_agg, [x['tgt'] for x in c['st_agg']])
+    return st_agg
