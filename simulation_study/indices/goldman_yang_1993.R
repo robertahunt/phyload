@@ -26,7 +26,7 @@ if ( grepl("nex",file.format) ) {
 } else {
   stop("Unrecognized file format of alignment.")
 }
-aln <- list(read.phyDat(args[1],format=file.format))
+aln <- read.phyDat(args[1],format=file.format)
 
 out.file <- args[2]
 
