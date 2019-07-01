@@ -53,9 +53,6 @@ rb_check = Command(f'{output}/scons.log',
                    None,
                    f'{revpath} -h > $TARGET')
 
-# tree path
-treepath = 'simulation_scripts/simulation_tree.tre'
-
 # aggregators perform analysis on a nest
 # these will collect the summary stat matrices
 nest.add_aggregate('mi_agg', list)
