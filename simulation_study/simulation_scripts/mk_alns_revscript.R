@@ -5,14 +5,15 @@
 # arg4: seed
 # arg5: path to folder where script and alignments will be output
 # arg6: path to RevBayes
+# arg7: path to tree
 
 # Call this script from phyload/simulation_study
 
 # Get arguments
 args = commandArgs(trailingOnly=TRUE)
 
-if (!length(args) == 6) {
-  stop("This script requires 6 arguments")
+if (!length(args) == 7) {
+  stop("This script requires 7 arguments")
 }
 
 n.iid     <- args[1]
@@ -21,6 +22,7 @@ this.d    <- args[3]
 this.seed <- args[4]
 out.dir   <- args[5]
 rb.path   <- args[6]
+tree.path <- args[7]
 
 # Get Rev source script
 revscript <- scan("simulation_scripts/rev_model_template.Rev",sep="\n",what="character",strip.white=FALSE)
@@ -35,5 +37,6 @@ this.revscript <- gsub("<<N_EPI>>",n.epi,this.revscript)
 this.revscript <- gsub("<<SEED>>",this.seed,this.revscript)
 this.revscript <- gsub("<<EPISTASIS_D>>",this.d,this.revscript)
 this.revscript <- gsub("<<TARGET_DIRECTORY>>",out.dir,this.revscript)
+this.revscript <- gsub("<<TREE>>",tree.path,this.revscript)
 
 cat(this.revscript,file=paste0(out.dir,"/sim_aln.Rev"))
