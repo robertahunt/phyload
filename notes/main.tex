@@ -294,40 +294,78 @@ Either that or in a finite alignment the correlated deviations are enough to sho
 
 \subsubsection*{Goldman 1993 multinomial likelihood}
 
-\cite{goldman1993statistical}, $\hat{S_1} = \sum X_i \log{X_i} - n \log(n)$ where $n$ is the number of sites and $X_i$ is the number of occurrences of site pattern $i$. 
+\cite{goldman1993statistical}, $\hat{S_1} = \sum X_i \log{X_i} - n \log(n)$ where $n$ is the number of sites and $X_i$ is the number of occurrences of site pattern $i$.
 
-In the following four taxa six site alignment, there are 3 observed site patterns. 
-[A, C, C, C] is observed two times, [C, C, C, C] is observed 3 times, and [C, C, C, A] is observed 1 time. 
-There are three distinct site patterns. 
+In the following four taxa six site alignment, there are 3 observed site patterns.
+[A, C, C, C] is observed two times, [C, C, C, C] is observed 3 times, and [C, C, C, A] is observed 1 time.
+There are three distinct site patterns.
 
 \begin{center}
-\begin{tabular}{ |c|c|c|c|c|c|} 
+\begin{tabular}{ |c|c|c|c|c|c|}
  \hline
-A & A & C &  C & C & C \\ 
-C & C & C &  C & C & C \\ 
-C & C & C &  C & C & C \\ 
-C & C & C  &  C & C & A\\ 
+A & A & C &  C & C & C \\
+C & C & C &  C & C & C \\
+C & C & C &  C & C & C \\
+C & C & C  &  C & C & A\\
  \hline
 \end{tabular}
 \end{center}
 
-If we increase the amount of epistasis in the alignment by forcing perfect coupling between sites one and six, does the statistic necessarily change? 
-No! 
+If we increase the amount of epistasis in the alignment by forcing perfect coupling between sites one and six, does the statistic necessarily change?
+No!
 
-In the following alignment, sites one and six are perfectly coupled. 
-[A, C, C, C] is observed two times, [C, C, C, C] is observed 3 times, and [C, A, A, A] is observed 1 time. 
-There are three distinct site patterns and therefore the G93 test statistic would not change. 
+In the following alignment, sites one and six are perfectly coupled.
+[A, C, C, C] is observed two times, [C, C, C, C] is observed 3 times, and [C, A, A, A] is observed 1 time.
+There are three distinct site patterns and therefore the G93 test statistic would not change.
 
 \begin{center}
-\begin{tabular}{ |c|c|c|c|c|c|} 
+\begin{tabular}{ |c|c|c|c|c|c|}
  \hline
-A & A & C &  C & C & C \\ 
-C & C & C &  C & C & A \\ 
-C & C & C &  C & C & A \\ 
-C & C & C  &  C & C & A\\ 
+A & A & C &  C & C & C \\
+C & C & C &  C & C & A \\
+C & C & C &  C & C & A \\
+C & C & C  &  C & C & A\\
  \hline
 \end{tabular}
 \end{center}
+
+To think about this mechanistically, we need to think about generating a site pattern.
+Under stationary models, this occurs by first sampling the root state from the stationary frequencies, and then evolving the site along the tree under the CTMC rate matrix.
+As the tree is the same in our case, we can ignore its effect on generating site patterns; it will determine which sets of sites are different from others, but not what states those sets take.
+Let us start by looking back at the rate matrix for the epistatic model.
+Here, as above, $S$ is the symmetric rate matrix that underlies a GTR model, $x$ is the current doublet and $y$ the doublet being changed to.
+We have two allowable kinds of changes, single nucleotide changes, where $q_{x,y} \propto \pi_{\boldsymbol{y}} S_{x_i, y_i}$, and double nucleotide changes, where $q_{x,y} \propto \pi_{\boldsymbol{y}} S_{x_1, y_1} S_{x_2, y_2} d$ (the proportionality is due to scaling the rate matrix to produce an expectation of one change per site over a branch length of one).
+The parameter $d$ controls the relative rate of doublet to single substitutions, but we can also think of this model as a mixture model between a rate matrix of only single substitutions and a matrix of only double substitutions with a mixing weight $p$ that controls the probability a substitution comes from the doublet matrix.
+The mixture weight is a function of $d$ ,$S$, and $\pi$, but in general $p$ scales logistically with log($d$).
+This mixture framework allows us to consider separately doublet and single substitutions to understand how this model generates site patterns.
+
+We can see from the doublet changes that if $\pi_{\boldsymbol{y}} = \pi_{y_1} \pi_{y_2}$, then conditional on there being a change at both sites, the substitutions are independent of each other.
+Thus, while the doublet portion of the model couples sites together by making them change simultaneously, it does not necessarily alter the dynamics of the substitutions.
+If we marginalize over the history of the partner site (\textit{i.e.} ignore it), then we have, for the $i$th site in a pair, $q_{x_i,y_i} = \pi_{y_i} S_{x_i, y_i}$, and we recover a standard site-iid GTR substitution model.
+Importantly, from $x_i \in (a,c,g,t)$ we can access any $y_i \in (a,c,g,t)$, so we can still make all possible site patterns.
+Clearly, patterns at an epistatically interacing site look just like the patterns at a site in the site-iid GTR model, if we marginalize over the site's partner.
+In the limiting case where $d$ is infinitely large, then all substitutions will be doublet substitutions, and when we know the pattern of one site we know the pattern of it's partner exactly.
+However, because the doublet substitution model is scaled to produce an expectation of a single substitution per site, and since the site patterns produced by the model are in this case identical to those under the site-iid model, the expectation of the Goldman-Yang test statistic (GY93) should not change.
+
+In a somewhat similar vein, $\pi_{\boldsymbol{y}} = \pi_{y_1} \pi_{y_2}$ will make the single substitution part of the model reduce exactly to the independent underlying GTR model.
+In this case, we can obtain the site-iid GTR model by summing over the second site and recovering $q_{x_i,y_i} = \sum_{y_j} \pi_{\boldsymbol{y}} S_{x_i, y_i} = S_{x_i, y_i} \sum_{y_j} \pi_{\boldsymbol{y}}$.
+If $\pi_{\boldsymbol{y}} = \pi_{y_1} \pi_{y_2}$, then $\sum_{y_j} \pi_{\boldsymbol{y}} = \sum_{y_j} \pi_{y_i} \pi_{y_j} = \pi_{y_i}$ and we recover the site-iid GTR model.
+We can marginalize over the first site in the same way.
+
+Both of the above examples demonstrate that the key factor that will drive whether GY93 can detect epistasis (as modeled in this paper) is the difference between the site-iid stationary frequencies, $(\pi_A,\pi_C,\pi_G,\pi_T)$, and the doublet stationary frequencies, $(\pi_{AA},\pi_{AC},\dots,\pi_{TT})$.
+Perhaps the most immediately evident way to describe the difference between the doublet stationary frequencies and the site-iid stationary frequencies is to compare $\pi_{ij}$ and $\pi_i \pi_j$.
+Taking the Jenson-Shannon divergence as our comparison metric, this gives us a distance of 0.202.
+However, unless $d$ is rather large (in our case, $d > 9.32$), more substitutions will come from the single-substitution component of the model, suggesting that a more useful comparison is to see how close the marginalized base frequencies from the doublet model are to the site-iid base frequencies.
+Our simulating site-iid stationary frequencies are (0.340,0.191,0.225,0.244), while if we marginalize over the second site in doublets the stationary frequencies are (0.201,0.226,0.304,0.27), and if we marginalize over the first site they are (0.186,0.304,0.261,0.248).
+While these stationary frequencies are different, they are not hugely different, only Jenson-Shannon divergences of 0.019 and 0.027 from the site-iid base frequencies, close enough that it may be hard for GY93 to detect the difference.
+
+We can verify this difficulty with a small set of simulations.
+First we pick some $\tilde{S}$ and $\tilde{\pi}$ for a GTR model, simulate 100 alignments (of length 100) from this model, and for each calculate GY93, then aggregate these into a vector $\boldsymbol{\tilde{G}}$.
+Then we randomly draw new $\pi \sim \text{Dirichlet}(1,1,1,1)$ and keep only those that have similar Jenson-Shannon divergences to $\tilde{\pi}$ as our epistatic model does to our site-iid model (we chose between 0.02 and 0.023).
+For each new $\tilde{\pi}$, we simulate 100 alignments and calculate $\boldsymbol{G}^{rep}$, then determine the proportion of $\boldsymbol{\tilde{G}}$ that is outside the 95\% central probability mass of $\tilde{\boldsymbol{G}^{rep}}$.
+This is an estimate of the probability that we could detect base frequencies that are misspecified by an amount similar to the misspecification induced by the epistatic model in our simulations.
+When we aggregate this detection probability across a number of simulations, we find that the probability of GY93 detecting this misspecification is on average 19\%.
+Thus we confirm that GY93 is capable of detecting incorrect stationary frequencies, but that it will have great difficulty in the regime in which our simulations take place.
 
 \section*{Results\label{sec:results}}
 
