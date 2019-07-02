@@ -19,7 +19,7 @@ rb.path   <- args[3]
 
 
 # Get Rev source script
-revscript <- scan("analysis_scripts/analysis_template.Rev",sep="\n",what="character",strip.white=FALSE, quiet=TRUE)
+revscript <- scan("analysis_scripts/trees_template.Rev",sep="\n",what="character",strip.white=FALSE, quiet=TRUE)
 
 # Make it a length 1 character vector
 revscript <- paste0(revscript,collapse="\n")
@@ -32,7 +32,4 @@ this.revscript <- gsub("<<SEED>>",this.seed,this.revscript)
 this.revscript <- gsub("<<TARGET_DIRECTORY>>", out.dir, this.revscript)
 this.revscript <- gsub("<<TARGET_ALN>>", input.aln, this.revscript)
 
-cat(this.revscript,file=paste0(out.dir,"/analysis.Rev"))
-
-# Run revscript
-system2(command=as.character(rb.path),args=paste0(out.dir,"/analysis.Rev"))
+cat(this.revscript,file=paste0(out.dir,"/trees.Rev"))

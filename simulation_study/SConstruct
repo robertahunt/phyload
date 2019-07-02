@@ -6,7 +6,8 @@
 import numpy as np
 import os
 import sconsutils
-from SCons.Script import Environment, AddOption, GetOption, File
+from SCons.Script import Environment, AddOption, GetOption, File, Command, \
+                         Flatten
 from nestly import Nest
 from nestly.scons import SConsWrap
 
@@ -61,8 +62,8 @@ nest.add_aggregate('st_agg', list)
 
 # nests define parameter sweeps
 nest.add('d', (.5, 2, 8))
-nest.add('n_iid', range(4, 404, 4))
-n_epi_range = np.array(range(4, 404, 4))
+nest.add('n_iid', range(4, 12, 4))
+n_epi_range = np.array(range(4, 12, 4))
 if any(n_epi_range % 2 != 0):
     raise ValueError('n_epi must be even!')
 nest.add('n_epi', n_epi_range)
@@ -74,14 +75,15 @@ seed_dict = {(cell[1]['d'], cell[1]['n_iid'], cell[1]['n_epi'],
 
 
 @nest.add_target()
-def revscript(outdir, c):
+def alns_revscript(outdir, c):
     '''make RevBayes script from template'''
     seed = seed_dict[(c["d"], c["n_iid"], c["n_epi"], c["replicate"])]
-    return env.Command(f'{outdir}/sim_aln.Rev',
+    return env.Command(f'{outdir}/alns.Rev',
                        None,
                        'Rscript simulation_scripts/mk_alns_revscript.R '
                        f'{c["n_iid"]} {c["n_epi"]} {c["d"]} {seed} '
-                       f'{outdir} {revpath} {treepath} > {outdir}/mk_alns_revscript.log')
+                       f'{outdir} {revpath} {treepath} '
+                       f'> {outdir}/mk_alns_revscript.log')
 
 
 @nest.add_target()
@@ -89,8 +91,8 @@ def alns(outdir, c):
     '''iid and epistatic alignments'''
     return env.SRun([f'{outdir}/iid_aln.nex',
                      f'{outdir}/epi_aln.nex'],
-                    c['revscript'],
-                    f'{revpath} $SOURCE > {outdir}/revscript.log')
+                    c['alns_revscript'],
+                    f'{revpath} $SOURCE > {outdir}/alns.log')
     env.Depends(alns, rb_check)
     return alns
 
@@ -106,13 +108,22 @@ def aln(outdir, c):
 
 
 @nest.add_target()
+def trees_revscript(outdir, c):
+    '''make RevBayes script from template'''
+    return env.Command(f'{outdir}/trees.Rev',
+                       c['aln'],
+                       'Rscript analysis_scripts/mk_trees_revscript.R '
+                       f'{c["replicate"]} $SOURCE {revpath} '
+                       f'> {outdir}/mk_trees_revscript.log')
+
+
+@nest.add_target()
 def trees(outdir, c):
     '''MCMC tree inference'''
-    return env.SRun([f'{outdir}/analysis.Rev', f'{outdir}/analysis_run_1.trees',
-                     f'{outdir}/analysis_run_2.trees', f'{outdir}/run_Rev.log'],
-                    c['aln'],
-                    f'Rscript analysis_scripts/run_Rev.R {c["replicate"]} '
-                    f'$SOURCE {revpath} > ${{TARGETS[3]}}')
+    return env.SRun([f'{outdir}/trees_run_1.trees',
+                     f'{outdir}/trees_run_2.trees'],
+                    c['trees_revscript'],
+                    f'{revpath} $SOURCE > {outdir}/trees.log')
 
 # calc summary stats
 @nest.add_target()
@@ -122,8 +133,8 @@ def convergence(outdir, c):
                      f'{outdir}/diagnose_convergence.log'],
                     c['trees'],
                     f'Rscript analysis_scripts/diagnose_convergence.R '
-                    f'${{SOURCES[1]}} ${{SOURCES[2]}} 1> ${{TARGETS[0]}}'
-                    f' 2> ${{TARGETS[1]}}')
+                    '$SOURCES 1> ${TARGETS[0]}'
+                    ' 2> ${TARGETS[1]}')
 
 
 @nest.add_target()
@@ -141,8 +152,8 @@ def mi(outdir, c):
 def G93(outdir, c):
     '''multinomial likelihood summary stat from Goldman (1993)'''
     G93 = env.SRun(f'{outdir}/aln.nex.G93.summary.tsv',
-                    c['aln'],
-                    'Rscript indices/goldman_yang_1993.R $SOURCE $TARGET')
+                   c['aln'],
+                   'Rscript indices/goldman_yang_1993.R $SOURCE $TARGET')
     c['G93_agg'].append({'d': c['d'], 'n_iid': c['n_iid'],
                          'n_epi': c['n_epi'], 'tgt': G93})
     return G93
@@ -256,8 +267,8 @@ def G93_agg(outdir, c):
 def pv_agg(outdir, c):
     '''aggregate pairwise variance matrices'''
     pv_agg = env.SRun(f'{outdir}/agg_PV.pdf',
-                       c['pv_agg_input'],
-                       f'python utils/stats_agg.py $SOURCE {outdir}')
+                      c['pv_agg_input'],
+                      f'python utils/stats_agg.py $SOURCE {outdir}')
     env.Depends(pv_agg, [x['tgt'] for x in c['pv_agg']])
     return pv_agg
 
@@ -266,7 +277,7 @@ def pv_agg(outdir, c):
 def st_agg(outdir, c):
     '''aggregate singleton fixed tree matrices'''
     st_agg = env.SRun(f'{outdir}/agg_ST.pdf',
-                       c['st_agg_input'],
-                       f'python utils/stats_agg.py $SOURCE {outdir}')
+                      c['st_agg_input'],
+                      f'python utils/stats_agg.py $SOURCE {outdir}')
     env.Depends(st_agg, [x['tgt'] for x in c['st_agg']])
     return st_agg

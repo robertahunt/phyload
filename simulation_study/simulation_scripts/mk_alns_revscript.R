@@ -39,4 +39,4 @@ this.revscript <- gsub("<<EPISTASIS_D>>",this.d,this.revscript)
 this.revscript <- gsub("<<TARGET_DIRECTORY>>",out.dir,this.revscript)
 this.revscript <- gsub("<<TREE>>",tree.path,this.revscript)
 
-cat(this.revscript,file=paste0(out.dir,"/sim_aln.Rev"))
+cat(this.revscript,file=paste0(out.dir,"/alns.Rev"))
