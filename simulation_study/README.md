@@ -74,14 +74,15 @@ $ Rscript indices/singleton_fixed_tree.R <path_to_aln> <path_to_tree> <output_fi
 ## [`simulation_scripts/`](simulation_scripts)
 Scripts needed to simulate a single cell in the simulation study.
 
-### [`mk_alns.R`](simulation_scripts/mk_alns.R)
+### [`simulate_alns.Rev`](simulation_scripts/simulate_alns.Rev)
 
 To perform a single simulation, use
 ```bash
-$ Rscript simulation_scripts/mk_alns.R <n_iid> <n_epi> <d> <seed> <outbase> <revpath>
+$ rb simulation_scripts/simulate_alns.Rev --args <n_iid> <n_epi> <d> <seed> <outbase> <treepath>
 ```
 Separate iid and epistatic alignments will be written in nexus format to `<outbase>/iid_aln.nex` and `<outbase>/epi_aln.nex`.
 NOTE: The epistatic alignment are not DNA but characters 0-F, where 0=AA, 1=AC, ..., F=TT.
+NOTE: The above assumes `rb` is on `$PATH`, if it is not replace `rb` with `<path/to/rb>`
 
 The arguments are
 - `n_iid`: number of iid sites
@@ -89,7 +90,7 @@ The arguments are
 - `d`: *d* parameter for Nasrallah-Huelsenbeck model
 - `seed`: random seed passed to RevBayes
 - `outbase`: path to write output alignments
-- `revpath`: path to installed version of RevBayes (can be `rb` if it is on `$PATH`)
+- `treepath`: path to treefile
 
 ### Utilities
 
@@ -107,19 +108,20 @@ Rev points to this automatically for simulating.
 ## [`analysis_scripts/`](analysis_scripts)
 Scripts needed to run a RevBayes analysis on a single cell in the simulation study.
 
-### [`run_Rev.R`](analysis_scripts/mk_alns.R)
+### [`run_analysis.Rev`](analysis_scripts/run_analysis.Rev)
 
 To analyze a single simulation, use
 ```bash
-$ Rscript simulation_scripts/mk_alns.R <seed> <outbase> <revpath>
+$ rb simulation_scripts/run_analysis.Rev --args <seed> <target_aln> <outbase>
 ```
-First makes a RevScript to analyze the simulation, then calls RevBayes on it to run the analysis.
-This step is not computationally trivial.
+Runs RevBayes on target_aln, then performs simulates alignments under the posterior predictive distribution into `<outbase>/PPS`.
+Each alignment will appear in its own directory, `<outbase>/PPS/posterior_predictive_sim_i`.
+Current setup will produce 1001 simulated alignments per MCMC run.
 
 The arguments are
 - `seed`: random seed passed to RevBayes
-- `outbase`: path to write output alignments
-- `revpath`: path to installed version of RevBayes (can be `rb` if it is on `$PATH`)
+- `target_aln`: path to alignment to analyze
+- `outbase`: path to write output files
 
 ### Utilities
 
