@@ -15,10 +15,14 @@ seed(SEED)
 
 # Get the topology for simulating
 <<<<<<< HEAD:simulation_study/simulation_scripts/simulate_alns.Rev
+<<<<<<< HEAD:simulation_study/simulation_scripts/simulate_alns.Rev
 phy <- readTrees(TREE_FILE,treetype="non-clock")[1]
 =======
 phy <- readTrees("<<TREE>>",treetype="non-clock")[1]
 >>>>>>> added tree path as a global variable:simulation_study/simulation_scripts/rev_model_template.Rev
+=======
+phy <- readTrees(TREE_FILE,treetype="non-clock")[1]
+>>>>>>> Command line Rev working and posterior prediction added. Scons not updated:simulation_study/simulation_scripts/simulate_alns.Rev
 
 # The underlying GTR model exchange rates, shared across all models
 # These parameters are estimated from the flu dataset in phyload/data
