@@ -41,7 +41,7 @@ Q := fnGTR(er,pi)
 
 # among-site rate variation
 alpha ~ dnHalfCauchy(0,1)
-moves[mvi++] = mvScaleBactrian(alpha)
+moves[mvi++] = mvScaleBactrian(alpha,weight=2.0)
 
 gamma_cats := fnDiscretizeGamma(alpha,alpha,4)
 
@@ -49,8 +49,13 @@ gamma_cats := fnDiscretizeGamma(alpha,alpha,4)
 # Tree model #
 ##############
 
+tree_length_mean ~ dnLognormal(ln(1.0),2*0.587405)
+moves[mvi++] = mvScaleBactrian(tree_length_mean,weight=2.5)
+
+branch_length_rate := num_branches / tree_length_mean
+
 # Prior distribution on the tree topology
-psi ~ dnUniformTopologyBranchLength(taxa, dnExponential(10))
+psi ~ dnUniformTopologyBranchLength(taxa, dnExponential(branch_length_rate))
 moves[mvi++] = mvNNI(psi, weight=num_taxa/2.0)
 moves[mvi++] = mvSPR(psi, weight=num_taxa/10.0)
 moves[mvi++] = mvBranchLengthScale(psi,weight=num_branches)
@@ -74,13 +79,13 @@ mymodel = model(psi)
 
 # add monitors
 #monitors[mni++] = mnFile(psi, filename=TARGET_DIRECTORY + "/analysis.trees", printgen=10)
-monitors[mni++] = mnStochasticVariable(filename=TARGET_DIRECTORY + "/analysis.log", printgen=10)
-monitors[mni++] = mnScreen(printgen=1000)
+monitors[mni++] = mnStochasticVariable(filename=TARGET_DIRECTORY + "/stochastic_variables.log", printgen=10)
+
 # run the analysis
 mymcmc = mcmc(mymodel, moves, monitors, nruns=2)
-mymcmc.burnin(generations=2000,tuningInterval=100)
-mymcmc.run(generations=20000)
+#mymcmc.burnin(generations=2000,tuningInterval=100)
+#mymcmc.run(generations=20000)
 
-#mymcmc.run(20)
+mymcmc.run(20)
 
 q()
