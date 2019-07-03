@@ -53,6 +53,9 @@ rb_check = Command(f'{output}/scons.log',
                    None,
                    f'{revpath} -h > $TARGET')
 
+# tree path
+treepath = 'simulation_scripts/simulation_tree.tre'
+
 # aggregators perform analysis on a nest
 # these will collect the summary stat matrices
 nest.add_aggregate('mi_agg', list)
@@ -82,8 +85,12 @@ def alns_revscript(outdir, c):
                        None,
                        'Rscript simulation_scripts/mk_alns_revscript.R '
                        f'{c["n_iid"]} {c["n_epi"]} {c["d"]} {seed} '
+<<<<<<< HEAD
                        f'{outdir} {revpath} {treepath} '
                        f'> {outdir}/mk_alns_revscript.log')
+=======
+                       f'{outdir} {revpath} {treepath} > {outdir}/mk_alns_revscript.log')
+>>>>>>> added tree path as a global variable
 
 
 @nest.add_target()
@@ -183,10 +190,14 @@ def st(outdir, c):
     '''singleton fixed tree summary stat'''
     st = env.SRun(f'{outdir}/aln.nex.ST.summary.tsv',
 <<<<<<< HEAD
+<<<<<<< HEAD
                   [c['aln'], treepath],
 =======
                   [c['aln'], 'simulation_scripts/simulation_tree.tre'],
 >>>>>>> added in pairwise variance and singleton tree summary stats
+=======
+                  [c['aln'], treepath],
+>>>>>>> added tree path as a global variable
                   'Rscript indices/singleton_fixed_tree.R $SOURCES $TARGET')
     c['st_agg'].append({'d': c['d'], 'n_iid': c['n_iid'],
                         'n_epi': c['n_epi'], 'tgt': st})
