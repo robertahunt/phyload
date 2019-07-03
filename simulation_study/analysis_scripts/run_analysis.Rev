@@ -1,7 +1,11 @@
-seed(<<SEED>>)
+SEED             = args[1]
+TARGET_ALN       = args[2]
+TARGET_DIRECTORY = args[3]
+
+seed(SEED)
 
 ### Read in sequence data for the gene
-data = readDiscreteCharacterData("<<TARGET_ALN>>")
+data = readDiscreteCharacterData(TARGET_ALN)
 
 # Get some useful variables from the data. We need these later on.
 num_taxa <- data.ntaxa()
@@ -44,8 +48,6 @@ moves[mvi++] = mvNNI(psi, weight=num_taxa/2.0)
 moves[mvi++] = mvSPR(psi, weight=num_taxa/10.0)
 moves[mvi++] = mvBranchLengthScale(psi,weight=num_branches)
 
-TL := psi.treeLength()
-
 ###################
 # PhyloCTMC Model #
 ###################
@@ -64,13 +66,24 @@ seq.clamp(data)
 mymodel = model(psi)
 
 # add monitors
-monitors[mni++] = mnFile(psi, filename="<<TARGET_DIRECTORY>>/trees.trees", printgen=10)
-monitors[mni++] = mnModel(filename="<<TARGET_DIRECTORY>>/trees.log", printgen=10)
+#monitors[mni++] = mnFile(psi, filename=TARGET_DIRECTORY + "/analysis.trees", printgen=10)
+monitors[mni++] = mnStochasticVariable(filename=TARGET_DIRECTORY + "/analysis.log", printgen=10)
 
 # run the analysis
 mymcmc = mcmc(mymodel, moves, monitors, nruns=2)
-#mymcmc.burnin(generations=2000,tuningInterval=100)
-#mymcmc.run(generations=20000)
+mymcmc.burnin(generations=2000,tuningInterval=100)
+mymcmc.run(generations=20000)
 
-mymcmc.run(generations=20)
+#mymcmc.run(20)
+
+###################################
+# Posterior Predictive Simulation #
+###################################
+
+trace = readStochasticVariableTrace(TARGET_DIRECTORY + "/analysis.log", delimiter=TAB)
+
+pps = posteriorPredictiveSimulation(mymodel, directory=TARGET_DIRECTORY + "/PPS", trace)
+
+pps.run(thinning=4)
+
 q()
