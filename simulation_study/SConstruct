@@ -73,30 +73,16 @@ nest.add('replicate', range(1, replicates + 1))
 seed_dict = {(cell[1]['d'], cell[1]['n_iid'], cell[1]['n_epi'],
               cell[1]['replicate']): seed for seed, cell in enumerate(nest, 1)}
 
-
-@nest.add_target()
-def alns_revscript(outdir, c):
-    '''make RevBayes script from template'''
-    seed = seed_dict[(c["d"], c["n_iid"], c["n_epi"], c["replicate"])]
-    return env.Command(f'{outdir}/alns.Rev',
-                       None,
-                       'Rscript simulation_scripts/mk_alns_revscript.R '
-                       f'{c["n_iid"]} {c["n_epi"]} {c["d"]} {seed} '
-<<<<<<< HEAD
-                       f'{outdir} {revpath} {treepath} '
-                       f'> {outdir}/mk_alns_revscript.log')
-=======
-                       f'{outdir} {revpath} {treepath} > {outdir}/mk_alns_revscript.log')
->>>>>>> added tree path as a global variable
-
-
 @nest.add_target()
 def alns(outdir, c):
     '''iid and epistatic alignments'''
+    seed = seed_dict[(c["d"], c["n_iid"], c["n_epi"], c["replicate"])]
     return env.SRun([f'{outdir}/iid_aln.nex',
                      f'{outdir}/epi_aln.nex'],
-                    c['alns_revscript'],
-                    f'{revpath} $SOURCE > {outdir}/alns.log')
+                    None,
+                    f'{revpath} simulation_scripts/simulate_alns.Rev --args '
+                    f'{c["n_iid"]} {c["n_epi"]} {c["d"]} {seed} {outdir} {treepath}'
+                    ' > {outdir}/alns.log')
     env.Depends(alns, rb_check)
     return alns
 
@@ -110,32 +96,16 @@ def aln(outdir, c):
                        '$SOURCES $TARGET '
                        f' > {outdir}/merge_alns.log')
 
-
-@nest.add_target()
-def trees_revscript(outdir, c):
-    '''make RevBayes script from template'''
-    return env.Command(f'{outdir}/trees.Rev',
-                       c['aln'],
-                       'Rscript analysis_scripts/mk_trees_revscript.R '
-                       f'{c["replicate"]} $SOURCE {revpath} '
-                       f'> {outdir}/mk_trees_revscript.log')
-
-
 @nest.add_target()
 def trees(outdir, c):
     '''MCMC tree inference'''
-<<<<<<< HEAD
-    return env.SRun([f'{outdir}/trees_run_1.trees',
-                     f'{outdir}/trees_run_2.trees'],
-                    c['trees_revscript'],
-                    f'{revpath} $SOURCE > {outdir}/trees.log')
-=======
-    return env.SRun([f'{outdir}/analysis.Rev', f'{outdir}/analysis_run_1.trees',
-                     f'{outdir}/analysis_run_2.trees', f'{outdir}/run_Rev.log'],
+    seed = seed_dict[(c["d"], c["n_iid"], c["n_epi"], c["replicate"])]
+    return env.SRun([f'{outdir}/stochastic_variables_run_1.log',
+                     f'{outdir}/stochastic_variables_run_2.log'],
                     c['aln'],
-                    f'Rscript analysis_scripts/run_Rev.R {c["replicate"]} '
-                    f'$SOURCE {revpath} > ${{TARGETS[3]}}')
->>>>>>> added in pairwise variance and singleton tree summary stats
+                    f'{revpath} analysis_scripts/run_analysis.Rev --args '
+                    f'{seed} $SOURCES {outdir}'
+                    '> {outdir}/trees.log')
 
 # calc summary stats
 @nest.add_target()
@@ -287,13 +257,8 @@ def G93_agg(outdir, c):
 def pv_agg(outdir, c):
     '''aggregate pairwise variance matrices'''
     pv_agg = env.SRun(f'{outdir}/agg_PV.pdf',
-<<<<<<< HEAD
                       c['pv_agg_input'],
                       f'python utils/stats_agg.py $SOURCE {outdir}')
-=======
-                       c['pv_agg_input'],
-                       f'python utils/stats_agg.py $SOURCE {outdir}')
->>>>>>> added in pairwise variance and singleton tree summary stats
     env.Depends(pv_agg, [x['tgt'] for x in c['pv_agg']])
     return pv_agg
 
@@ -302,12 +267,7 @@ def pv_agg(outdir, c):
 def st_agg(outdir, c):
     '''aggregate singleton fixed tree matrices'''
     st_agg = env.SRun(f'{outdir}/agg_ST.pdf',
-<<<<<<< HEAD
                       c['st_agg_input'],
                       f'python utils/stats_agg.py $SOURCE {outdir}')
-=======
-                       c['st_agg_input'],
-                       f'python utils/stats_agg.py $SOURCE {outdir}')
->>>>>>> added in pairwise variance and singleton tree summary stats
     env.Depends(st_agg, [x['tgt'] for x in c['st_agg']])
     return st_agg
