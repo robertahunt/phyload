@@ -24,16 +24,10 @@ mni = 1
 # specify the stationary frequency parameters
 pi_prior <- v(1,1,1,1)
 pi ~ dnDirichlet(pi_prior)
-moves[mvi++] = mvBetaSimplex(pi, weight=2.0)
-moves[mvi++] = mvDirichletSimplex(pi, weight=1.0)
-
 
 # specify the exchangeability rate parameters
 er_prior <- v(1,1,1,1,1,1)
 er ~ dnDirichlet(er_prior)
-moves[mvi++] = mvBetaSimplex(er, weight=3.0)
-moves[mvi++] = mvDirichletSimplex(er, weight=1.5)
-
 
 # create a deterministic variable for the rate matrix, GTR
 Q := fnGTR(er,pi)
@@ -41,7 +35,6 @@ Q := fnGTR(er,pi)
 
 # among-site rate variation
 alpha ~ dnHalfCauchy(0,1)
-moves[mvi++] = mvScaleBactrian(alpha)
 
 gamma_cats := fnDiscretizeGamma(alpha,alpha,4)
 
@@ -51,9 +44,6 @@ gamma_cats := fnDiscretizeGamma(alpha,alpha,4)
 
 # Prior distribution on the tree topology
 psi ~ dnUniformTopologyBranchLength(taxa, dnExponential(10))
-moves[mvi++] = mvNNI(psi, weight=num_taxa/2.0)
-moves[mvi++] = mvSPR(psi, weight=num_taxa/10.0)
-moves[mvi++] = mvBranchLengthScale(psi,weight=num_branches)
 
 ###################
 # PhyloCTMC Model #
@@ -65,22 +55,16 @@ seq ~ dnPhyloCTMC(tree=psi, Q=Q, siteRates=gamma_cats, type="DNA")
 # attach the data
 seq.clamp(data)
 
-
-############
-# Analysis #
-############
+###################################
+# Posterior Predictive Simulation #
+###################################
 
 mymodel = model(psi)
 
-# add monitors
-#monitors[mni++] = mnFile(psi, filename=TARGET_DIRECTORY + "/analysis.trees", printgen=10)
-monitors[mni++] = mnStochasticVariable(filename=TARGET_DIRECTORY + "/analysis.log", printgen=10)
-monitors[mni++] = mnScreen(printgen=1000)
-# run the analysis
-mymcmc = mcmc(mymodel, moves, monitors, nruns=2)
-mymcmc.burnin(generations=2000,tuningInterval=100)
-mymcmc.run(generations=20000)
+trace = readStochasticVariableTrace(TARGET_DIRECTORY + "/analysis.log", delimiter=TAB)
 
-#mymcmc.run(20)
+pps = posteriorPredictiveSimulation(mymodel, directory=TARGET_DIRECTORY + "/PPS", trace)
+
+pps.run(thinning=4)
 
 q()
