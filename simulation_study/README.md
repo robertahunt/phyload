@@ -114,7 +114,20 @@ To analyze a single simulation, use
 ```bash
 $ rb simulation_scripts/run_analysis.Rev --args <seed> <target_aln> <outbase>
 ```
-Runs RevBayes on target_aln, then performs simulates alignments under the posterior predictive distribution into `<outbase>/PPS`.
+Runs RevBayes on target_aln, stores output in format needed for posterior predictive simulation into `<outbase>/stochastic_variables.log` and `<outbase>/stochastic_variables_run_<1|2>.log`.
+
+The arguments are
+- `seed`: random seed passed to RevBayes
+- `target_aln`: path to alignment to analyze
+- `outbase`: path to write output files
+
+### [`run_pps.Rev`](analysis_scripts/run_pps.Rev)
+
+To perform posterior predictive simulation based on the posterior from a single analysis, use
+```bash
+$ rb simulation_scripts/run_pps.Rev --args <seed> <target_aln> <outbase>
+```
+Simulates alignments under the posterior predictive distribution into `<outbase>/PPS`.
 Each alignment will appear in its own directory, `<outbase>/PPS/posterior_predictive_sim_i`.
 Current setup will produce 1001 simulated alignments per MCMC run.
 
