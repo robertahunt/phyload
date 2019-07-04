@@ -18,7 +18,6 @@ environ = os.environ.copy()
 env = Environment(ENV=environ)
 
 # command line arguments
-
 AddOption('--treepath',
           type='str',
           metavar='<PATH>',
@@ -73,6 +72,7 @@ nest.add('replicate', range(1, replicates + 1))
 seed_dict = {(cell[1]['d'], cell[1]['n_iid'], cell[1]['n_epi'],
               cell[1]['replicate']): seed for seed, cell in enumerate(nest, 1)}
 
+
 @nest.add_target()
 def alns(outdir, c):
     '''iid and epistatic alignments'''
@@ -81,8 +81,8 @@ def alns(outdir, c):
                      f'{outdir}/epi_aln.nex'],
                     None,
                     f'{revpath} simulation_scripts/simulate_alns.Rev --args '
-                    f'{c["n_iid"]} {c["n_epi"]} {c["d"]} {seed} {outdir} {treepath}'
-                    ' > {outdir}/alns.log')
+                    f'{c["n_iid"]} {c["n_epi"]} {c["d"]} {seed} {outdir} '
+                    f'{treepath} > {outdir}/alns.log')
     env.Depends(alns, rb_check)
     return alns
 
@@ -96,6 +96,7 @@ def aln(outdir, c):
                        '$SOURCES $TARGET '
                        f' > {outdir}/merge_alns.log')
 
+
 @nest.add_target()
 def trees(outdir, c):
     '''MCMC tree inference'''
@@ -104,8 +105,8 @@ def trees(outdir, c):
                      f'{outdir}/stochastic_variables_run_2.log'],
                     c['aln'],
                     f'{revpath} analysis_scripts/run_analysis.Rev --args '
-                    f'{seed} $SOURCES {outdir}'
-                    '> {outdir}/trees.log')
+                    f'{seed} $SOURCES {outdir} > {outdir}/trees.log')
+
 
 # calc summary stats
 @nest.add_target()
@@ -115,8 +116,7 @@ def convergence(outdir, c):
                      f'{outdir}/diagnose_convergence.log'],
                     c['trees'],
                     f'Rscript analysis_scripts/diagnose_convergence.R '
-                    '$SOURCES 1> ${TARGETS[0]}'
-                    ' 2> ${TARGETS[1]}')
+                    '$SOURCES 1> ${TARGETS[0]} 2> ${TARGETS[1]}')
 
 
 @nest.add_target()
@@ -156,15 +156,7 @@ def pv(outdir, c):
 def st(outdir, c):
     '''singleton fixed tree summary stat'''
     st = env.SRun(f'{outdir}/aln.nex.ST.summary.tsv',
-<<<<<<< HEAD
-<<<<<<< HEAD
                   [c['aln'], treepath],
-=======
-                  [c['aln'], 'simulation_scripts/simulation_tree.tre'],
->>>>>>> added in pairwise variance and singleton tree summary stats
-=======
-                  [c['aln'], treepath],
->>>>>>> added tree path as a global variable
                   'Rscript indices/singleton_fixed_tree.R $SOURCES $TARGET')
     c['st_agg'].append({'d': c['d'], 'n_iid': c['n_iid'],
                         'n_epi': c['n_epi'], 'tgt': st})
