@@ -64,8 +64,8 @@ seq.clamp(data)
 mymodel = model(psi)
 
 # add monitors
-monitors[mni++] = mnFile(psi, filename="<<TARGET_DIRECTORY>>/analysis.trees", printgen=10)
-monitors[mni++] = mnModel(filename="<<TARGET_DIRECTORY>>/analysis.log", printgen=10)
+monitors[mni++] = mnFile(psi, filename="<<TARGET_DIRECTORY>>/trees.trees", printgen=10)
+monitors[mni++] = mnModel(filename="<<TARGET_DIRECTORY>>/trees.log", printgen=10)
 
 # run the analysis
 mymcmc = mcmc(mymodel, moves, monitors, nruns=2)
