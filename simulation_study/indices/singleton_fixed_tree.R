@@ -37,13 +37,19 @@ out.file <- args[3]
 #'
 #' @param aln              phyDat alignment.
 #' @param phy              phylo-style tree or multiPhylo-style list of trees
+#' @param test.type        the test against the null hypothesis can be performed in many ways
+#'                         1) GOF:        a chi-squared goodness-of-fit test using the chi-squared distribution to assess significance
+#'                         2) GOF.MC:     a chi-squared goodness-of-fit test with Monte Carlo simulation of the null distribution to assess significance
+#'                         3) LRT:        a likelihood-ratio test of null against MLE parameters
+#'                         4) LRT.cor:    a likelihood-ratio test of null against MLE parameters with correction of the test-statistic
 #' 
 #' @details This function tests if sites are independent using singleton sites only.
 #'          If there is a posterior distribution on trees, this will perform the test on all trees
 #' 
 #' @return The valuep-value against independence.
 
-testSiteIID <- function(aln,phy) {
+testSiteIID <- function(aln,phy,test.type="GOF.MC") {
+  # recover()
   
   # If phy is a single tree, make phy a multiPhylo so we can use loop regardless
   if ( class(phy) == "phylo" ) {
@@ -73,7 +79,7 @@ testSiteIID <- function(aln,phy) {
   singletons <- lapply(1:dim(aln_char)[2],function(i){
     x <- aln_tab[[i]]
     # A singleton is a site with two kinds of bases with one present only once
-    if (length(x) == 2 && any(x) == 1) {
+    if (length(x) == 2 && any(x == 1)) {
       the_base <- names(x[x == 1])
       return(row.names(aln_char)[which(aln_char[,i] == the_base)])
     } else {
@@ -100,9 +106,25 @@ testSiteIID <- function(aln,phy) {
     
     tree_singleton_probs <- tree_tip_edge_lengths/sum(tree_tip_edge_lengths)
     
-    expected <- length(singletons) * tree_singleton_probs
-    xi_sq <- sum( ((obs - expected)^2)/expected )
-    p[n] <- pchisq(xi_sq,ntaxa-1,lower.tail=FALSE)
+    if (test.type == "GOF") {
+      expected <- length(singletons) * tree_singleton_probs
+      xi_sq <- sum( ((obs - expected)^2)/expected )
+      p[n] <- pchisq(xi_sq,ntaxa-1,lower.tail=FALSE)
+    } else if (test.type == "GOF.MC") {
+      p[n] <- chisq.test(obs,p=tree_singleton_probs,simulate.p.value = T)$p.value
+    } else if (test.type == "LRT") {
+      mle <- obs/sum(obs)
+      l_ratio <- -2 * (dmultinom(obs,prob=tree_singleton_probs,log=TRUE) - dmultinom(obs,prob=mle,log=TRUE))
+      p[n] <- pchisq(l_ratio,df=ntaxa-1,lower.tail=FALSE)
+    } else if (test.type == "LRT.cor") {
+      mle <- obs/sum(obs)
+      l_ratio <- -2 * (dmultinom(obs,prob=tree_singleton_probs,log=TRUE) - dmultinom(obs,prob=mle,log=TRUE))
+      correction <- 1 + (sum(1/tree_singleton_probs) - 1)/(6 * sum(obs) * (ntaxa - 1))
+      l_ratio <- l_ratio/correction
+      p[n] <- pchisq(l_ratio,df=ntaxa-1,lower.tail=FALSE)
+    } else {
+      stop("Invalid choice of test.")
+    }
   }
   return(p)
 }
