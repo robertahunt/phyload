@@ -24,10 +24,16 @@ mni = 1
 # specify the stationary frequency parameters
 pi_prior <- v(1,1,1,1)
 pi ~ dnDirichlet(pi_prior)
+moves[mvi++] = mvBetaSimplex(pi, weight=2.0)
+moves[mvi++] = mvDirichletSimplex(pi, weight=1.0)
+
 
 # specify the exchangeability rate parameters
 er_prior <- v(1,1,1,1,1,1)
 er ~ dnDirichlet(er_prior)
+moves[mvi++] = mvBetaSimplex(er, weight=3.0)
+moves[mvi++] = mvDirichletSimplex(er, weight=1.5)
+
 
 # create a deterministic variable for the rate matrix, GTR
 Q := fnGTR(er,pi)
@@ -35,6 +41,7 @@ Q := fnGTR(er,pi)
 
 # among-site rate variation
 alpha ~ dnHalfCauchy(0,1)
+moves[mvi++] = mvScaleBactrian(alpha,weight=2.0)
 
 gamma_cats := fnDiscretizeGamma(alpha,alpha,4)
 
@@ -42,8 +49,16 @@ gamma_cats := fnDiscretizeGamma(alpha,alpha,4)
 # Tree model #
 ##############
 
+tree_length_mean ~ dnLognormal(ln(1.0),2*0.587405)
+moves[mvi++] = mvScaleBactrian(tree_length_mean,weight=2.5)
+
+branch_length_rate := num_branches / tree_length_mean
+
 # Prior distribution on the tree topology
-psi ~ dnUniformTopologyBranchLength(taxa, dnExponential(10))
+psi ~ dnUniformTopologyBranchLength(taxa, dnExponential(branch_length_rate))
+moves[mvi++] = mvNNI(psi, weight=num_taxa/2.0)
+moves[mvi++] = mvSPR(psi, weight=num_taxa/10.0)
+moves[mvi++] = mvBranchLengthScale(psi,weight=num_branches)
 
 ###################
 # PhyloCTMC Model #
@@ -61,7 +76,7 @@ seq.clamp(data)
 
 mymodel = model(psi)
 
-trace = readStochasticVariableTrace(TARGET_DIRECTORY + "/analysis.log", delimiter=TAB)
+trace = readStochasticVariableTrace(TARGET_DIRECTORY + "/stochastic_variables.log", delimiter=TAB)
 
 pps = posteriorPredictiveSimulation(mymodel, directory=TARGET_DIRECTORY + "/PPS", trace)
 
