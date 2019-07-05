@@ -18,7 +18,6 @@ environ = os.environ.copy()
 env = Environment(ENV=environ)
 
 # command line arguments
-
 AddOption('--treepath',
           type='str',
           metavar='<PATH>',
@@ -75,24 +74,15 @@ seed_dict = {(cell[1]['d'], cell[1]['n_iid'], cell[1]['n_epi'],
 
 
 @nest.add_target()
-def alns_revscript(outdir, c):
-    '''make RevBayes script from template'''
-    seed = seed_dict[(c["d"], c["n_iid"], c["n_epi"], c["replicate"])]
-    return env.Command(f'{outdir}/alns.Rev',
-                       None,
-                       'Rscript simulation_scripts/mk_alns_revscript.R '
-                       f'{c["n_iid"]} {c["n_epi"]} {c["d"]} {seed} '
-                       f'{outdir} {revpath} {treepath} '
-                       f'> {outdir}/mk_alns_revscript.log')
-
-
-@nest.add_target()
 def alns(outdir, c):
     '''iid and epistatic alignments'''
+    seed = seed_dict[(c["d"], c["n_iid"], c["n_epi"], c["replicate"])]
     return env.SRun([f'{outdir}/iid_aln.nex',
                      f'{outdir}/epi_aln.nex'],
-                    c['alns_revscript'],
-                    f'{revpath} $SOURCE > {outdir}/alns.log')
+                    None,
+                    f'{revpath} simulation_scripts/simulate_alns.Rev --args '
+                    f'{c["n_iid"]} {c["n_epi"]} {c["d"]} {seed} {outdir} '
+                    f'{treepath} > {outdir}/alns.log')
     env.Depends(alns, rb_check)
     return alns
 
@@ -108,22 +98,15 @@ def aln(outdir, c):
 
 
 @nest.add_target()
-def trees_revscript(outdir, c):
-    '''make RevBayes script from template'''
-    return env.Command(f'{outdir}/trees.Rev',
-                       c['aln'],
-                       'Rscript analysis_scripts/mk_trees_revscript.R '
-                       f'{c["replicate"]} $SOURCE {revpath} '
-                       f'> {outdir}/mk_trees_revscript.log')
-
-
-@nest.add_target()
 def trees(outdir, c):
     '''MCMC tree inference'''
-    return env.SRun([f'{outdir}/trees_run_1.trees',
-                     f'{outdir}/trees_run_2.trees'],
-                    c['trees_revscript'],
-                    f'{revpath} $SOURCE > {outdir}/trees.log')
+    seed = seed_dict[(c["d"], c["n_iid"], c["n_epi"], c["replicate"])]
+    return env.SRun([f'{outdir}/stochastic_variables_run_1.log',
+                     f'{outdir}/stochastic_variables_run_2.log'],
+                    c['aln'],
+                    f'{revpath} analysis_scripts/run_analysis.Rev --args '
+                    f'{seed} $SOURCES {outdir} > {outdir}/trees.log')
+
 
 # calc summary stats
 @nest.add_target()
@@ -133,8 +116,7 @@ def convergence(outdir, c):
                      f'{outdir}/diagnose_convergence.log'],
                     c['trees'],
                     f'Rscript analysis_scripts/diagnose_convergence.R '
-                    '$SOURCES 1> ${TARGETS[0]}'
-                    ' 2> ${TARGETS[1]}')
+                    '$SOURCES 1> ${TARGETS[0]} 2> ${TARGETS[1]}')
 
 
 @nest.add_target()

@@ -37,13 +37,16 @@ out.file <- args[3]
 #'
 #' @param aln              phyDat alignment.
 #' @param phy              phylo-style tree or multiPhylo-style list of trees
+#' @param nrep             the test uses Monte Carlo simulation with nrep simulations to calculate the p-value, default 2000 as in R's chisq.test
+#' @param min.edge.length  if any branch lengths are below this value (that is, they are essentially 0 either due to rounding or inference programs thresholding branches to 0) we set the branch to this length to avoid dividing by 0
 #' 
 #' @details This function tests if sites are independent using singleton sites only.
 #'          If there is a posterior distribution on trees, this will perform the test on all trees
 #' 
 #' @return The valuep-value against independence.
 
-testSiteIID <- function(aln,phy) {
+testSiteIID <- function(aln,phy,nrep=2000,min.edge.length=1e-8) {
+  # recover()
   
   # If phy is a single tree, make phy a multiPhylo so we can use loop regardless
   if ( class(phy) == "phylo" ) {
@@ -60,22 +63,25 @@ testSiteIID <- function(aln,phy) {
     return(NA)
   }
   
-  aln_char <- tolower(as.character(aln))
+  aln_num <- do.call(rbind,aln)
   
-  ordered_taxa <- sort(row.names(aln_char))
+  ordered_taxa <- sort(row.names(aln_num))
   
-  aln_tab <- apply(aln_char,2,table)
+  aln_tab <- apply(aln_num,2,table)
   
   ntaxa <- length(aln)
   
+  site_pattern_counts <- attributes(aln)$weight
+  
   # Reduce alignment to count data
   # singletons is a character vector containing one occurrence each time that taxon is the singleton in a singleton site
-  singletons <- lapply(1:dim(aln_char)[2],function(i){
+  possible_singletons <- which(lengths(aln_tab) == 2)
+  singletons <- lapply(possible_singletons,function(i){
     x <- aln_tab[[i]]
     # A singleton is a site with two kinds of bases with one present only once
-    if (length(x) == 2 && any(x) == 1) {
-      the_base <- names(x[x == 1])
-      return(row.names(aln_char)[which(aln_char[,i] == the_base)])
+    if ( any(x == 1) ) {
+      the_base <- as.numeric(names(x[x == 1]))
+      return(rep(row.names(aln_num)[which(aln_num[,i] == the_base)],site_pattern_counts[i]))
     } else {
       return(NULL)
     }
@@ -83,10 +89,13 @@ testSiteIID <- function(aln,phy) {
   # Make singletons an integer vector by using taxon number instead of name
   singletons <- unlist(singletons)
   singletons <- sapply(singletons,function(x){which(ordered_taxa == x)})
-  names(singletons) <- NULL
-  
+
   # Table of the number of observed singletons for each taxon
   obs <- sapply(1:ntaxa,function(i){sum(singletons == i)})
+  
+  if (sum(obs) == 0) {
+    stop("No singleton sites in this alignment")
+  }
   
   # p-values against independence
   p <- numeric(length(phy))
@@ -97,12 +106,24 @@ testSiteIID <- function(aln,phy) {
       tip_index <- which(tree$tip.label == ordered_taxa[i])
       tree$edge.length[which(tree$edge[,2] == tip_index)]
     })
+    tree_tip_edge_lengths[tree_tip_edge_lengths < min.edge.length] <- min.edge.length
     
     tree_singleton_probs <- tree_tip_edge_lengths/sum(tree_tip_edge_lengths)
     
-    expected <- length(singletons) * tree_singleton_probs
+    # Use Monte Carlo simulation to calculate p-value
+    # p[n] <- chisq.test(obs,p=tree_singleton_probs,simulate.p.value = T)$p.value
+    
+    # This is faster than using R's built in version, but equivalent
+    n_singletons <- length(singletons)
+    expected <- n_singletons * tree_singleton_probs
     xi_sq <- sum( ((obs - expected)^2)/expected )
-    p[n] <- pchisq(xi_sq,ntaxa-1,lower.tail=FALSE)
+    
+    sim <- rmultinom(nrep,n_singletons,tree_singleton_probs)
+    sim <- (sim - expected)^2/expected
+    null_dist <- colSums(sim)
+    
+    # (n_greater + 1) / (n + 1) is how R calculates the p-value
+    p[n] <- (sum(null_dist > xi_sq)+1)/(nrep+1)
   }
   return(p)
 }

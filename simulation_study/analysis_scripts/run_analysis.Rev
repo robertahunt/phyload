@@ -1,7 +1,11 @@
-seed(<<SEED>>)
+SEED             = args[1]
+TARGET_ALN       = args[2]
+TARGET_DIRECTORY = args[3]
+
+seed(SEED)
 
 ### Read in sequence data for the gene
-data = readDiscreteCharacterData("<<TARGET_ALN>>")
+data = readDiscreteCharacterData(TARGET_ALN)
 
 # Get some useful variables from the data. We need these later on.
 num_taxa <- data.ntaxa()
@@ -34,24 +38,34 @@ moves[mvi++] = mvDirichletSimplex(er, weight=1.5)
 # create a deterministic variable for the rate matrix, GTR
 Q := fnGTR(er,pi)
 
+
+# among-site rate variation
+alpha ~ dnHalfCauchy(0,1)
+moves[mvi++] = mvScaleBactrian(alpha,weight=2.0)
+
+gamma_cats := fnDiscretizeGamma(alpha,alpha,4)
+
 ##############
 # Tree model #
 ##############
 
+tree_length_mean ~ dnLognormal(ln(1.0),2*0.587405)
+moves[mvi++] = mvScaleBactrian(tree_length_mean,weight=2.5)
+
+branch_length_rate := num_branches / tree_length_mean
+
 # Prior distribution on the tree topology
-psi ~ dnUniformTopologyBranchLength(taxa, dnExponential(10))
+psi ~ dnUniformTopologyBranchLength(taxa, dnExponential(branch_length_rate))
 moves[mvi++] = mvNNI(psi, weight=num_taxa/2.0)
 moves[mvi++] = mvSPR(psi, weight=num_taxa/10.0)
 moves[mvi++] = mvBranchLengthScale(psi,weight=num_branches)
-
-TL := psi.treeLength()
 
 ###################
 # PhyloCTMC Model #
 ###################
 
 # the sequence evolution model
-seq ~ dnPhyloCTMC(tree=psi, Q=Q, type="DNA")
+seq ~ dnPhyloCTMC(tree=psi, Q=Q, siteRates=gamma_cats, type="DNA")
 
 # attach the data
 seq.clamp(data)
@@ -64,13 +78,14 @@ seq.clamp(data)
 mymodel = model(psi)
 
 # add monitors
-monitors[mni++] = mnFile(psi, filename="<<TARGET_DIRECTORY>>/trees.trees", printgen=10)
-monitors[mni++] = mnModel(filename="<<TARGET_DIRECTORY>>/trees.log", printgen=10)
+#monitors[mni++] = mnFile(psi, filename=TARGET_DIRECTORY + "/analysis.trees", printgen=10)
+monitors[mni++] = mnStochasticVariable(filename=TARGET_DIRECTORY + "/stochastic_variables.log", printgen=10)
 
 # run the analysis
 mymcmc = mcmc(mymodel, moves, monitors, nruns=2)
 #mymcmc.burnin(generations=2000,tuningInterval=100)
 #mymcmc.run(generations=20000)
 
-mymcmc.run(generations=20)
+mymcmc.run(100)
+
 q()
