@@ -1,0 +1,57 @@
+N_IID                = args[1]
+N_EPI                = args[2]
+SEED                 = args[4]
+EPISTASIS_D          = args[4]
+TARGET_DIRECTORY     = args[5]
+TREE_FILE            = args[6]
+
+seed(SEED)
+
+## This script will allow simulation of an alignment with epistasis
+# Specifically, this simulates
+#    1) an alignment without epistatic interactions,
+#    2) an alignment with epistatic interactions,
+# These may then be woven together into epistatic and nonepistatic alignments of equal length
+
+# Get the topology for simulating
+phy <- readTrees(TREE_FILE,treetype="non-clock")[1]
+
+# The underlying GTR model exchange rates, shared across all models
+# These parameters are estimated from preliminary analysis of the tunicate dataset in phyload/empirical_analysis
+er <- simplex(v(0.11,0.187,0.107,0.116,0.366,0.114))
+
+# Underlying GTR model stationary frequencies
+# These parameters are estimated from preliminary analysis of the tunicate dataset in phyload/empirical_analysis
+bf <- simplex(v(0.319,0.209,0.245,0.227))
+
+# The non-epistatic substitution rate matrix
+Q_iid := fnGTR(er,bf)
+
+# Gamma-distributed rate heterogeneity
+# These parameters are estimated from the flu dataset in phyload/data
+alpha <- 0.354
+gamma_cats := fnDiscretizeGamma(alpha,alpha,4)
+
+# Number of sites we need to simulate is half that given by the proportion
+# This is because one simulated site is a pair of interacting sites
+nsites_epi <- N_EPI / 2
+
+nsites_iid <- N_IID
+
+# What is the value of d?
+epistasis_d <- EPISTASIS_D
+
+# Get epistatic model
+source("simulation_scripts/epistatic_doublet_model_stub_tunicates.Rev")
+
+# Simulate the pieces to make 1 epistatic+iid alignment
+# Simulate the non-epistatic portion of the alignment
+seq_iid ~ dnPhyloCTMC(tree=phy,Q=Q_iid,siteRates=gamma_cats,nSites=nsites_iid,type="DNA")
+
+# simulate epistatic alignment
+seq_epi ~ dnPhyloCTMC(tree=phy,Q=Q_epi,rootFrequencies=df,siteRates=gamma_cats,nSites=nsites_epi,type="Standard")
+
+writeNexus(file=TARGET_DIRECTORY + "/iid_aln.nex",seq_iid)
+writeNexus(file=TARGET_DIRECTORY + "/epi_aln.nex",seq_epi)
+
+q()
