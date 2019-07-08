@@ -4,6 +4,7 @@ SEED                 = args[4]
 EPISTASIS_D          = args[4]
 TARGET_DIRECTORY     = args[5]
 TREE_FILE            = args[6]
+PARAM_FILE           = args[7]
 
 seed(SEED)
 
@@ -16,13 +17,7 @@ seed(SEED)
 # Get the topology for simulating
 phy <- readTrees(TREE_FILE,treetype="non-clock")[1]
 
-# The underlying GTR model exchange rates, shared across all models
-# These parameters are estimated from the flu dataset in phyload/data
-er <- simplex(v(1.882161, 7.009179, 0.914813, 0.495852, 7.666181, 1.000000))
-
-# Underlying GTR model stationary frequencies
-# These parameters are estimated from the flu dataset in phyload/data
-bf <- simplex(v(0.340152, 0.190828, 0.225045, 0.243974))
+source(PARAM_FILE)
 
 # The non-epistatic substitution rate matrix
 Q_iid := fnGTR(er,bf)

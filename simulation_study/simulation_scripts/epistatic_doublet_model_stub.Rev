@@ -6,10 +6,6 @@
 # Put the underlying GTR model exchange rates in a matrix for ease of accessing them to put them in the codon rate matrix
 S := fnFreeSymmetricRateMatrix(er,rescaled=false)
 
-# Stationary frequencies of the doublets
-# These are the frequencies that Nasrallah et al used
-df <- simplex(v(0.015, 0.025, 0.011, 0.15, 0.0175, 0.019, 0.175, 0.014,0.014, 0.22, 0.01, 0.06, 0.14, 0.04, 0.065, 0.0245))
-
 # To help us navigate making the Q matrix
 d1 <- v(1,1,1,1,2,2,2,2,3,3,3,3,4,4,4,4)
 d2 <- v(1,2,3,4,1,2,3,4,1,2,3,4,1,2,3,4)

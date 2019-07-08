@@ -78,7 +78,7 @@ Scripts needed to simulate a single cell in the simulation study.
 
 To perform a single simulation, use
 ```bash
-$ rb simulation_scripts/simulate_alns.Rev --args <n_iid> <n_epi> <d> <seed> <outbase> <treepath>
+$ rb simulation_scripts/simulate_alns.Rev --args <n_iid> <n_epi> <d> <seed> <outbase> <treepath> <config>
 ```
 Separate iid and epistatic alignments will be written in nexus format to `<outbase>/iid_aln.nex` and `<outbase>/epi_aln.nex`.
 NOTE: The epistatic alignment are not DNA but characters 0-F, where 0=AA, 1=AC, ..., F=TT.
@@ -91,6 +91,7 @@ The arguments are
 - `seed`: random seed passed to RevBayes
 - `outbase`: path to write output alignments
 - `treepath`: path to treefile
+- `config`: path to file with simulation parameters for all other (non-d) substitution models (iid and epistatic)
 
 ### Utilities
 

@@ -1,0 +1,11 @@
+# Stationary frequencies of the doublets
+# These parameters are estimated from preliminary analysis of the tunicate dataset in phyload/empirical_analysis
+df <- simplex(v(0.01745,0.02179,0.0231,0.154,0.0192,0.02119,0.184,0.01484,0.01476,0.245,0.02152,0.05001,0.122,0.01751,0.05221,0.02157))
+
+# The underlying GTR model exchange rates, shared across all models
+# These parameters are estimated from preliminary analysis of the tunicate dataset in phyload/empirical_analysis
+er <- simplex(v(0.11,0.187,0.107,0.116,0.366,0.114))
+
+# Underlying GTR model stationary frequencies
+# These parameters are estimated from preliminary analysis of the tunicate dataset in phyload/empirical_analysis
+bf <- simplex(v(0.319,0.209,0.245,0.227))
