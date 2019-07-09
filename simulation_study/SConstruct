@@ -82,7 +82,7 @@ def alns(outdir, c):
                     None,
                     f'{revpath} simulation_scripts/simulate_alns.Rev --args '
                     f'{c["n_iid"]} {c["n_epi"]} {c["d"]} {seed} {outdir} '
-                    f'{treepath} > {outdir}/alns.log')
+                    f'{treepath} simulation_scripts/flu_params.Rev simulation_scripts/flu_params.Rev > {outdir}/alns.log')
     env.Depends(alns, rb_check)
     return alns
 
