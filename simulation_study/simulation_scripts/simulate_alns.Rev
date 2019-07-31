@@ -1,7 +1,7 @@
 N_IID                = args[1]
 N_EPI                = args[2]
+EPISTASIS_D          = args[3]
 SEED                 = args[4]
-EPISTASIS_D          = args[4]
 TARGET_DIRECTORY     = args[5]
 TREE_FILE            = args[6]
 PARAM_FILE           = args[7]
