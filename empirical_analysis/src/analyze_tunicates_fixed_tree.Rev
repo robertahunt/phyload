@@ -1,0 +1,38 @@
+seed(8472)
+
+# tree (from RAxML)
+raxml = readTrees("empirical_analysis/output/RAxML/RAxML_bestTree.tunicate50",treetype="non-clock")[1]
+
+# Initialize workspace iterators
+mvi = 0
+mni = 0
+
+# Get character data
+data_iid = readDiscreteCharacterData("empirical_analysis/data/loop_50.nex")
+data_epi = readDiscreteCharacterData("empirical_analysis/data/pair_50.nex")
+
+taxa = data_iid.taxa()
+num_taxa = taxa.size()
+num_branches = 2 * num_taxa - 3
+
+# Tree model
+phy <- raxml
+
+# Site models
+source("empirical_analysis/src/iid_model.Rev")
+source("empirical_analysis/src/epistatic_doublet_model.Rev")
+
+# Monitors
+monitors[++mni] = mnScreen(epistasis_d,printgen=1)
+monitors[++mni] = mnModel(filename="empirical_analysis/output/tunicates_fixed_tree.log",printgen=10)
+
+# MCMC
+mymodel = model(Q_epi)
+
+mymcmc = mcmc(mymodel,monitors,moves,nruns=2)
+
+mymcmc.burnin(generations=1000, tuningInterval=50)
+mymcmc.operatorSummary()
+mymcmc.run(generations=5000)
+
+q()

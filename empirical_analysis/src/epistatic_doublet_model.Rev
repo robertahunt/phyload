@@ -9,14 +9,14 @@ S := fnFreeSymmetricRateMatrix(er,rescaled=false)
 # Epistasis parameter
 epistasis_d ~ dnHalfCauchy(0,1)
 
-moves[++mvi] = mvScaleBactrian(epistasis_d,weight=1.0)
+moves[++mvi] = mvScaleBactrian(epistasis_d,weight=4.0)
 moves[++mvi] = mvRandomDive(epistasis_d,weight=1.0)
 
 # Stationary frequencies of the doublets
 df ~ dnDirichlet(rep(1,16))
 
-moves[++mvi] = mvBetaSimplex(df,weight=1.0)
-moves[++mvi] = mvDirichletSimplex(df,weight=1.0)
+moves[++mvi] = mvBetaSimplex(df,weight=4.0)
+moves[++mvi] = mvDirichletSimplex(df,weight=4.0)
 
 # To help us navigate making the Q matrix
 d1 <- v(1,1,1,1,2,2,2,2,3,3,3,3,4,4,4,4)
@@ -70,11 +70,6 @@ for (i in 1:16) {
 # Make the rate matrix an object Rev can use
 Q_epi := fnFreeK(scaled_Q, rescaled=false,matrixExponentialMethod="scalingAndSquaring")
 
-# Possibility of letting epistatic and non-epistatic sites have different tree lengths
-epi_rate_multiplier ~ dnHalfCauchy(0,0.5)
-moves[++mvi] = mvScaleBactrian(epi_rate_multiplier,weight=1.0)
-moves[++mvi] = mvRandomDive(epi_rate_multiplier,weight=1.0)
-
 # model for epistatic alignment
-seq_epi ~ dnPhyloCTMC(tree=phy,Q=Q_epi,rootFrequencies=df,siteRates=gamma_cats,branchRates=epi_rate_multiplier,type="Standard")
+seq_epi ~ dnPhyloCTMC(tree=phy,Q=Q_epi,rootFrequencies=df,siteRates=gamma_cats,type="Standard")
 seq_epi.clamp(data_epi)

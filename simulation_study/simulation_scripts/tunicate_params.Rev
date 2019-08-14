@@ -1,11 +1,14 @@
+# These parameters are estimated from fixed-tree analysis of the tunicate dataset in phyload/empirical_analysis, using both chains combined discarding the first 500 iterations from each as extra burnin
+
+# Gamma-distributed rate heterogeneity
+alpha <- 0.3451
+gamma_cats := fnDiscretizeGamma(alpha,alpha,4)
+
 # Stationary frequencies of the doublets
-# These parameters are estimated from preliminary analysis of the tunicate dataset in phyload/empirical_analysis
-df <- simplex(v(0.01745,0.02179,0.0231,0.154,0.0192,0.02119,0.184,0.01484,0.01476,0.245,0.02152,0.05001,0.122,0.01751,0.05221,0.02157))
+df <- simplex(v(0.016,0.0198,0.0205,0.1626,0.0195,0.0165,0.1939,0.0119,0.0096,0.2457,0.0245,0.0501,0.1163,0.0143,0.0584,0.0203))
 
 # The underlying GTR model exchange rates, shared across all models
-# These parameters are estimated from preliminary analysis of the tunicate dataset in phyload/empirical_analysis
-er <- simplex(v(0.11,0.187,0.107,0.116,0.366,0.114))
+er <- simplex(v(0.101,0.1951,0.1006,0.1087,0.3627,0.1318))
 
 # Underlying GTR model stationary frequencies
-# These parameters are estimated from preliminary analysis of the tunicate dataset in phyload/empirical_analysis
-bf <- simplex(v(0.319,0.209,0.245,0.227))
+bf <- simplex(v(0.3289,0.2108,0.2408,0.2195))

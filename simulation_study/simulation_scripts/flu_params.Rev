@@ -1,3 +1,8 @@
+# Gamma-distributed rate heterogeneity
+# These parameters are estimated from the flu dataset in phyload/data
+alpha <- 0.440894
+gamma_cats := fnDiscretizeGamma(alpha,alpha,4)
+
 # Stationary frequencies of the doublets
 # These are the frequencies that Nasrallah et al used
 df <- simplex(v(0.015, 0.025, 0.011, 0.15, 0.0175, 0.019, 0.175, 0.014,0.014, 0.22, 0.01, 0.06, 0.14, 0.04, 0.065, 0.0245))
