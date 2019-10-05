@@ -122,6 +122,21 @@ The arguments are
 - `target_aln`: path to alignment to analyze
 - `outbase`: path to write output files
 
+### [`tree_distances.R`](analysis_scripts/tree_distances.R)
+
+To compute a variety of summaries of distance from true tree to posterior trees, use
+```bash
+$ rb simulation_scripts/tree_distances.R <run1> <run2> <true_tree>
+```
+Computes the posterior distribution of RF and KF distances (that is, all RF and KF distances from trees sampled by the MCMC to the true tree).
+Summarizes by taking the mean, median, min, max, and 2.5%, 5%, 95%, and 97.5% of the distribution.
+Prints to stdout a tsv of the names of the summaries (row 1) and the summaries (row2).
+
+The arguments are
+- `run1`: path to posterior stochastic variables log for replicate/chain 1
+- `run2`: path to posterior stochastic variables log for replicate/chain 2
+- `true_tree`: path to the true tree
+
 ### [`run_pps.Rev`](analysis_scripts/run_pps.Rev)
 
 To perform posterior predictive simulation based on the posterior from a single analysis, use
