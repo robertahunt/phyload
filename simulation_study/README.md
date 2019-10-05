@@ -126,7 +126,7 @@ The arguments are
 
 To compute a variety of summaries of distance from true tree to posterior trees, use
 ```bash
-$ rb simulation_scripts/tree_distances.R <run1> <run2> <true_tree>
+$ Rscript simulation_scripts/tree_distances.R <run1> <run2> <true_tree>
 ```
 Computes the posterior distribution of RF and KF distances (that is, all RF and KF distances from trees sampled by the MCMC to the true tree).
 Summarizes by taking the mean, median, min, max, and 2.5%, 5%, 95%, and 97.5% of the distribution.
