@@ -40,48 +40,48 @@ out.dir <- dirname(args[1])
 #' @return The value of the test statistic.
 countBins <- function(aln) {
   # recover()
-  
+
   # For ease of grepping
   aln_mat <- tolower(as.character(aln))
-  
+
   NCOL <- ncol(aln_mat)
-  
+
   # Begin by getting list of what columns contain which of the four bases
   has.a.plus <- unique(which(aln_mat == "a",arr.ind=T)[,2])
   has.c.plus <- unique(which(aln_mat == "c",arr.ind=T)[,2])
   has.g.plus <- unique(which(aln_mat == "g",arr.ind=T)[,2])
   has.t.plus <- unique(which(aln_mat == "t",arr.ind=T)[,2])
-  
+
   # Define columns that are missing each of the four bases
   not.a <- c(1:NCOL)[-has.a.plus]
   not.c <- c(1:NCOL)[-has.c.plus]
   not.g <- c(1:NCOL)[-has.g.plus]
   not.t <- c(1:NCOL)[-has.t.plus]
-  
+
   # Check for gap-only columns
   has.none <- intersect(intersect(not.a,not.c),intersect(not.g,not.t))
-  
+
   if ( length(has.none) > 0 ) {
     warning(paste0("There are ",length(has.none)," gap only columns in this alignment"))
-    
+
     # # aln_mat <- aln_mat[,-has.none]
-    # 
+    #
     # NCOL <- ncol(aln_mat)
-    # 
+    #
     # # Begin by getting list of what columns contain which of the four bases
     # has.a.plus <- unique(which(aln_mat == "a",arr.ind=T)[,2])
     # has.c.plus <- unique(which(aln_mat == "c",arr.ind=T)[,2])
     # has.g.plus <- unique(which(aln_mat == "g",arr.ind=T)[,2])
     # has.t.plus <- unique(which(aln_mat == "t",arr.ind=T)[,2])
-    # 
+    #
     # # Define columns that are missing each of the four bases
     # not.a <- c(1:NCOL)[-has.a.plus]
     # not.c <- c(1:NCOL)[-has.c.plus]
     # not.g <- c(1:NCOL)[-has.g.plus]
     # not.t <- c(1:NCOL)[-has.t.plus]
-    
+
   }
-  
+
   # Find columns with at least two of the bases
   has.a.c.plus <- intersect(has.a.plus,has.c.plus)
   has.a.g.plus <- intersect(has.a.plus,has.g.plus)
@@ -89,16 +89,16 @@ countBins <- function(aln) {
   has.c.g.plus <- intersect(has.c.plus,has.g.plus)
   has.c.t.plus <- intersect(has.c.plus,has.t.plus)
   has.g.t.plus <- intersect(has.g.plus,has.t.plus)
-  
+
   # Find columns with all 4 bases
   has.a.c.g.t <- intersect(intersect(has.a.plus,has.c.plus),intersect(has.g.plus,has.t.plus))
-  
+
   # Using sets, find columns with exactly three bases
   has.a.c.g <- intersect(intersect(has.a.c.plus,has.g.plus),not.t)
   has.a.c.t <- intersect(intersect(has.a.c.plus,has.t.plus),not.g)
   has.a.g.t <- intersect(intersect(has.a.g.plus,has.t.plus),not.c)
   has.c.g.t <- intersect(intersect(has.c.g.plus,has.t.plus),not.a)
-  
+
   # Using sets, find columns with exactly two bases
   has.a.c <- intersect(intersect(has.a.c.plus,not.g),not.t)
   has.a.g <- intersect(intersect(has.a.g.plus,not.c),not.t)
@@ -106,13 +106,13 @@ countBins <- function(aln) {
   has.c.g <- intersect(intersect(has.c.g.plus,not.a),not.t)
   has.c.t <- intersect(intersect(has.c.t.plus,not.a),not.g)
   has.g.t <- intersect(intersect(has.g.t.plus,not.a),not.c)
-  
+
   # Using everything we know, find columns with one base
   has.a <- intersect(intersect(not.c,not.g),not.t)
   has.c <- intersect(intersect(not.a,not.g),not.t)
   has.g <- intersect(intersect(not.a,not.c),not.t)
   has.t <- intersect(intersect(not.a,not.c),not.g)
-  
+
   per.site <- numeric(NCOL)
   per.site[has.a] <- 1
   per.site[has.c] <- 2
@@ -130,7 +130,7 @@ countBins <- function(aln) {
   per.site[has.c.g.t] <- 14
   per.site[has.a.c.g.t] <- 15
   per.site[has.none] <- -Inf
-  
+
   return(per.site)
 }
 
@@ -139,7 +139,7 @@ all.bins <- sapply(1:15,function(i){sum(site.cats == i)})
 cat("LB","\n",paste0(all.bins,collapse=","),sep="",file=paste0(out.dir,"/LB.txt"))
 
 prop.inv <- sum(all.bins[1:4])/sum(all.bins)
-cat("PI","\n",prop.inv,sep="",file=paste0(out.dir,"/PI.txt"))
+#cat("PI","\n",prop.inv,sep="",file=paste0(out.dir,"/PI.txt"))
 
 site.nucs <- sapply(site.cats,function(s){
   if (s %in% c(1:4)) {
@@ -156,7 +156,9 @@ site.nucs <- sapply(site.cats,function(s){
 })
 
 bcd <- mean(site.nucs)
-cat("BCD","\n",bcd,sep="",file=paste0(out.dir,"/BCD.txt"))
+#cat("BCD","\n",bcd,sep="",file=paste0(out.dir,"/BCD.txt"))
 
 bcv <- var(site.nucs)
-cat("BCV","\n",bcv,sep="",file=paste0(out.dir,"/BCV.txt"))
+#cat("BCV","\n",bcv,sep="",file=paste0(out.dir,"/BCV.txt"))
+
+cat("PI\tBCD\tBCV","\n",prop.inv,"\t",bcd,"\t",bcv,sep="",file=paste0(out.dir,"/aln.nex.pi.summary.tsv"))
