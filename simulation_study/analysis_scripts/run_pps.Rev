@@ -80,6 +80,6 @@ trace = readStochasticVariableTrace(TARGET_DIRECTORY + "/stochastic_variables.lo
 
 pps = posteriorPredictiveSimulation(mymodel, directory=TARGET_DIRECTORY + "/PPS", trace)
 
-pps.run(thinning=4)
+pps.run(thinning=400)
 
 q()
