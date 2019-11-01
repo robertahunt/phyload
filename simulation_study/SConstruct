@@ -10,6 +10,7 @@ from SCons.Script import Environment, AddOption, GetOption, File, Command, \
                          Flatten
 from nestly import Nest
 from nestly.scons import SConsWrap
+import os
 import pathlib
 sconsutils
 
@@ -68,6 +69,8 @@ nest.add_aggregate('st_agg', list)
 nest.add_aggregate('pi_agg', list)
 nest.add_aggregate('converge_agg', list)
 nest.add_aggregate('distance_agg', list)
+nest.add_aggregate('mi_pvalue_agg', list)
+
 
 # nests define parameter sweeps
 nest.add('d', (0.5, 2, 8))
@@ -150,11 +153,22 @@ def pps(outdir, c):
     '''alignment simulations from the posteior'''
     seed = seed_dict[(c["d"], c["n_iid"], c["n_epi"], c["replicate"])]
     pps = env.SRun([f'{outdir}/PPS/posterior_predictive_sim_{n}/seq.nex'
-                    for n in range(1, 12)],
+                    for n in range(1, 102)],
                    c['aln'],
                    f'{revpath} analysis_scripts/run_pps.Rev --args {seed}'
                    f' $SOURCE {outdir} 1> pps.log 2> pps.err')
     return pps
+
+
+@nest.add_target()
+def pps_mi(outdir, c):
+    '''calc mi for pps aln'''
+    mi_list = []
+    for i, aln in enumerate(c['pps']):
+        mi_list.append(env.SRun(f'{str(aln)}.mi.summary.tsv',
+                                aln,
+                                'python indices/align_mi.py $SOURCES'))
+    return mi_list
 
 
 @nest.add_target()
@@ -166,6 +180,21 @@ def mi(outdir, c):
     c['mi_agg'].append({'d': c['d'], 'n_iid': c['n_iid'], 'n_epi': c['n_epi'],
                         'tgt': mi})
     return mi
+
+
+@nest.add_target()
+def pps_mi_pvalue(outdir, c):
+    '''calc mi pvalue for pps aln'''
+    pps_mi_fname = f'{outdir}/PPS/pps_mi.tsv'
+    env.Textfile(pps_mi_fname,
+                 [str(x[0]) for x in c['pps_mi']])
+    pps_mi_pvalue = env.SRun(f'{outdir}/aln.nex.mi.summary.pvalue.csv',
+                             c['mi'],
+                             f'python indices/pps_pvalue.py {pps_mi_fname} '
+                             f'$SOURCES')
+    c['mi_pvalue_agg'].append({'d': c['d'], 'n_iid': c['n_iid'],
+                               'n_epi': c['n_epi'], 'tgt': pps_mi_pvalue})
+    return pps_mi_pvalue
 
 
 @nest.add_target()
@@ -207,6 +236,20 @@ def mi_agg_input(outdir, c):
     mi_input = env.Textfile(f'{outdir}/mi_agg.input.tsv', lines)
     env.Depends(mi_input, Flatten(mi['tgt']))
     return mi_input
+
+
+@nest.add_target()
+def mi_pvalue_agg_input(outdir, c):
+    '''some scons ninjutsu for building a file of mi pvalue paths w/ associated args
+    '''
+    # first the header line
+    lines = ['d\tn_iid\tn_epi\tpath']
+    for mi_pvalue in c['mi_pvalue_agg']:
+        lines.append(f"{mi_pvalue['d']}\t{mi_pvalue['n_iid']}"
+                     f"\t{mi_pvalue['n_epi']}\t{File(mi_pvalue['tgt'][0])}")
+    mi_pvalue_input = env.Textfile(f'{outdir}/mi_pvalue_agg.input.tsv', lines)
+    env.Depends(mi_pvalue_input, Flatten(mi_pvalue['tgt']))
+    return mi_pvalue_input
 
 
 @nest.add_target()
@@ -274,6 +317,16 @@ def mi_agg(outdir, c):
                       f'python utils/stats_agg.py $SOURCE {outdir} --smooth 4')
     env.Depends(mi_agg, [x['tgt'] for x in c['mi_agg']])
     return mi_agg
+
+
+@nest.add_target()
+def mi_pvalue_agg(outdir, c):
+    '''aggregate mutual infomation pvalue matrices'''
+    mi_pvalue_agg = env.SRun(f'{outdir}/agg_skewness_pvalue.pdf',
+                             c['mi_pvalue_agg_input'],
+                             f'python utils/stats_agg.py $SOURCE {outdir}')
+    env.Depends(mi_pvalue_agg, [x['tgt'] for x in c['mi_pvalue_agg']])
+    return mi_pvalue_agg
 
 
 @nest.add_target()
