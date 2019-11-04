@@ -142,12 +142,12 @@ ntaxa <- length(true$tip.label)
 # Get all splits in MRC from posterior and calculate what percent resolved it is
 resolved <- findResolvedSplitsMRC(list(run1,run2))
 
-percent_resolved <- length(resolved)/(ntaxa-3)
+percent.resolved <- length(resolved)/(ntaxa-3)
 
-resolved_wrong <- wrongSplits(true,resolved)
+resolved.wrong <- wrongSplits(true,resolved)
 
-percent_resolved_wrong <- length(resolved_wrong)/length(resolved)
+percent.resolved.wrong <- length(resolved.wrong)/length(resolved)
 
 cat("mrc_percent_resolved", "mrc_percent_wrong_splits",file=stdout(), sep="\t")
 cat("\n")
-cat(percent_resolved, percent_resolved_wrong, file=stdout(), sep="\t")
+cat(percent.resolved, percent.resolved.wrong, file=stdout(), sep="\t")

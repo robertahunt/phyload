@@ -137,6 +137,35 @@ The arguments are
 - `run2`: path to posterior stochastic variables log for replicate/chain 2
 - `true_tree`: path to the true tree
 
+### [`split_based_metrics.R`](analysis_scripts/split_based_metrics.R)
+
+To compute summaries related to the posterior distribution on splits, use
+```bash
+$ Rscript simulation_scripts/split_based_metrics.R <run1> <run2> <true_tree>
+```
+Computes how resolved the majority-rule consensus tree is (as a fraction of a fully bifurcating tree) and what percent of splits in the MRC tree are not in the true tree.
+Prints to stdout a tsv of the names of the summaries (row 1) and the summaries (row2).
+
+The arguments are
+- `run1`: path to posterior stochastic variables log for replicate/chain 1
+- `run2`: path to posterior stochastic variables log for replicate/chain 2
+- `true_tree`: path to the true tree
+
+### [`branch_length_measures.R`](analysis_scripts/branch_length_measures.R)
+
+To compute a variety of summaries of tree and branch lengths, use
+```bash
+$ Rscript simulation_scripts/branch_length_measures.R <run1> <run2> <true_tree>
+```
+Computes the posterior distribution of tree length (sum of all branch lengths), sum of all tip branch lengths, and tree span (longest tip-to-tip distance).
+Summarizes by taking the mean, median, min, max, and 2.5%, 5%, 95%, and 97.5% of the distribution.
+Prints to stdout a tsv of the names of the summaries (row 1) and the summaries (row2).
+
+The arguments are
+- `run1`: path to posterior stochastic variables log for replicate/chain 1
+- `run2`: path to posterior stochastic variables log for replicate/chain 2
+- `true_tree`: path to the true tree
+
 ### [`run_pps.Rev`](analysis_scripts/run_pps.Rev)
 
 To perform posterior predictive simulation based on the posterior from a single analysis, use
