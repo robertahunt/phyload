@@ -73,10 +73,13 @@ class AlignMI():
         stats = describe(values, nan_policy='omit')
         with open(outfile, 'w') as f:
             print('\t'.join(['min', 'max', 'mean', 'variance', 'skewness',
-                             'kurtosis']),
+                             'kurtosis', 'percentile_90', 'percentile_95',
+                             'percentile_99']),
                   file=f)
             print(f'{stats.minmax[0]}\t{stats.minmax[1]}\t{stats.mean}\t'
-                  f'{stats.variance}\t{stats.skewness}\t{stats.kurtosis}',
+                  f'{stats.variance}\t{stats.skewness}\t{stats.kurtosis}\t'
+                  f'{np.percentile(values, 90)}\t',
+                  f'{np.percentile(values, 95)}\t{np.percentile(values, 99)}',
                   file=f)
 
     def write_skewness(self, outfile) -> None:
@@ -111,7 +114,7 @@ def main():
     if args.plot:
         align_mi.plot(f'{args.aln_file}.mi.png')
         align_mi.write(f'{args.aln_file}.mi.txt')
-    align_mi.write_skewness(f'{args.aln_file}.mi.summary.tsv')
+    align_mi.write_summary(f'{args.aln_file}.mi.summary.tsv')
 
 
 if __name__ == '__main__':

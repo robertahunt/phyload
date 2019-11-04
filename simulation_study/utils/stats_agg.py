@@ -26,6 +26,9 @@ def main():
                         default=None,
                         help='gaussian smooth the heatmap data with this '
                              'bandwidth')
+    parser.add_argument('--diag',
+                        default=False,
+                        help='creates diagonal plot when `True`')
     args = parser.parse_args()
 
     df_meta = pd.read_csv(args.input_list, sep='\t')
@@ -65,17 +68,20 @@ def main():
                          )
         fg.fig.suptitle(metric)
         plt.savefig(f'{args.outdir}/agg_{metric}.pdf')
+        group.to_csv(f'{args.outdir}/agg_{metric}.csv')
 
-        # prop epi plot
-        group = group.assign(**{"proportion epistatic":
-                             lambda x: x['$n_e$'] / (x['$n_i$'] + x['$n_e$'])})
-        max_iid = group['$n_i$'].max()
-        group_diag = group.loc[df['$n_i$'] + group['$n_e$'] == max_iid, :]
-        plt.figure()
-        sns.lmplot(x='proportion epistatic', y="value",
-                   data=group_diag, col='$d$')
-        plt.xlim([0, 1])
-        plt.savefig(f'{args.outdir}/agg_{metric}.diagonal.pdf')
+        if args.diag:
+            # prop epi plot
+            group = group.assign(**{"proportion epistatic":
+                                 lambda x: x['$n_e$'] /
+                                 (x['$n_i$'] + x['$n_e$'])})
+            max_iid = group['$n_i$'].max()
+            group_diag = group.loc[df['$n_i$'] + group['$n_e$'] == max_iid, :]
+            plt.figure()
+            sns.lmplot(x='proportion epistatic', y="value",
+                       data=group_diag, col='$d$')
+            plt.xlim([0, 1])
+            plt.savefig(f'{args.outdir}/agg_{metric}.diagonal.pdf')
 
 
 if __name__ == '__main__':
