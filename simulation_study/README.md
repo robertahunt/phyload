@@ -158,6 +158,7 @@ To compute a variety of summaries of tree and branch lengths, use
 $ Rscript simulation_scripts/branch_length_measures.R <run1> <run2> <true_tree>
 ```
 Computes the posterior distribution of tree length (sum of all branch lengths), sum of all tip branch lengths, and tree span (longest tip-to-tip distance).
+Reports this relative to the true length, as a proportion (*e.g.* estimated_tree_length/true_tree_length).
 Summarizes by taking the mean, median, min, max, and 2.5%, 5%, 95%, and 97.5% of the distribution.
 Prints to stdout a tsv of the names of the summaries (row 1) and the summaries (row2).
 

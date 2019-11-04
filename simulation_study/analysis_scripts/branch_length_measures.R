@@ -27,10 +27,18 @@ ntax <- length(all.trees[[1]]$tip.label)
 
 # tree length (sum of all branches)
 all.tl <- unlist(lapply(all.trees,function(phy){sum(phy$edge.length)}))
+true.tl <- sum(true$edge.length)
+all.tl <- all.tl/true.tl
+
 # total length of tip branches
 all.tl.tip <- unlist(lapply(all.trees,function(phy){sum(phy$edge.length[phy$edge[,2] <= ntax])}))
+true.tl.tip <- sum(true$edge.length[true$edge[,2] <= ntax])
+all.tl.tip <- all.tl.tip/true.tl.tip
+
 # longest tip-to-tip distance
 all.span <- unlist(lapply(all.trees,function(phy){max(cophenetic.phylo(phy))}))
+true.span <- max(cophenetic.phylo(true))
+all.span <- all.span/true.span
 
 tl.min    <- min(all.tl)
 tl.max    <- max(all.tl)
