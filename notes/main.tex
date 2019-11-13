@@ -80,7 +80,6 @@ Secondly, can we detect the presence of epistatic interactions in datasets using
 Thirdly, is there a test-statistic or set of test-statistics that allow researchers to detect the presence of specifically problematic epistasis?
 That is, if there is epistasis in a dataset and failing to model is is causing poor or inadequate phylogenetic inference, is there a way to know we are in this regime?
 
-\amcomment{okay but can we rename this, d is such a poor choice of letter and is so confusing to talk about}
 To address these questions, we perform a simulation study using the epistatic model of \cite{nasrallah2013phylogenetic}, which has a single parameter, $d$ that controls the strength of epistatic interactions.
 We simulate alignments on a 3-dimensional grid, defined by the number of sites in the alignment that site-iid, the number of sites(not site-pairs) that are drawn from a paired model, and the value of $d$.
 Our grid thus includes a variety of alignment sizes.
@@ -96,20 +95,23 @@ We will crush them.
 
 It would be nice to write an intro to phylo modeling that builds up complexity, mentioning GTR+$\Gamma$ and ExpCMs, then the \cite{nasrallah2013phylogenetic} stuff.
 
-\section*{Model\label{sec:Model}}
+\section*{Methods\label{sec:methods}}
 
-\subsection*{Goal and Housekeeping}
+\subsection*{Model\label{sec:model}}
 
-Andy re-implemented the model from \cite{nasrallah2013phylogenetic}, which models pair-wise epistasis due to RNA secondary structure.
-Below is the model as Andy implemented it in \texttt{RevBayes}.
+\amcomment{We should change this around in an order we like and with notation we like.}
 
-\subsection*{RNA epistasis model}
+For all our simulations, we employ the epistatic RNA doublet model of \cite{nasrallah2013phylogenetic}, which we implemented this model in RevBayes \citep{hohna2016revbayes}.
+In this model, there are two categories of sites: paired sites experiencing epistatic interactions (which we will refer to as epistatic sites) and unpaired sites evolving independently (which we will refer to as independent sites).
+Within each category, it is assumed that all sites (or site pairs) evolve under the same model.
+The independent sites evolve under a standard GTR+G substitution model \citep{tavare1986some}.
+The epistatic sites evolve under a generalization of the RNA doublet model of \cite{schoniger1994stochastic} with gamma-distributed rate heterogeneity.
+The (symmetric) nucleotide exchange rates and the shape parameter of the gamma-distributed rate heterogeneity are shared between the models for the independent and epistatic sites.
+We now describe the model for epistatic sites.
 
-Here is the model from \cite{nasrallah2013phylogenetic}.
-We should change this around in an order we like and with notation we like.
-
-$\boldsymbol{Q}$ is the instantaneous rate matrix describing changes from doublet $\boldsymbol{x}$ to doublet $\boldsymbol{y}$.
+Let $\boldsymbol{Q}$ be the instantaneous rate matrix describing changes from doublet $\boldsymbol{x}$ to doublet $\boldsymbol{y}$.
 For $\boldsymbol{x} = (x_1, x_2)$, $x_1$ is the 5' nucleotide and $x_2$ is the 3' nucleotide.
+The rate matrix is defined as,
 \begin{equation}
 \label{eq:Q}
 \boldsymbol{Q} = \xi \times
@@ -121,266 +123,140 @@ For $\boldsymbol{x} = (x_1, x_2)$, $x_1$ is the 5' nucleotide and $x_2$ is the 3
    - \sum_{\boldsymbol{x} \ne \boldsymbol{y}} Q_{\boldsymbol{x},\boldsymbol{y}}& \mbox{if $\boldsymbol{x}$ = $\boldsymbol{y}$} \\
    \end{cases}
 \end{equation}
-$\boldsymbol{S}$ is the GTR exchangeability matrix \citep{tavare1986some} and $S_{x_i,y_i}$ is understood to be the element in $S$ governing the rate of exchangeability between nucleotide $x_i$ and $y_i$ (by definition, $S_{x_i,y_i} = S_{y_i,x_i}$),
-${\boldsymbol{W}} = {AT, CG, GC, TA}$ is the set of Watson-Crick pairs,
+where $\boldsymbol{S}$ is the GTR exchangeability matrix (shared with the independent sites) and $S_{x_i,y_i}$ is understood to be the element in $S$ governing the rate of exchangeability between nucleotide $x_i$ and $y_i$ (by definition, $S_{x_i,y_i} = S_{y_i,x_i}$),
+${\boldsymbol{W}} = (AT, CG, GC, TA)$ is the set of Watson-Crick pairs,
 $\boldsymbol{\pi} = (\pi_{AA}, \pi_{AC}, ..., \pi_{TT})$ are the stationary state frequencies of the 16 possible doublet states,
 $d$ controls rate of double to single mutations between doublets,
-and $\xi$ is the rate-scaling factor.
+and $\xi$ is the rate-scaling factor (the matrix is normalized to one substitution per single site for comparability with the independent sites).
 
-\paragraph{Points to clarify}
-\begin{itemize}
-\item How do we interpret $d$? $d$ is the relative rate of double to single mutations between doublets or the ``strength" of epistatic interactions.
-
-Nasrallah says relative proportion, we've been saying relative rate.
-Are these the same?
-
-Here is a copy of table 1 from \cite{nasrallah2013phylogenetic}:
-
-\begin{tabular}{ |p{1cm}|p{5cm}|p{5cm}|  }
- \hline
-& $\pi_{\boldsymbol{y}} = \pi_{y_1}\pi_{y_2}$&$\pi_{\boldsymbol{y}} \ne \pi_{y_1}\pi_{y_2}$\\
- \hline
-$d=0$  & Independent and nonepistatic & Model inadequacy \\
-\hline
- $d > 0$  & Dependent but nonepistatic & Dependent and epistatic\\
- \hline
-\end{tabular}
-
-\item How do we normalize $\boldsymbol{Q}$ ($\xi$)?
-
-From slack: 0.5 * Pr(single) + Pr(double)
-
-It is not completely clear how $\xi$ is defined in the paper.
-Assuming it's defined in the usual way (which RevBayes can do for us), simply take a weighted sum of the off-diagonal elements $\xi^{-1} = \sum_{\boldsymbol{x}} \sum_{\boldsymbol{y} \ne \boldsymbol{x}} \pi_{\boldsymbol{x}} Q_{\boldsymbol{x},\boldsymbol{y}}$.
-However, this normalizes the rate matrix on paired sites, which would count both doublet substitutions and single-substitutions equally.
-This formulation does not guarantee that the number of expected substitutions per unpaired epistatic site is the same as per non-epistatic site.
-Thus it seems that the appropriate normalization should be defined by,
-\begin{align*}
-\xi^{-1} = \sum_{\boldsymbol{x}} \sum_{\boldsymbol{y} \ne \boldsymbol{x}} \pi_{\boldsymbol{x}} \times
-\begin{cases}
-   \frac{1}{2}Q_{\boldsymbol{x},\boldsymbol{y}} & \mbox{if single substitution,} \\
-   Q_{\boldsymbol{x},\boldsymbol{y}} & \mbox{if double substitution of the allowed type,} \\
-   \end{cases}
-\end{align*}
-This \textit{should} recognize the fact that single substitutions change only one site in the pair.
-We have to do this normalization ourselves, and can't just make RevBayes do it for us, but that's more me whining than anything important.
-
-Looking at the NH paper, the $\xi$ ``scaling factor'' is a unified rate parameter for both $Q$ and $Q^*$, but for $Q$ the worry is that it's controlling expected numbers of events on pairs of sites, not on individual sites like for $Q^*$.
-To sort out what's up with $\xi$ it we'd want to compute the expected number of single subs per site in a pair as
+The parameter $d$ controls the strength of epistatic interactions.
+At $d = 0$, there are no double substitutions and this model collapses to the model of \cite{schoniger1994stochastic}.
+When $d = \infty$, all substitutions are double substitutions.
+In the intervening regimes, a portion of substitutions at epistatically paired sites will be doublet substitutions while the remainder will be single-site changes.
+We can compute the total fraction of the substitutions that are doublet substitutions as,
 \[
-\mathbbm{E}_\mathbf{Q}[\text{number of pair events}]\left(\frac{1}{2}\mathbbm{P}(\text{single sub})+\mathbbm{P}(\text{double sub})\right),
+p = \frac{ r_{d} }{r_{d} + r_{s}}
 \]
-then demand that this equals the expected number of subs per site for the null model
+with $r_d$ the total rate of doublet subtitutions,
 \[
-\mathbbm{E}_\mathbf{Q^*}[\text{number of events}].
+  r_{d} = 2 \times \sum_{x,y \in \boldsymbol{W}} \pi_{xy} \pi_{yx} S_{x_1,y_1} S_{x_2,y_2},
 \]
+and $r_s$ the total rate of single substitutions,
+\[
+  r_{s} = \sum_{x,y \not\in \boldsymbol{W}} \pi_{xy} \pi_{yx} S_{x_1,y_1} S_{x_2,y_2}.
+\]
+It can thus be seen that (for fixed values of other substitution parameters) the proportion of doublet mutations is a strictly increasing, sigmoidal, function of $d$.
+In the case of $d = 0$ and $\pi_{xy} = \pi_x \pi_y$, the model collapses to a standard GTR+G model.
 
+\subsection*{Simulation grid\label{sec:leviathan}}
+With the epistatic doublet model, there are two variables that govern the capacity for epistasis to affect phylogenetic inference: the strength of the interactions, and the proportion of the alignment that is epistatic.
+To investigate the effect of the strength of epistasis, we simulate with $d = (0,0.5,2,8,1000)$, which encompasses both realistic (see below) and extreme values.
+To understand the effect of adding epistatic sites, for each value of $d$ we simulate a grid where we independently vary the number of epistatic sites, $n_e$ and independent sites, $n_i$.
+More than simply allowing us to investigate the effect of the proportion of epistatic sites in the alignment, this setup allows us to assess the value of an epistatic site to inference.
+Specifically, we ask if epistatic sites useful but simply not as informative as independent sites or are actively harmful to inference.
+\amcomment{That Huelsenbeck ``effective alignment length'' paper may sort of preclude the idea that these sites are actively harmful, but if we want to sell this work as a useful general framework it's worth pointing out you could get at that with this approach.}
 
-\item Given the fit parameter values for a GTR model, how do we simulate under this model?
+In order to maximimize the potential resolution of our simulation study, we simulate a fine grid of... \amcomment{what is our current grid size? I've lost track}
+To keep computation costs down, at each grid point we simulate a single alignment, and we refer to these alignments collectively as the ``real'' alignments.
+While this setup does not afford us a precise estimtate of any quantity at any grid cell, this is not an issue.
+For our statistical analyses, including estimation of the value of an epistatic site, the presence of sampling noise is expected by the models.
+For visualization purposes, we can always reduce the resolution of the grid or use smoothing techniques to filter out any added noise.
 
-From github, ``
-This is the tree inferred under GTR+GAMMA using RAxML version 8.2.12.
-Inferred model parameters
+\subsection*{Simulating parameters\label{sec:tunicates}}
+To ensure that our simulation regime is realistic, we targeted our simulating parameters on values inferred from the dataset of \cite{}.
+As we are primarily interested in the epistatic model parameters, we first inferred a fixed tree using RAxML \citep{stamatakis2014raxml}.
+Fixing this tree, we then used RevBayes to infer the epistatic doublet model parameters.
+For simulation, we use the RAxML tree, several values of $d$, and the posterior mean values of all other parameters.
+The inferred value of $d$ for this dataset is approximately 0.65, while Nasrallah and Huelsenbeck inferred values as high as 7.59 in fixed-tree analyses and 9.72 when inferring the tree.
+We thus choose to simulate $d = (0.5,2.0,8.0)$ as plausible values, and additionally $d=(0,1000)$ to understand the behavior of the model at the extremes.
+Simulating values of all parameters are available in Supplementary Table \ref{}.
 
-alpha shape parameter = 0.440894
+\subsection*{Analysis of simulated data\label{sec:mcmc}}
+We use RevBayes \citep{hohna2016revbayes} to infer unrooted phylogenies for each of the ``real'' alignments.
+In all cases, we use a single GTR+G substitution model, intentionally ignoring the presence of epistasis in the datasets.
+Details of the model setup, priors, and MCMC moves used are available in the supplement.
+For each analysis we run two independent MCMC chains.
+In order to avoid analysis artifacts due to convergence issues we perform convergence diagnostics and exclude all grid cells that fail from downstream analysis.
+As we are interested in the phylogeny specifically, our convergence diagnostics focus on the tree and branch lengths.
+First, we use the average standard deviation of split frequencies (ASDSF) to compare topologies between the two chains.
+To account for the possibility of branch-length convergence issues, we also check if the tree length distributions between chains by using the potential scale reduction factor \citep[PSRF,\ ][]{brooks1998general}.
+We discard all chains where either ASDSF $>$ XXX or PSRF $>$ YYY.
 
-relative exchange rates (ac ag at cg ct gt) = 1.882161 7.009179 0.914813 0.495852 7.666181 1.000000
-
-base frequencies = 0.340152 0.190828 0.225045 0.243974"
-
-Under the parameterization in the paper (standard MrBayes/RevBayes parameterization), we first take the RER and simplex them, yielding $\boldsymbol{r} = (0.0992,0.3695,0.0482,0.0261,0.4042,0.0527)$.
-Then we make the symmetric GTR rate matrix $\boldsymbol{S}$ from the relative rates (for entirely too much detail, we put the elements of $\boldsymbol{r}$ into the upper diagonal of $\boldsymbol{S}$ row-wise, and the lower-diagonal column-wise, to make the symmetric exchangeability matrix).
-Then we draw the doublet stationary frequencies $\boldsymbol{\pi}$ from a Dirichlet(2,...,2) distribution.
-Then we assemble an unscaled version of 16 x 16 matrix $\boldsymbol{Q}$ as described \ref{eq:Q}, while calculating $\xi$.
-Then we normalize $\boldsymbol{Q}$, tell RevBayes that's our rate matrix on the flu tree, and draw from the induced phylogenetic CTMC distribution.
-Rev simulates these as characters 0,1,2,...,D,E,F.
-We also simulate the non-epistatic sites, and with an R script we turn the 16-state characters into pairs of sites, and add them to the nonepistatic sites.
-
-\end{itemize}
-
-
-\section*{Methods}
-We sconsed the shit out of our simulation study. Also we used RevBayes for things.
-
-\subsection*{Posterior predictive assessments}
+\subsection*{Posterior predictive assessments\label{sec:pps}}
 
 One of our key questions is, can the presence of unmodeled epistatic interactions be detected with posterior predictive checks?
-$<$ Explain posterior predictive stuff here $>$
+\amcomment{Explain posterior predictive stuff here}
 
 \amcomment{if we can't get this alliteration in the final paper I'll be very sad}
-As epistasis has yet to be studied from a posterior predictive perspective, there are currently no test posterior preictive approaches designed explicitly to detect it.
-In the following sections, we describe two test statistics designed to capture features of epistatis, and a frequentist test for which we calculate the posterior distribution on p-values.
-These measures are all inspired by the idea of compensatory substitutions: in a pairwise epistatic interaction, when one site is changed, the other site will most likely change as well.
-This idea underlies the parameter $d$ in both the model of \cite{nasrallah2013phylogenetic} and the model of \cite{meyer2019simultaneous}.
-There are two approaches which can be taken to detect signatures of epistasis: one can look for the induced correlations in site patterns (sitewise measures), or one can look for evidence of substitutions co-localized to a branch (branchwise measures).
-Our approaches include one sitewise and three branchwise measures, and we also apply the more general test statistic introduced by \cite{goldman1993statistical} as a general test of model adequacy.
+As epistasis has yet to be studied from a posterior predictive perspective, there are currently no test posterior predictive approaches designed explicitly to detect it.
+As we are explicitly using a misspecified model for inference, it is possible that a posterior predictive test statistic will be able to capture the unmodeled epistasis.
+We first examine whether a standard phylogenetic posterior predictive test-statistic, the multinomial likelihood test statistic of \cite{goldman1993statistical} can detect this model misspecification.
+We then develop two new statistics based on mutual information that directly address the expected behavior of epistasis.
 
-We will test the performance of these test statistics on simulated datasets.
-We make the distinction between being able to detect a phenomenon in principle and being able to detect it in practice.
-A test can detect a phenomenon in principle if two sets of alignments simulated on the same tree with the same overall rate of change can be distinguished with this test.
-A test can detect a phenomenon in practice if, after running an analysis under a mis-specified model, the test is capable of detecting the misspecified model.
-Thus, while the test statistic of \cite{goldman1993statistical} is in principle capable of detecting the difference between certain GTR \citep{tavare1986some} models and certain HKY \citep{hasegawa1985dating} models, if we simulate an alignment under HKY and infer it under GTR, we will not see any evidence of misspecification \citep{bollback2002bayesian}.
-We will test the capacity of our new tests to detect epistasis in principle on all simulated alignments, and their ability to detect it in practice on a subset of these.
-We will also investigate the specificity of these tests to detecting epistasis (as opposed to other forms of model misspecification) in principle by simulating alignments from a handful of non-epistatic models.
+We will test the performance of these test statistics on simulated datasets in two ways.
+First, by using only the simulated ``real'' alignments, we will examine if these test statistics are sensitive to the presence of epistasis and to the proportion of epistatic sites in the alignment.
+Any statistic that shows no pattern here will be unable to capture the presence of epistasis in a posterior predictive check.
+Then we will perform posterior predictive checks for all inferred phylogenies to determine if the statistics are able to detect epistasis in practice.
+As an example of this distinction, consider that in principle the GY statistic is capable of detecting the difference between certain GTR \citep{tavare1986some} models and certain HKY \citep{hasegawa1985dating} models.
+However, if we simulate an alignment under HKY and infer it under GTR, we will not see any evidence of misspecification \citep{bollback2002bayesian}.
 
-\subsubsection*{Excess statistical coupling of site patterns}
+\subsubsection*{Multinomial likelihood\label{sec:goldman}}
 
-In the absence of epistasis, pairs of sites will have dependence structure induced by the phylogeny.
-With pair-wise epistasis, we expect excess coupling between epistatically paired sites.
-We don't know which sites are paired, but we can calculate the mutual information for all pairs of sites.
-The skew of this MI distribution is a measure of the effects of a subset of sites with pairwise epistasis.
-\wdcomment{Notation here, especially $\ell$, is inconsistent with Andy's $S$.}
-Denote the length $\ell$ alignment of $n$ taxa by the $n\times\ell$ character state matrix $D$, where $D_{ij}\in\mathcal{A}$.
-The character states $\mathcal{A}$ are probably nucleotides.
-Let $f_i(a)$ denote the relative frequency of character $a$ at site $i$, and $f_{ij}(a,b)$ denote the relative joint frequency of character $a$ at site $i$ and character $b$ at site $j$:
+The multinomial likelihood test statistic treats the multiple sequence alignment $\boldsymbol{D}$ as a draw from a multinomial distribution on all possible site patterns.
+For $n$ taxa and a DNA or RNA alignment, there are $4^n$ such patterns, and for an alignment of length $m$ we observe some number $s \leq m$ site patterns.
+If $s_i$ is the number of times we see site pattern $i$, the maximum likelihood estimate of the multinomial probability of seeing pattern $i$ is $p(i) = s_i / m$.
+The test statistic is simply the log-likelihood of this dataset using these estimated probabilities, or $\mathcal{L} = \sum_i [ s_i \log(s_i)]  - m \log(m)$.
+
+\subsubsection*{Mutual information\label{sec:mi}}
+
+Under a phylogenetic model, all sites are conditionally independent given the phylogeny.
+However, under the epistatic doublet model, epistatic pairs of sites evolve dependently due to both $d$ and the use of doublet stationary frequencies.
+In particular, the presence doublet substitutions make it more likely that when one site in a pair changes along a branch, the other site does as well.
+This should result in pairs of epistatic sites having more similar patterns than independent sites, and the degree of this similarity should depend on $d$.
+What is needed, then, is a way to capture this idea of the similarity of sites.
+
+Mutual information is a measure of the dependency of two variables, quantifying the amount of information that one contains about the other.
+The higher the mutual information, the more that knowing the value of one variable tells you about the other, in other words the more similar the two variables are.
+As above, we assume that we have an $n$ taxa by $m$ sites multiple sequence alignment $\boldsymbol{D}$, and here we denote the alphabet of this alignment $\mathcal{A}$.
+For an RNA alignment, $\mathcal{A} = (A,C,G,U)$, for a DNA alignment, $\mathcal{A} = (A,C,G,T)$.
+The mutual information of a pair of sites $(i,j)$ is given by,
 \[
-f_i(a) = \frac{1}{n}\sum_{k=1}^{n}\boldsymbol{1}_{\{D_{ki}\}}(a),
+I_{ij} = \sum_{(a,b)\in\mathcal{A}^2}f_{ij}(a,b)\log\left(\frac{f_{ij}(a,b)}{f_i(a)f_j(b)}\right),
 \]
+where $f_i(a)$ is the relative frequency of character $a$ at site $i$,
 \[
-f_{ij}(a,b) = \frac{1}{n}\sum_{k=1}^{n}\boldsymbol{1}_{\{D_{ki}\}}(a) \boldsymbol{1}_{\{D_{kj}\}}(b)
+f_i(a) = \frac{1}{n}\sum_{k=1}^{n}\mathbbm{1}_{\{D_{ki}\}}(a),
 \]
-The mutual information between sites $i$ and $j$ is then
+and $f_{ij}(a,b)$ is the relative joint frequency of character $a$ at site $i$ and character $b$ at site $j$,
 \[
-I_{ij} = \sum_{(a,b)\in\mathcal{A}^2}f_{ij}(a,b)\log\left(\frac{f_{ij}(a,b)}{f_i(a)f_j(b)}\right)
+f_{ij}(a,b) = \frac{1}{n}\sum_{k=1}^{n}\mathbbm{1}_{\{D_{ki}\}}(a) \mathbbm{1}_{\{D_{kj}\}}(b).
 \]
 
-Direct coupling analysis (\url{https://en.wikipedia.org/wiki/Direct_coupling_analysis}) would be a nice way to go too.
-Although in our simulations there are only mated pairwise interactions (so mutual information should be sufficient and DCA is overkill), it should do just as well here and be more generalizable to more complicated epistasis.
-We also score hipster points, and get to say impressive things like ``Ising model".
+If we had an \textit{a priori} hypothesis about a pair of interacting sites $(i,j)$, we could thus compute the posterior predictive distribution of $I_{ij}$ and compare the observed value to this distribution.
+However, if one wants to test for the presence or absence at the level of the entire alignment, this will not work.
+However, for an alignment we can compute the mutual information of all pairs of sites, $\boldsymbol{I}$.
+As we expect epistasis to increase the mutual information between pairs of interacting sites, the upper tail of $\boldsymbol{I}$ should be informative with respect to the overall presence and strength of epistasis.
+We consider two summaries of $\boldsymbol{I}$.
+First we consider the skew of $\boldsymbol{I}$, $I_s$, which should be sensitive to the strength of epistasis and proportion of epistatic sites, as the more interactions the more values that should fall in the right tail and the stronger the interactions the larger those values should get.
+We also consider the max, $I_m$, which should be sensitive to the presence or absence of epistasis, but is less likely to be sensistive to the proportion of epistatic sites as the maximum of a distribution is not a particularly stable quantity.
 
-For DCA, Kristian recommends the code from Deb Marks' group: \url{https://github.com/debbiemarkslab/plmc} and \url{https://github.com/debbiemarkslab/EVcouplings}
-
-In any case, some scalar like the skewness on either MI or the coupling terms in DCA should be sensitive to epistasis.
-The number of couplings is $\frac{\ell(\ell-1)}{2}$.
-
-\subsubsection{Pairwise variance}
-Our next posterior predictive approach is a branchwise test-statistic.
-For a given tree, pairwise epistasis as modeled in this paper should cause the co-localization of substitutions on branches.
-In general, branch lengths should still be interpretable as expected numbers of changes, but the variance about that expectation should change.
-While we do not have access to the variance of the number of substitutions on a branch \citep[though given a tree it can be estimated, ][]{dhar2017calculating}, we can attempt to measure this by taking variances across multiple branches at a time.
-Perhaps the simplest way to do this and incorporate information across all branches is to take the variance of the number of substitutions across all pairwise comparisons.
-This will of course be sensitive to the tree topology and branch lengths, but by simulating alignments from the posterior we can account for this and use the pairwise variance as a test statistics.
-
-\subsubsection*{Singleton mutations}
-Our last posterior predictive approach to detecting epistasis requires a tree with branch lengths, which we will assume to be known for the purposes of describing the measure.
-Given an edge $e$ in a phylogeny of length $l$ (measured in the expected number of substitutions per site) the number of changes along that branch is (approximately) distributed Poisson($l$).
-Given two branches, $e_i$ and $e_j$, the total number of changes is (approximately) distributed Poisson($l_i + l_j$).
-More importantly, we can compute the probability $\pr(i \mid c)$ that, given that there is a single change, it occurs on $e_i$: $\pr(i \mid c) = \frac{l_i}{l_i + l_j}$.
-More generally, for a vector of branches $\boldsymbol{e}$, $\pr(e_i \mid c) = \frac{l_i}{\sum_j l_j}$.
-\amcomment{It seems possible that this probability statement is better behaved than the Poisson approximation given that we are making the same approximation in the numerator and the denominator and both edges are evolving under the same CTMC. If Will is looking for fun things to prove.}
-
-Assuming for the moment that no edge has more than a single change at a single site, a vector $\boldsymbol{N}$ of the number of observed changes on all edges $\boldsymbol{e}$ should be distributed Multinomial($\frac{1}{\sum_i l_i} \boldsymbol{l}$).
-Changes to the CTMC that induce correlations among sites, such as by epistatic interactions, will induce correlations in $\boldsymbol{N}$ and alter its distribution.
-This means that the suitability of the independence assumption on sites can be directly tested by a suitable comparison to the Multinomial null model.
-As a bonus, this test does not require posterior-predictive simulations of the alignment: given $\boldsymbol{e}$ and $N$, we can test the model using a $\chi^2$ goodness-of-fit test.
-Thus, with no simulation required, we can obtain a posterior distribution of p-values where the null hypothesis is that the singleton sites were generated by a standard site-iid phylogenetic model.
-Where sites are independent, the distribution of these p-values should not be strongly skewed, and where it is violated strongly they should accumulate near 0.
-
-We now turn our attention to the major remaining difficulties in implementing this test.
-First and foremost, we do not have $\boldsymbol{e}$, or we would not have been estimating a phylogeny in the first place.
-However, the estimated phylogeny can be substituted for the real one (and there's probably a fancy theorem that says so), and in practice we apply the test to every sample from the posterior distribution on phylogenies (to avoid issues with tree summarization).
-The two remaining hurdles are that we do not have $\boldsymbol{N}$, the real counts of the changes on branches, and our stated assumption that along a branch no site changes more than once.
-Both of these can be addressed by restricting our focus to sites where all but one character share a state (variable but parsimony-uninformative sites), which we will call singleton sites.
-These sites must be generated by one of three scenarios, (1) a single change along the branch of interest, (2) an odd number of changes along the pendant edge, (3) a single change along the branch of interest and some number of changes and back-changes along the rest of the tree, (3) a change in a deeper branch followed by back-changes that prevent the change manifesting in other taxa.
-Of these scenarios, only (2) and (4) are problematic as (1) and (3) both mean that the singleton was caused by a single change.
-If the pendant edges are not overly long ($l < 1$), scenarios (2) and (4) should be relatively unlikely, and (4) is already significantly less likely than (2).
-Thus, by conditioning on singleton sites, we have ameliorated the issue of our assumption of one change per branch per site, if not entirely solved it.
-In the cases where there are long pendant edges, discarding them from $\boldsymbol{e}$ may suffice to allow the test to work.
-
-So, I've been thinking about how this could work.
-The addition of epistatic interactions should not in general change the expected counts, $\mathbb{E}[N_i]$, each branch still has the same interpretation for numbers of hits since we normalize the rate matrix to sites not site-pairs (and the addition of a rate scalar for paired sites doesn't change $\frac{l_i}{\sum_j l_j}$).
-I think that by inducing correlations we should change the variances $\text{Var}(N_i)$, and that is what we would detect.
-Either that or in a finite alignment the correlated deviations are enough to show up and deplete some branches of their rightful number of singletons.
-
-\subsubsection*{Goldman 1993 multinomial likelihood}
-
-\cite{goldman1993statistical}, $\hat{S_1} = \sum X_i \log{X_i} - n \log(n)$ where $n$ is the number of sites and $X_i$ is the number of occurrences of site pattern $i$.
-
-In the following four taxa six site alignment, there are 3 observed site patterns.
-[A, C, C, C] is observed two times, [C, C, C, C] is observed 3 times, and [C, C, C, A] is observed 1 time.
-There are three distinct site patterns.
-
-\begin{center}
-\begin{tabular}{ |c|c|c|c|c|c|}
- \hline
-A & A & C &  C & C & C \\
-C & C & C &  C & C & C \\
-C & C & C &  C & C & C \\
-C & C & C  &  C & C & A\\
- \hline
-\end{tabular}
-\end{center}
-
-If we increase the amount of epistasis in the alignment by forcing perfect coupling between sites one and six, does the statistic necessarily change?
-No!
-
-In the following alignment, sites one and six are perfectly coupled.
-[A, C, C, C] is observed two times, [C, C, C, C] is observed 3 times, and [C, A, A, A] is observed 1 time.
-There are three distinct site patterns and therefore the G93 test statistic would not change.
-
-\begin{center}
-\begin{tabular}{ |c|c|c|c|c|c|}
- \hline
-A & A & C &  C & C & C \\
-C & C & C &  C & C & A \\
-C & C & C &  C & C & A \\
-C & C & C  &  C & C & A\\
- \hline
-\end{tabular}
-\end{center}
-
-To think about this mechanistically, we need to think about generating a site pattern.
-Under stationary models, this occurs by first sampling the root state from the stationary frequencies, and then evolving the site along the tree under the CTMC rate matrix.
-As the tree is the same in our case, we can ignore its effect on generating site patterns; it will determine which sets of sites are different from others, but not what states those sets take.
-Let us start by looking back at the rate matrix for the epistatic model.
-Here, as above, $S$ is the symmetric rate matrix that underlies a GTR model, $x$ is the current doublet and $y$ the doublet being changed to.
-We have two allowable kinds of changes, single nucleotide changes, where $q_{x,y} \propto \pi_{\boldsymbol{y}} S_{x_i, y_i}$, and double nucleotide changes, where $q_{x,y} \propto \pi_{\boldsymbol{y}} S_{x_1, y_1} S_{x_2, y_2} d$ (the proportionality is due to scaling the rate matrix to produce an expectation of one change per site over a branch length of one).
-The parameter $d$ controls the relative rate of doublet to single substitutions, but we can also think of this model as a mixture model between a rate matrix of only single substitutions and a matrix of only double substitutions with a mixing weight $p$ that controls the probability a substitution comes from the doublet matrix.
-The mixture weight is a function of $d$ ,$S$, and $\pi$, but in general $p$ scales logistically with log($d$).
-This mixture framework allows us to consider separately doublet and single substitutions to understand how this model generates site patterns.
-
-We can see from the doublet changes that if $\pi_{\boldsymbol{y}} = \pi_{y_1} \pi_{y_2}$, then conditional on there being a change at both sites, the substitutions are independent of each other.
-Thus, while the doublet portion of the model couples sites together by making them change simultaneously, it does not necessarily alter the dynamics of the substitutions.
-If we marginalize over the history of the partner site (\textit{i.e.} ignore it), then we have, for the $i$th site in a pair, $q_{x_i,y_i} = \pi_{y_i} S_{x_i, y_i}$, and we recover a standard site-iid GTR substitution model.
-Importantly, from $x_i \in (a,c,g,t)$ we can access any $y_i \in (a,c,g,t)$, so we can still make all possible site patterns.
-Clearly, patterns at an epistatically interacing site look just like the patterns at a site in the site-iid GTR model, if we marginalize over the site's partner.
-In the limiting case where $d$ is infinitely large, then all substitutions will be doublet substitutions, and when we know the pattern of one site we know the pattern of it's partner exactly.
-However, because the doublet substitution model is scaled to produce an expectation of a single substitution per site, and since the site patterns produced by the model are in this case identical to those under the site-iid model, the expectation of the Goldman-Yang test statistic (GY93) should not change.
-
-In a somewhat similar vein, $\pi_{\boldsymbol{y}} = \pi_{y_1} \pi_{y_2}$ will make the single substitution part of the model reduce exactly to the independent underlying GTR model.
-In this case, we can obtain the site-iid GTR model by summing over the second site and recovering $q_{x_i,y_i} = \sum_{y_j} \pi_{\boldsymbol{y}} S_{x_i, y_i} = S_{x_i, y_i} \sum_{y_j} \pi_{\boldsymbol{y}}$.
-If $\pi_{\boldsymbol{y}} = \pi_{y_1} \pi_{y_2}$, then $\sum_{y_j} \pi_{\boldsymbol{y}} = \sum_{y_j} \pi_{y_i} \pi_{y_j} = \pi_{y_i}$ and we recover the site-iid GTR model.
-We can marginalize over the first site in the same way.
-
-Both of the above examples demonstrate that the key factor that will drive whether GY93 can detect epistasis (as modeled in this paper) is the difference between the site-iid stationary frequencies, $(\pi_A,\pi_C,\pi_G,\pi_T)$, and the doublet stationary frequencies, $(\pi_{AA},\pi_{AC},\dots,\pi_{TT})$.
-Perhaps the most immediately evident way to describe the difference between the doublet stationary frequencies and the site-iid stationary frequencies is to compare $\pi_{ij}$ and $\pi_i \pi_j$.
-Taking the Jenson-Shannon divergence as our comparison metric, this gives us a distance of 0.202.
-However, unless $d$ is rather large (in our case, $d > 9.32$), more substitutions will come from the single-substitution component of the model, suggesting that a more useful comparison is to see how close the marginalized base frequencies from the doublet model are to the site-iid base frequencies.
-Our simulating site-iid stationary frequencies are (0.340,0.191,0.225,0.244), while if we marginalize over the second site in doublets the stationary frequencies are (0.201,0.226,0.304,0.27), and if we marginalize over the first site they are (0.186,0.304,0.261,0.248).
-While these stationary frequencies are different, they are not hugely different, only Jenson-Shannon divergences of 0.019 and 0.027 from the site-iid base frequencies, close enough that it may be hard for GY93 to detect the difference.
-
-We can verify this difficulty with a small set of simulations.
-First we pick some $\tilde{S}$ and $\tilde{\pi}$ for a GTR model, simulate 100 alignments (of length 100) from this model, and for each calculate GY93, then aggregate these into a vector $\boldsymbol{\tilde{G}}$.
-Then we randomly draw new $\pi \sim \text{Dirichlet}(1,1,1,1)$ and keep only those that have similar Jenson-Shannon divergences to $\tilde{\pi}$ as our epistatic model does to our site-iid model (we chose between 0.02 and 0.023).
-For each new $\tilde{\pi}$, we simulate 100 alignments and calculate $\boldsymbol{G}^{rep}$, then determine the proportion of $\boldsymbol{\tilde{G}}$ that is outside the 95\% central probability mass of $\tilde{\boldsymbol{G}^{rep}}$.
-This is an estimate of the probability that we could detect base frequencies that are misspecified by an amount similar to the misspecification induced by the epistatic model in our simulations.
-When we aggregate this detection probability across a number of simulations, we find that the probability of GY93 detecting this misspecification is on average 19\%.
-Thus we confirm that GY93 is capable of detecting incorrect stationary frequencies, but that it will have great difficulty in the regime in which our simulations take place.
+\subsection*{Data and code availability\label{sec:itsongithub}}
+All the code you need to reproduce these analyses is available somewhere.
+But not all the files we produced because that's a loooot of logfiles and a loooot of space required, sorry.
 
 \section*{Results\label{sec:results}}
 
-Do we need results?
+We did a lot of cool stuff.
 
 \section*{Discussion\label{sec:discussion}}
 
-We win, they lose.
+Phylogenetics is probably fine.
 
 \section*{Supplementary Material}
 
 
-
 \section*{Acknowledgments}
-We thank the physicists for being obnoxious enough to motivate us to do this project.
+We thank whoever ends up paying our page charges, our PIs for not interfering, and the gods for not striking us down for our unholy combination of python, R, and Rev scripting.
 
 \bibliographystyle{plainnat}
 \bibliography{refs}
