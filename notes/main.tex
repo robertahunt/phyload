@@ -203,9 +203,9 @@ However, if we simulate an alignment under HKY and infer it under GTR, we will n
 \subsubsection*{Multinomial likelihood\label{sec:goldman}}
 
 The multinomial likelihood test statistic treats the multiple sequence alignment $\boldsymbol{D}$ as a draw from a multinomial distribution on all possible site patterns.
-For $n$ taxa and a DNA or RNA alignment, there are $4^n$ such patterns, and for an alignment of length $m$ we observe some number $s \leq m$ site patterns.
-If $s_i$ is the number of times we see site pattern $i$, the maximum likelihood estimate of the multinomial probability of seeing pattern $i$ is $p(i) = s_i / m$.
-The test statistic is simply the log-likelihood of this dataset using these estimated probabilities, or $\mathcal{L} = \sum_i [ s_i \log(s_i)]  - m \log(m)$.
+For $t$ taxa and a DNA or RNA alignment, there are $4^t$ such patterns, and for an alignment of length $n$ we observe some number $s \leq n$ site patterns.
+If $s_i$ is the number of times we see site pattern $i$, the maximum likelihood estimate of the multinomial probability of seeing pattern $i$ is $p(i) = s_i / n$.
+The test statistic is simply the log-likelihood of this dataset using these estimated probabilities, or $\mathcal{L} = \sum_i [ s_i \log(s_i)]  - n \log(n)$.
 
 \subsubsection*{Mutual information\label{sec:mi}}
 
@@ -217,7 +217,7 @@ What is needed, then, is a way to capture this idea of the similarity of sites.
 
 Mutual information is a measure of the dependency of two variables, quantifying the amount of information that one contains about the other.
 The higher the mutual information, the more that knowing the value of one variable tells you about the other, in other words the more similar the two variables are.
-As above, we assume that we have an $n$ taxa by $m$ sites multiple sequence alignment $\boldsymbol{D}$, and here we denote the alphabet of this alignment $\mathcal{A}$.
+As above, we assume that we have an $t$ taxa by $n$ sites multiple sequence alignment $\boldsymbol{D}$, and here we denote the alphabet of this alignment $\mathcal{A}$.
 For an RNA alignment, $\mathcal{A} = (A,C,G,U)$, for a DNA alignment, $\mathcal{A} = (A,C,G,T)$.
 The mutual information of a pair of sites $(i,j)$ is given by,
 \[
@@ -225,11 +225,11 @@ I_{ij} = \sum_{(a,b)\in\mathcal{A}^2}f_{ij}(a,b)\log\left(\frac{f_{ij}(a,b)}{f_i
 \]
 where $f_i(a)$ is the relative frequency of character $a$ at site $i$,
 \[
-f_i(a) = \frac{1}{n}\sum_{k=1}^{n}\mathbbm{1}_{\{D_{ki}\}}(a),
+f_i(a) = \frac{1}{t}\sum_{k=1}^{t}\mathbbm{1}_{\{D_{ki}\}}(a),
 \]
 and $f_{ij}(a,b)$ is the relative joint frequency of character $a$ at site $i$ and character $b$ at site $j$,
 \[
-f_{ij}(a,b) = \frac{1}{n}\sum_{k=1}^{n}\mathbbm{1}_{\{D_{ki}\}}(a) \mathbbm{1}_{\{D_{kj}\}}(b).
+f_{ij}(a,b) = \frac{1}{t}\sum_{k=1}^{t}\mathbbm{1}_{\{D_{ki}\}}(a) \mathbbm{1}_{\{D_{kj}\}}(b).
 \]
 
 If we had an \textit{a priori} hypothesis about a pair of interacting sites $(i,j)$, we could thus compute the posterior predictive distribution of $I_{ij}$ and compare the observed value to this distribution.
