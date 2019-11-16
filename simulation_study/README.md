@@ -167,20 +167,22 @@ The arguments are
 - `run2`: path to posterior stochastic variables log for replicate/chain 2
 - `true_tree`: path to the true tree
 
-### [`run_pps.Rev`](analysis_scripts/run_pps.Rev)
+### [`run_PPS.R`](analysis_scripts/run_PPS.R)
 
 To perform posterior predictive simulation based on the posterior from a single analysis, use
 ```bash
-$ rb simulation_scripts/run_pps.Rev --args <seed> <target_aln> <outbase>
+$ Rscript simulation_scripts/run_PPS.R <seed> <target_aln> <outbase> <rev_path>
 ```
 Simulates alignments under the posterior predictive distribution into `<outbase>/PPS`.
 Each alignment will appear in its own directory, `<outbase>/PPS/posterior_predictive_sim_i`.
-Current setup will produce 1001 simulated alignments per MCMC run.
+Current setup will produce 102 simulated alignments per MCMC run.
+We use an R wrapper around the script `run_pps.Rev` because we run PPS separately on each logfile and combine them, requiring some temporary directories lest we overwrite files.
 
 The arguments are
 - `seed`: random seed passed to RevBayes
 - `target_aln`: path to alignment to analyze
 - `outbase`: path to write output files
+- `rev_path`: path to RevBayes executable
 
 ### Utilities
 
