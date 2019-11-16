@@ -73,7 +73,7 @@ nest.add_aggregate('mi_pvalue_agg', list)
 
 
 # nests define parameter sweeps
-nest.add('d', (0.5, 2, 8))
+nest.add('d', (0, 0.5, 2, 8, 1000))
 nest.add('n_iid', range(4, 404, 16))
 n_epi_range = np.array(range(4, 404, 16))
 if any(n_epi_range % 2 != 0):
@@ -119,7 +119,8 @@ def trees(outdir, c):
                      f'{outdir}/stochastic_variables_run_2.log'],
                     c['aln'],
                     f'{revpath} analysis_scripts/run_analysis.Rev --args '
-                    f'{seed} $SOURCES {outdir} > {outdir}/trees.log')
+                    f'{seed} $SOURCES {outdir} > {outdir}/trees.log '
+                    f'&& rm {outdir}/stochastic_variables.log')
 
 
 # calc summary stats
@@ -153,10 +154,9 @@ def pps(outdir, c):
     '''alignment simulations from the posteior'''
     seed = seed_dict[(c["d"], c["n_iid"], c["n_epi"], c["replicate"])]
     pps = env.SRun([f'{outdir}/PPS/posterior_predictive_sim_{n}/seq.nex'
-                    for n in range(1, 102)],
-                   c['aln'],
-                   f'{revpath} analysis_scripts/run_pps.Rev --args {seed}'
-                   f' $SOURCE {outdir} 1> pps.log 2> pps.err')
+                    for n in range(1, 103)],
+                   [c['aln'], c['trees']],
+                   f'Rscript simulation_scripts/run_PPS.R {seed} $SOURCES {outdir} {revpath}')
     return pps
 
 
@@ -168,7 +168,9 @@ def pps_mi(outdir, c):
         mi_list.append(env.SRun(f'{str(aln)}.mi.summary.tsv',
                                 aln,
                                 'python indices/align_mi.py $SOURCES'))
-    return mi_list
+    pps_mi_fname = f'{outdir}/PPS/pps_mi.tsv'
+    env.Textfile(pps_mi_fname, [str(x[0]) for x in mi_list])
+    return pps_mi_fname
 
 
 @nest.add_target()
@@ -185,13 +187,9 @@ def mi(outdir, c):
 @nest.add_target()
 def pps_mi_pvalue(outdir, c):
     '''calc mi pvalue for pps aln'''
-    pps_mi_fname = f'{outdir}/PPS/pps_mi.tsv'
-    env.Textfile(pps_mi_fname,
-                 [str(x[0]) for x in c['pps_mi']])
     pps_mi_pvalue = env.SRun(f'{outdir}/aln.nex.mi.summary.pvalue.csv',
-                             c['mi'],
-                             f'python indices/pps_pvalue.py {pps_mi_fname} '
-                             f'$SOURCES')
+                             [c['pps_mi'], c['mi']],
+                             f'python indices/pps_pvalue.py $SOURCES')
     c['mi_pvalue_agg'].append({'d': c['d'], 'n_iid': c['n_iid'],
                                'n_epi': c['n_epi'], 'tgt': pps_mi_pvalue})
     return pps_mi_pvalue

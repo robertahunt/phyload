@@ -17,8 +17,10 @@ if (!length(args) == 4) {
 
 seed   <- args[1]
 aln    <- args[2]
-outdir <- args[3]
-rb     <- args[4]
+stochastic_1 <- args[3]
+stochastic_1 <- args[4]
+outdir <- args[5]
+rb     <- args[6]
 
 pps.dir <- paste0(outdir,"/PPS")
 
