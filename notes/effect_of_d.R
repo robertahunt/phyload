@@ -89,244 +89,6 @@ rateProportionDoublets <- function(er,df,epistasis_d) {
   return(sum_doublet/(sum_doublet + sum_single))
 }
 
-# # Make a 13x13 matrix out of the 16x16 matrix, where the new state is A at doublet site 1, or G at doublet site 2
-# # Will return matrix with condensed state in first row/column
-# condenseEpiTransitionProbabilityMatrix <- function(Q_epi,acgt,first_or_second) {
-#   # recover()
-#   
-#   d1 <- c(1,1,1,1,2,2,2,2,3,3,3,3,4,4,4,4)
-#   d2 <- c(1,2,3,4,1,2,3,4,1,2,3,4,1,2,3,4)
-#   
-#   if ( is.numeric(acgt) ) {
-#     if (acgt < 1 || acgt > 4) {
-#       stop("Invalid state to condense on.")
-#     } else {
-#       state <- acgt
-#     }
-#   } else {
-#     acgt <- toupper(acgt)
-#     if (acgt == "A") {
-#       state <- 1
-#     } else if (acgt == "C") {
-#       state <- 2
-#     } else if (acgt == "G") {
-#       state <- 3
-#     } else if (acgt == "T") {
-#       state <- 4
-#     } else {
-#       stop("Invalid state to condense on.")
-#     }
-#   }
-#   
-#   if ( first_or_second == 1 ) {
-#     condenser <- d1
-#   } else if ( first_or_second == 2 ) {
-#     condenser <- d2
-#   } else {
-#     stop("Option first_or_second takes a numeric argument")
-#   }
-#   
-#   new_prob_to_state <- numeric(16)
-#   for (i in 1:16) {
-#     if ( condenser[i] == state ) {
-#       new_prob_to_state[i] <- NA
-#     } else {
-#       new_prob_to_state[i] <- sum(Q_epi[i,condenser == state])
-#     }
-#   }
-#   new_prob_to_state <- new_prob_to_state[!is.na(new_prob_to_state)]
-#   
-#   new_prob_from_state <- numeric(16)
-#   for (j in 1:16) {
-#     if ( condenser[j] == state ) {
-#       new_prob_from_state[j] <- NA
-#     } else {
-#       new_prob_from_state[j] <- sum(Q_epi[condenser == state,j])
-#     }
-#   }
-#   new_prob_from_state <- new_prob_from_state[!is.na(new_prob_from_state)]
-#   
-#   # Make new matrix
-#   
-#   # First, we start by dropping out all rows and columns that are going into the aggregate state
-#   reduced_Q <- Q_epi[condenser != state,condenser != state]
-#   
-#   # Add in new rate of leaving
-#   reduced_Q <- rbind(new_prob_from_state,reduced_Q)
-#   
-#   # Add in new rate of arriving
-#   reduced_Q <- cbind(c(0,new_prob_to_state),reduced_Q)
-#   
-#   # Fix diagonal
-#   diag(reduced_Q) <- -rowSums(reduced_Q)
-#   
-#   return(reduced_Q)
-#   
-# }
-
-# expectedEpiPropInv <- function(er,df,epistasis_d,gamma_shape_parameter,branch_length) {
-#   recover()
-# 
-#   d1 <- c(1,1,1,1,2,2,2,2,3,3,3,3,4,4,4,4)
-#   d2 <- c(1,2,3,4,1,2,3,4,1,2,3,4,1,2,3,4)
-#   
-#   Q_epi <- assembleEpiQ(er,df,epistasis_d)
-#   
-#   if ( !is.numeric(gamma_shape_parameter)) {
-#     P_epi <- expm::expm(Q_epi * branch_length)
-#     
-#     # To get nucleotide-level results, we must marginalize over each pair of the doublet in turn
-#     # First, we consider the first site at a doublet, first site is A,C,G,T, and in all cases we marginalize over the second state
-#     p_inv <- numeric(4)
-#     
-#     # First site
-#     p_inv_1 <- numeric(4)
-#     for (n in 1:4) {
-#       total_stationary_frequency <- 0.5 * sum(df[d1 == n])
-#       p_inv_1[n] <- total_stationary_frequency * sum(P_epi[d1 == n,d1 == n])
-#     }
-#     
-#     # Second site
-#     p_inv_2 <- numeric(4)
-#     for (n in 1:4) {
-#       total_stationary_frequency <- 0.5 * sum(df[d2 == n])
-#       p_inv_1[n] <- total_stationary_frequency * sum(P_epi[d2 == n,d2 == n])
-#     }
-#     
-#     p_inv <- (p_inv_1 + p_inv_2)/2
-#     
-#    return(p_inv)
-#   } else {
-# 
-#     gamma_cats <- discrete.gamma(gamma_shape_parameter,4)
-#     
-#     p_inv <- matrix(0,4,4)
-#     for (g in 1:4) {
-#       P_epi <- expm::expm(Q_epi * branch_length * gamma_cats[g])
-#       
-#       # First site
-#       p_inv_1 <- numeric(4)
-#       for (n in 1:4) {
-#         total_stationary_frequency <- 0.5 * sum(df[d1 == n])
-#         p_inv_1[n] <- total_stationary_frequency * sum(P_epi[d1 == n,d1 == n])
-#       }
-#       
-#       # Second site
-#       p_inv_2 <- numeric(4)
-#       for (n in 1:4) {
-#         total_stationary_frequency <- 0.5 * sum(df[d2 == n])
-#         p_inv_1[n] <- total_stationary_frequency * sum(P_epi[d2 == n,d2 == n])
-#       }
-#       
-#       p_inv[g,] <- (p_inv_1 + p_inv_2)/2
-#       
-#     }
-#     
-#     return(colMeans(p_inv))
-#       
-#   }
-#   
-# }
-
-# expectedEpiPropInv <- function(er,df,epistasis_d,gamma_shape_parameter,branch_length) {
-#   recover()
-#   
-#   d1 <- c(1,1,1,1,2,2,2,2,3,3,3,3,4,4,4,4)
-#   d2 <- c(1,2,3,4,1,2,3,4,1,2,3,4,1,2,3,4)
-#   
-#   Q_epi <- assembleEpiQ(er,df,epistasis_d)
-#   
-#   if ( !is.numeric(gamma_shape_parameter)) {
-#     gamma_cats <- 1
-#   } else {
-#     gamma_cats <- discrete.gamma(gamma_shape_parameter,4)
-#   }
-#   
-#   p_inv <- matrix(0,length(gamma_cats),4)
-#   
-#   for (g in 1:length(gamma_cats)) {
-#     # First site
-#     p_inv_1 <- numeric(4)
-#     for (n in 1:4) {
-#       submatrix <- Q_epi[d1 == n,d1 == n]
-#       total_stationary_frequency <- 0.5 * sum(df[d1 == n])
-#       total_leaving_rate <- -sum(submatrix)
-#       p_inv_1[n] <- total_stationary_frequency * exp(-total_leaving_rate * branch_length * gamma_cats[g])
-#     }
-#     
-#     # Second site
-#     p_inv_2 <- numeric(4)
-#     for (n in 1:4) {
-#       submatrix <- Q_epi[d2 == n,d2 == n]
-#       total_stationary_frequency <- 0.5 * sum(df[d2 == n])
-#       total_leaving_rate <- sum(submatrix)
-#       p_inv_2[n] <- total_stationary_frequency * exp(total_leaving_rate * branch_length * gamma_cats[g])
-#     }
-#     
-#     p_inv[g,] <- (p_inv_1 + p_inv_2)
-#     
-#   }
-#     
-#   return(colMeans(p_inv))
-# 
-# }
-
-expectedEpiPropInvDoublet <- function(er,df,epistasis_d,gamma_shape_parameter,branch_length) {
-  # recover()
-  
-  d1 <- c(1,1,1,1,2,2,2,2,3,3,3,3,4,4,4,4)
-  d2 <- c(1,2,3,4,1,2,3,4,1,2,3,4,1,2,3,4)
-  
-  Q_epi <- assembleEpiQ(er,df,epistasis_d)
-  
-  if ( !is.numeric(gamma_shape_parameter)) {
-    gamma_cats <- 1
-  } else {
-    gamma_cats <- discrete.gamma(gamma_shape_parameter,4)
-  }
-  
-  p_inv <- matrix(0,length(gamma_cats),16)
-  
-  for (g in 1:length(gamma_cats)) {
-    P_epi <- expm::expm(Q_epi * branch_length * gamma_cats[g])
-    p_inv[g,] <- df * diag(P_epi)
-  }
-  
-  return(colMeans(p_inv))
-  
-}
-
-expectedIIDPropInv <- function(er,bf,gamma_shape_parameter,branch_length) {
-  
-  # recover()
-  
-  # Assemble rate matrix
-  Q <- matrix(0,4,4)
-  Q[upper.tri(Q)] <- er
-  Q <- t(Q)
-  Q[upper.tri(Q)] <- er
-  Q <- t(Q * bf)
-  diag(Q) <- -rowSums(Q)
-  mu <- -sum(bf * diag(Q))
-  Q <- Q * 1/mu
-  
-  if ( class(gamma_shape_parameter) != "numeric") {
-    gamma_cats <- 1
-  } else {
-    gamma_cats <- discrete.gamma(gamma_shape_parameter,4)
-    
-    p_inv <- matrix(NA,length(gamma_cats),4)
-    
-    for (g in 1:length(gamma_cats)) {
-      # To be invariant, barring back-substitutions, we must start in a state and then never leave
-      p_inv[g,] <- bf * exp(diag(Q*branch_length*gamma_cats[g]))
-    }
-    
-    return(colMeans(p_inv))
-  }
-  
-}
-
 marginalizeDoubletFrequencies <- function(df) {
   d1 <- c(1,1,1,1,2,2,2,2,3,3,3,3,4,4,4,4)
   d2 <- c(1,2,3,4,1,2,3,4,1,2,3,4,1,2,3,4)
@@ -342,21 +104,6 @@ marginalizeDoubletFrequencies <- function(df) {
 # Calculate stuff!
 #######
 
-# Our flu exchange rates
-er <- c(1.882161, 7.009179, 0.914813, 0.495852, 7.666181, 1.000000)
-er <- er/sum(er)
-
-# Flu alpha parameter for ASRV
-gamma_alpha <- 0.440894
-
-# Nasrallah and Huelsenbeck's exchange rates
-S <- c(1,2,1,1,2,1)
-S <- S/sum(S)
-  
-# Nasrallah and Huelsenbeck's doublet stationary frequencies
-df <- c(0.015, 0.025, 0.011, 0.15, 0.0175, 0.019, 0.175, 0.014,0.014, 0.22, 0.01, 0.06, 0.14, 0.04, 0.065, 0.0245)
-df <- df/sum(df)
-
 # Tunicate parameters
 er <- c(0.11,0.187,0.107,0.116,0.366,0.114)
 er <- er/sum(er)
@@ -368,38 +115,18 @@ bf <- c(0.319,0.209,0.245,0.227)
 bf <- bf/sum(bf)
 
 # Our values in the study
+rateProportionDoublets(er,df,0.0)
 rateProportionDoublets(er,df,0.5)
 rateProportionDoublets(er,df,2)
 rateProportionDoublets(er,df,8)
+rateProportionDoublets(er,df,1000)
 
 # Large sequence
-d <- exp(seq(log(1/1024),log(1024),length.out=100))
+d <- exp(seq(log(1/1000),log(10000),length.out=1000))
 
 p <- sapply(d,function(this_d){rateProportionDoublets(er,df,this_d)})
 
-plot(d,p,log="x")
-
-# Invariant sites
-expectedEpiPropInvDoublet(er,df,gamma_alpha,epistasis_d=0,branch_length=6)
-expectedEpiPropInvDoublet(er,df,gamma_alpha,epistasis_d=0.5,branch_length=6)
-expectedEpiPropInvDoublet(er,df,gamma_alpha,epistasis_d=2,branch_length=6)
-expectedEpiPropInvDoublet(er,df,gamma_alpha,epistasis_d=8,branch_length=6)
-
-epi_inv <- sapply(seq(0,100,1),function(d){
-  expectedEpiPropInvDoublet(er,df,gamma_alpha,epistasis_d=d,branch_length=5.928407)
-})
-
-colSums(epi_inv)
-
-plot(NULL,NULL,xlim=c(0,100),ylim=c(0,1),xlab="d",ylab="prop inv")
-
-# lines(seq(0,100,1),epi_inv[1,],col="red")
-# lines(seq(0,100,1),epi_inv[2,],col="green")
-# lines(seq(0,100,1),epi_inv[3,],col="gold2")
-# lines(seq(0,100,1),epi_inv[4,],col="blue")
-# lines(seq(0,100,1),colSums(epi_inv),col="black")
-# legend("topleft",fill=c("red","green","gold2","blue","black"),legend=c("A","C","G","T","total"),bty="n",border=NA)
-
-plot(seq(0,100,1),colSums(epi_inv),type="l",ylim=c(0,1),xlab="d",ylab="prop inv")
-abline(h=sum(expectedIIDPropInv(er,bf,gamma_alpha,5.928407)),col="grey")
-
+# pdf("notes/figures/p_vs_d.pdf",)
+#   par(lend=2)
+  plot(d,p,type="l",log="x",ylab="proportion doublet")
+# dev.off()

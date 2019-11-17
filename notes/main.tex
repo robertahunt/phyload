@@ -135,9 +135,9 @@ When $d = \infty$, all substitutions are double substitutions.
 In the intervening regimes, a portion of substitutions at epistatically paired sites will be doublet substitutions while the remainder will be single-site changes.
 We can compute the total fraction of the substitutions that are doublet substitutions as,
 \[
-p = \frac{ r_{d} }{r_{d} + r_{s}}
+p = \frac{ d \times r_{d} }{d \times r_{d} + r_{s}}
 \]
-with $r_d$ the total rate of doublet subtitutions,
+with $r_d$ $1 / d$ times the total rate of doublet subtitutions,
 \[
   r_{d} = 2 \times \sum_{x,y \in \boldsymbol{W}} \pi_{xy} \pi_{yx} S_{x_1,y_1} S_{x_2,y_2},
 \]
@@ -148,10 +148,13 @@ and $r_s$ the total rate of single substitutions,
 It can thus be seen that (for fixed values of other substitution parameters) the proportion of doublet mutations is a strictly increasing, sigmoidal, function of $d$.
 In the case of $d = 0$ and $\pi_{xy} = \pi_x \pi_y$, the model collapses to a standard GTR+G model.
 
+\amcomment{Add curve here, highlight our d values}
+
 \subsection*{Simulation grid\label{sec:leviathan}}
 With the epistatic doublet model, there are two variables that govern the capacity for epistasis to affect phylogenetic inference: the strength of the interactions, and the proportion of the alignment that is epistatic.
 To investigate the effect of the strength of epistasis, we simulate with $d = (0,0.5,2,8,1000)$, which encompasses both realistic (see below) and extreme values.
 Further, simulating $d=0$ allows us to disentangle the effect of model misspecification due to unmodeled heterogeneity in stationary frequencies from model misspecification due to paired substitutions.
+Our values of $d$ correspond to 0\%, 3.2\%, 11.6\%, 34.5\%, and 98.5\% of all substitutions being doublet substitutions.
 To understand the effect of adding epistatic sites, for each value of $d$ we simulate a grid where we independently vary the number of epistatic sites, $n_e$ and independent sites, $n_i$.
 More than simply allowing us to investigate the effect of the proportion of epistatic sites in the alignment, this setup allows us to assess the value of an epistatic site to inference.
 Specifically, we ask if epistatic sites useful but simply not as informative as independent sites or are actively harmful to inference.
