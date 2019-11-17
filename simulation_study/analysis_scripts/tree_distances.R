@@ -25,7 +25,7 @@ post <- c(run1,run2)
 class(post) <- "multiPhylo"
 
 all.rf <- RF.dist(post,true)
-all.kf <- RF.dist(post,true)
+all.kf <- KF.dist(post,true)
 
 rf.min    <- min(all.rf)
 rf.max    <- max(all.rf)
