@@ -1,17 +1,24 @@
 SEED             = args[1]
 TARGET_ALN       = args[2]
 TARGET_DIRECTORY = args[3]
+TAXON_FILE       = args[4]
 
 seed(SEED)
 
 ### Read in sequence data for the gene
 data = readDiscreteCharacterData(TARGET_ALN)
 
-# Get some useful variables from the data. We need these later on.
-num_taxa <- data.ntaxa()
-num_branches <- 2 * num_taxa - 3
-taxa <- data.taxa()
-
+# With this switch, if we read in an empty alignment we will run an analysis under the prior (equivalent to running an analysis on a dataset of 0 sites)
+if ( type(data) != "NULL" ) {
+  # Get some useful variables from the data. We need these later on.
+  num_taxa <- data.ntaxa()
+  num_branches <- 2 * num_taxa - 3
+  taxa <- data.taxa()
+} else {
+  source(TAXON_FILE)
+  num_taxa <- taxa.size()
+  num_branches <- 2 * num_taxa - 3
+}
 
 mvi = 1
 mni = 1
@@ -67,9 +74,14 @@ moves[mvi++] = mvBranchLengthScale(psi,weight=num_branches)
 # the sequence evolution model
 seq ~ dnPhyloCTMC(tree=psi, Q=Q, siteRates=gamma_cats, type="DNA")
 
-# attach the data
-seq.clamp(data)
-
+# Switch for running under the prior if the alignment is empty
+if ( type(data) != "NULL" ) {
+  # attach the data if we have it, otherwise we're running under the prior
+  seq.clamp(data)
+  under_prior = false
+} else {
+  under_prior = true
+}
 
 ############
 # Analysis #
@@ -83,7 +95,7 @@ monitors[mni++] = mnStochasticVariable(filename=TARGET_DIRECTORY + "/stochastic_
 
 # run the analysis
 mymcmc = mcmc(mymodel, moves, monitors, nruns=2)
-mymcmc.burnin(generations=2000,tuningInterval=100)
-mymcmc.run(generations=20000)
+mymcmc.burnin(generations=2000,tuningInterval=100,underPrior=under_prior)
+mymcmc.run(generations=20000,underPrior=under_prior)
 
 q()
