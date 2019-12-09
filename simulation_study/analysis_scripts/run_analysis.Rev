@@ -12,6 +12,10 @@ if ( type(data) == "NULL" ) {
   q()
 }
 
+num_taxa <- data.ntaxa()
+num_branches <- 2 * num_taxa - 3
+taxa <- data.taxa()
+
 mvi = 1
 mni = 1
 
