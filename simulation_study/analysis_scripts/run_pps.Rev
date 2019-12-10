@@ -1,7 +1,7 @@
 SEED             = args[1]
 TARGET_ALN       = args[2]
 TARGET_DIRECTORY = args[3]
-RUN_NUMBER       = args[4]
+STOCHASTIC_LOG   = args[4]
 
 seed(SEED)
 
@@ -77,9 +77,9 @@ seq.clamp(data)
 
 mymodel = model(psi)
 
-trace = readStochasticVariableTrace(TARGET_DIRECTORY + "/stochastic_variables_run_" + RUN_NUMBER + ".log", delimiter=TAB)
+trace = readStochasticVariableTrace(STOCHASTIC_LOG, delimiter=TAB)
 
-pps = posteriorPredictiveSimulation(mymodel, directory=TARGET_DIRECTORY + "/" + RUN_NUMBER + "/PPS", trace)
+pps = posteriorPredictiveSimulation(mymodel, directory=TARGET_DIRECTORY + "/PPS", trace)
 
 pps.run(thinning=40)
 

@@ -3,22 +3,24 @@ library(phangorn)
 # This is designed to be called with Rscript with several arguments
 # arg1: seed for Rev
 # arg2: alignment that PPS is to be run on
-# arg3: path to write output files
-# arg4: command for calling RevBayes
+# arg3: full path tostochastic_variables_run_1.log
+# arg4: full path tostochastic_variables_run_2.log
+# arg5: output files will be in args[5]/PPS
+# arg6: command for calling RevBayes
 
 # Call this script from phyload/simulation_study
 
 # Get arguments
 args = commandArgs(trailingOnly=TRUE)
 
-if (!length(args) == 4) {
-  stop("This script requires 4 arguments")
+if (!length(args) == 6) {
+  stop("This script requires 6 arguments")
 }
 
 seed   <- args[1]
 aln    <- args[2]
 stochastic_1 <- args[3]
-stochastic_1 <- args[4]
+stochastic_2 <- args[4]
 outdir <- args[5]
 rb     <- args[6]
 
@@ -32,8 +34,8 @@ dir.create(dir1)
 dir.create(dir2)
 dir.create(pps.dir)
 
-system2("rb",args=c("analysis_scripts/run_pps.Rev","--args",seed,aln,outdir,1))
-system2("rb",args=c("analysis_scripts/run_pps.Rev","--args",seed,aln,outdir,2))
+system2(rb, args=c("analysis_scripts/run_pps.Rev","--args",seed,aln,dir1,stochastic_1))
+system2(rb, args=c("analysis_scripts/run_pps.Rev","--args",seed,aln,dir2,stochastic_2))
 
 n_pps <- length(list.files(paste0(dir1,"/PPS")))
 
