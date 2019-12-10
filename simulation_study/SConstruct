@@ -73,7 +73,7 @@ nest.add_aggregate('mi_pvalue_agg', list)
 
 
 # nests define parameter sweeps
-nest.add('d', (0, 0, 0.5, 2, 8, 1000))
+nest.add('d', (0, 0.5, 2, 8, 1000))
 nest.add('n_iid', range(0, 404, 16))
 n_epi_range = np.array(range(0, 404, 16))
 if any(n_epi_range % 2 != 0):
