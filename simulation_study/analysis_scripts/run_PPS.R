@@ -3,8 +3,10 @@ library(phangorn)
 # This is designed to be called with Rscript with several arguments
 # arg1: seed for Rev
 # arg2: alignment that PPS is to be run on
-# arg3: path to write output files
-# arg4: command for calling RevBayes
+# arg3: full path tostochastic_variables_run_1.log
+# arg4: full path tostochastic_variables_run_2.log
+# arg5: output files will be in args[5]/PPS
+# arg6: command for calling RevBayes
 
 # Call this script from phyload/simulation_study
 
