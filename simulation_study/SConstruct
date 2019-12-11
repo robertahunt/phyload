@@ -74,11 +74,11 @@ nest.add_aggregate('mi_pvalue_agg', list)
 
 # nests define parameter sweeps
 nest.add('d', (0, 0.5, 2, 8, 1000))
-nest.add('n_iid', range(4, 404, 16))
-n_epi_range = np.array(range(4, 404, 16))
+nest.add('n_iid', range(0, 404, 16))
+n_epi_range = np.array(range(0, 404, 16))
 if any(n_epi_range % 2 != 0):
     raise ValueError('n_epi must be even!')
-nest.add('n_epi', n_epi_range)
+nest.add('n_epi', lambda c: n_epi_range if c['n_iid'] else n_epi_range[1:])
 nest.add('replicate', range(1, replicates + 1))
 
 # a random seed for each grid cell will be needed for rev
@@ -156,7 +156,7 @@ def pps(outdir, c):
     pps = env.SRun([f'{outdir}/PPS/posterior_predictive_sim_{n}/seq.nex'
                     for n in range(1, 103)],
                    [c['aln'], c['trees']],
-                   f'Rscript simulation_scripts/run_PPS.R {seed} $SOURCES {outdir} {revpath}')
+                   f'Rscript analysis_scripts/run_PPS.R {seed} $SOURCES {outdir} {revpath}')
     return pps
 
 
@@ -170,6 +170,8 @@ def pps_mi(outdir, c):
                                 'python indices/align_mi.py $SOURCES'))
     pps_mi_fname = f'{outdir}/PPS/pps_mi.tsv'
     env.Textfile(pps_mi_fname, [str(x[0]) for x in mi_list])
+    env.Depends(pps_mi_fname, c['pps'])
+    env.Depends(pps_mi_fname, mi_list)
     return pps_mi_fname
 
 
@@ -189,7 +191,7 @@ def pps_mi_pvalue(outdir, c):
     '''calc mi pvalue for pps aln'''
     pps_mi_pvalue = env.SRun(f'{outdir}/aln.nex.mi.summary.pvalue.csv',
                              [c['pps_mi'], c['mi']],
-                             f'python indices/pps_pvalue.py $SOURCES')
+                             f'python indices/pps_pvalue.py $SOURCES --pc 1')
     c['mi_pvalue_agg'].append({'d': c['d'], 'n_iid': c['n_iid'],
                                'n_epi': c['n_epi'], 'tgt': pps_mi_pvalue})
     return pps_mi_pvalue
@@ -312,7 +314,7 @@ def mi_agg(outdir, c):
     '''aggregate mutual infomation matrices'''
     mi_agg = env.SRun(f'{outdir}/agg_skewness.pdf',
                       c['mi_agg_input'],
-                      f'python utils/stats_agg.py $SOURCE {outdir} --smooth 4')
+                      f'python utils/stats_agg.py $SOURCE {outdir}')
     env.Depends(mi_agg, [x['tgt'] for x in c['mi_agg']])
     return mi_agg
 
@@ -332,7 +334,7 @@ def pi_agg(outdir, c):
     '''aggregate prop invar matrices'''
     pi_agg = env.SRun(f'{outdir}/agg_PI.pdf',
                       c['pi_agg_input'],
-                      f'python utils/stats_agg.py $SOURCE {outdir} --smooth 4')
+                      f'python utils/stats_agg.py $SOURCE {outdir}')
     env.Depends(pi_agg, [x['tgt'] for x in c['pi_agg']])
     return pi_agg
 
@@ -342,8 +344,7 @@ def G93_agg(outdir, c):
     '''aggregate Goldman (1993) multinomial likelihood matrices'''
     G93_agg = env.SRun(f'{outdir}/agg_G93.pdf',
                        c['G93_agg_input'],
-                       f'python utils/stats_agg.py $SOURCE {outdir}'
-                       ' --smooth 4')
+                       f'python utils/stats_agg.py $SOURCE {outdir}')
     env.Depends(G93_agg, [x['tgt'] for x in c['G93_agg']])
     return G93_agg
 
@@ -353,8 +354,7 @@ def converge_agg(outdir, c):
     '''aggregate convergence matrices'''
     converge_agg = env.SRun(f'{outdir}/agg_asdsf.pdf',
                             c['converge_agg_input'],
-                            f'python utils/stats_agg.py $SOURCE {outdir}'
-                            f' --smooth 4')
+                            f'python utils/stats_agg.py $SOURCE {outdir}')
     env.Depends(converge_agg, [x['tgt'] for x in c['converge_agg']])
     return converge_agg
 
@@ -364,7 +364,6 @@ def distance_agg(outdir, c):
     '''aggregate distance matrices'''
     distance_agg = env.SRun(f'{outdir}/agg_rf.min.pdf',
                             c['distance_agg_input'],
-                            f'python utils/stats_agg.py $SOURCE {outdir}'
-                            f' --smooth 4')
+                            f'python utils/stats_agg.py $SOURCE {outdir}')
     env.Depends(distance_agg, [x['tgt'] for x in c['distance_agg']])
     return distance_agg
