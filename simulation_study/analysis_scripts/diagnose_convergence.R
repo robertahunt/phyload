@@ -26,7 +26,7 @@ run2 <- read.tree(args[2])
 #   split: should we split each chain in half before calculation (adds within chain component to overall convergence)
 #   min.freq.cutoff: we will ignore all splits that occur at less than this frequency overall
 # Returns: the ASDSF
-ASDSF <- function(chains,split.chains=TRUE,min.freq.cutoff=0.05) {
+ASDSF <- function(chains,split.chains=FALSE,min.freq.cutoff=0.05) {
   # recover()
 
   all_trees <- do.call(c,chains)
@@ -128,7 +128,7 @@ ASDSF <- function(chains,split.chains=TRUE,min.freq.cutoff=0.05) {
 # Arguments:
 #   chains: all chains as a list (need not be multiphylo class)
 # Returns: the PSRF
-treeLengthPSRF <- function(chains,split.chains=TRUE) {
+treeLengthPSRF <- function(chains,split.chains=FALSE) {
   # Get all tree lengths, preserve chains
   chains <- lapply(chains,function(chain){
     unlist(lapply(chain,function(phy){sum(phy$edge.length)}))
