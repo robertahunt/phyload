@@ -38,7 +38,7 @@
 % Andy comments
 \newcommand{\amcomment}[1]{{\color{blue}{(\textbf{AM's comment:} #1)}}}
 % Sarah comments
-\newcommand{\shcomment}[1]{{\color{red}{(\textbf{SH's comment:} #1)}}}
+\newcommand{\skhcomment}[1]{{\color{red}{(\textbf{SH's comment:} #1)}}}
 
 
 \title{Phyload: a story of paired sites finding their way in an unpaired model space}
@@ -177,9 +177,11 @@ With the epistatic doublet model, there are two variables that govern the capaci
 To investigate the effect of the strength of epistasis, we simulate with $d = \{0.0,0.5,2.0,8.0,1000.0\}$, which encompasses both realistic (see below) and extreme values.
 Simulating $d=0$ allows us to disentangle the effect of model misspecification due to the doublet stationary frequencies from model misspecification due to paired substitutions.
 Our values of $d$ correspond to 0\%, 3.2\%, 11.6\%, 34.5\%, and 98.5\% of all substitutions being doublet substitutions.
+\skhcomment{All substitutions at epi pairs are doublets, not all subs across the tree, yes?}
 To understand the effect of adding epistatic sites, for each value of $d$ we simulate a grid where we independently vary the number of epistatic sites, $n_e$ and independent sites, $n_i$.
 This setup is more informative than a one in which we hold the number of sites constant and vary the proportion of sites coming from the epistatic model.
 By comparing the accuracy of inference on a dataset with $n_i$ independent sites and one with $n_i$ independent sites and $n_e$ epistatic sites, we can determine if we are in the catastrophic model misspecification regime (inference with $n = n_i + n_e$ sites is worse than with $n = n_i$ sites) or the best-case regime (inference with $n = n_i + n_e$ is better than with $n = n_i$ sites).
+\skhcomment{I like the idea of being very clear here what the possible outcomes are. Andy mentioned in slack that we want to be clear that we think epi sites are less useful but not misleading.}
 
 For each value of $d$, we simulate a grid with $n_i,n_e \in \{0, 16, 32, \dots, 400\}$, excluding the cell in which $n_i = n_e = 0$.
 To keep computation costs down, at each grid point we simulate a single alignment, and we refer to these alignments collectively as the ``real'' alignments.
@@ -191,6 +193,7 @@ To ensure that our simulation regime is realistic, we targeted our simulating pa
 As we are primarily interested in the epistatic model parameters, we first inferred a fixed tree using RAxML \citep{stamatakis2014raxml}.
 Fixing this tree, we then used RevBayes \cite{hohna2016revbayes} to infer the epistatic doublet model parameters.
 The inferred value of $d$ for this dataset is approximately 0.65, while Nasrallah and Huelsenbeck inferred values as high as 7.59 in fixed-tree analyses and 9.72 when inferring the tree.
+\skhcomment{N+H used a different tree right? We don't expect to the same value as they did but we expect to get order of magnitude close?}
 Thus, our simulating values of $d$ include both extreme values, $d=\{0,1000\}$, and biologically relevant values, $d = \{0.5,2.0,8.0\}$ as biologically relevant values, with the inclu $d=\{0,1000\})$.
 We use the RAxML tree for simulation, and all other parameters are fixed to the posterior mean values from the RevBayes analysis.
 Simulating values of all parameters are available in Supplementary Table \ref{}.
