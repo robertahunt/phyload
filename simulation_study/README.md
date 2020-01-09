@@ -141,7 +141,7 @@ The arguments are
 
 To compute summaries related to the posterior distribution on splits, use
 ```bash
-$ Rscript simulation_scripts/split_based_metrics.R <run1> <run2> <true_tree>
+$ Rscript analysis_scripts/split_based_metrics.R <run1> <run2> <true_tree>
 ```
 Computes how resolved the majority-rule consensus tree is (as a fraction of a fully bifurcating tree) and what percent of splits in the MRC tree are not in the true tree.
 Prints to stdout a tsv of the names of the summaries (row 1) and the summaries (row2).
