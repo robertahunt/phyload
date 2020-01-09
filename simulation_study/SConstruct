@@ -70,6 +70,8 @@ nest.add_aggregate('pi_agg', list)
 nest.add_aggregate('converge_agg', list)
 nest.add_aggregate('distance_agg', list)
 nest.add_aggregate('mi_pvalue_agg', list)
+nest.add_aggregate('splits_agg', list)
+nest.add_aggregate('bl_agg', list)
 
 
 # nests define parameter sweeps
@@ -123,7 +125,7 @@ def trees(outdir, c):
                     f'&& rm {outdir}/stochastic_variables.log')
 
 
-# calc summary stats
+# # calc summary stats
 @nest.add_target()
 def convergence(outdir, c):
     '''convergence checks'''
@@ -219,6 +221,30 @@ def G93(outdir, c):
     return G93
 
 
+@nest.add_target()
+def splits(outdir, c):
+    '''summaries related to the posterior distribution of splits'''
+    split = env.SRun(f'{outdir}/split_based_metrics.tsv',
+                     c['trees'],
+                     f'Rscript analysis_scripts/split_based_metrics.R '
+                     f'$SOURCES {treepath} > $TARGET')
+    c['splits_agg'].append({'d': c['d'], 'n_iid': c['n_iid'],
+                            'n_epi': c['n_epi'], 'tgt': split})
+    return split
+
+
+@nest.add_target()
+def bl(outdir, c):
+    '''summaries related to branch lengths'''
+    bl = env.SRun(f'{outdir}/branch_length_measures.tsv',
+                  c['trees'],
+                  f'Rscript analysis_scripts/branch_length_measures.R '
+                  f'$SOURCES {treepath} > $TARGET')
+    c['bl_agg'].append({'d': c['d'], 'n_iid': c['n_iid'],
+                        'n_epi': c['n_epi'], 'tgt': bl})
+    return bl
+
+
 # pop to the top level to aggregate
 nest.pop('d')
 
@@ -308,6 +334,34 @@ def distance_agg_input(outdir, c):
     return distance_input
 
 
+@nest.add_target()
+def splits_agg_input(outdir, c):
+    '''some scons ninjutsu for building a file of distance paths w/ associated args
+    '''
+    # first the header line
+    lines = ['d\tn_iid\tn_epi\tpath']
+    for split in c['splits_agg']:
+        lines.append(f"{split['d']}\t{split['n_iid']}"
+                     f"\t{split['n_epi']}\t{File(split['tgt'][0])}")
+    split_input = env.Textfile(f'{outdir}/splits_agg.input.tsv', lines)
+    env.Depends(split_input, Flatten(split['tgt']))
+    return split_input
+
+
+@nest.add_target()
+def bl_agg_input(outdir, c):
+    '''some scons ninjutsu for building a file of distance paths w/ associated args
+    '''
+    # first the header line
+    lines = ['d\tn_iid\tn_epi\tpath']
+    for bl in c['bl_agg']:
+        lines.append(f"{bl['d']}\t{bl['n_iid']}"
+                     f"\t{bl['n_epi']}\t{File(bl['tgt'][0])}")
+    bl_input = env.Textfile(f'{outdir}/bl_agg.input.tsv', lines)
+    env.Depends(bl_input, Flatten(bl['tgt']))
+    return bl_input
+
+
 # aggregate stats
 @nest.add_target()
 def mi_agg(outdir, c):
@@ -367,3 +421,23 @@ def distance_agg(outdir, c):
                             f'python utils/stats_agg.py $SOURCE {outdir}')
     env.Depends(distance_agg, [x['tgt'] for x in c['distance_agg']])
     return distance_agg
+
+
+@nest.add_target()
+def splits_agg(outdir, c):
+    '''aggregate splits matrices'''
+    splits_agg = env.SRun(f'{outdir}/agg_mrc_percent_resolved.pdf',
+                          c['splits_agg_input'],
+                          f'python utils/stats_agg.py $SOURCE {outdir}')
+    env.Depends(splits_agg, [x['tgt'] for x in c['splits_agg']])
+    return splits_agg
+
+
+@nest.add_target()
+def bl_agg(outdir, c):
+    '''aggregate branch length matrices'''
+    bl_agg = env.SRun(f'{outdir}/agg_tl.min.pdf',
+                      c['bl_agg_input'],
+                      f'python utils/stats_agg.py $SOURCE {outdir}')
+    env.Depends(bl_agg, [x['tgt'] for x in c['bl_agg']])
+    return bl_agg
