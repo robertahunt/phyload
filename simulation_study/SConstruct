@@ -70,6 +70,7 @@ nest.add_aggregate('pi_agg', list)
 nest.add_aggregate('converge_agg', list)
 nest.add_aggregate('distance_agg', list)
 nest.add_aggregate('mi_pvalue_agg', list)
+nest.add_aggregate('G93_pvalue_agg', list)
 nest.add_aggregate('splits_agg', list)
 nest.add_aggregate('bl_agg', list)
 
@@ -178,6 +179,22 @@ def pps_mi(outdir, c):
 
 
 @nest.add_target()
+def pps_G93(outdir, c):
+    '''calc G93 for pps aln'''
+    G93_list = []
+    for i, aln in enumerate(c['pps']):
+        G93_list.append(env.SRun(f'{str(aln)}.G93.summary.tsv',
+                                 aln,
+                                 'Rscript indices/goldman_yang_1993.R $SOURCE '
+                                 '$TARGET'))
+    pps_G93_fname = f'{outdir}/PPS/pps_G93.tsv'
+    env.Textfile(pps_G93_fname, [str(x[0]) for x in G93_list])
+    env.Depends(pps_G93_fname, c['pps'])
+    env.Depends(pps_G93_fname, G93_list)
+    return pps_G93_fname
+
+
+@nest.add_target()
 def mi(outdir, c):
     '''column mutual information matrix summary stats'''
     mi = env.SRun(f'{outdir}/aln.nex.mi.summary.tsv',
@@ -186,6 +203,17 @@ def mi(outdir, c):
     c['mi_agg'].append({'d': c['d'], 'n_iid': c['n_iid'], 'n_epi': c['n_epi'],
                         'tgt': mi})
     return mi
+
+
+@nest.add_target()
+def G93(outdir, c):
+    '''multinomial likelihood summary stat from Goldman (1993)'''
+    G93 = env.SRun(f'{outdir}/aln.nex.G93.summary.tsv',
+                   c['aln'],
+                   'Rscript indices/goldman_yang_1993.R $SOURCE $TARGET')
+    c['G93_agg'].append({'d': c['d'], 'n_iid': c['n_iid'],
+                         'n_epi': c['n_epi'], 'tgt': G93})
+    return G93
 
 
 @nest.add_target()
@@ -200,6 +228,17 @@ def pps_mi_pvalue(outdir, c):
 
 
 @nest.add_target()
+def pps_G93_pvalue(outdir, c):
+    '''calc G93 pvalue for pps aln'''
+    pps_G93_pvalue = env.SRun(f'{outdir}/aln.nex.G93.summary.pvalue.csv',
+                              [c['pps_G93'], c['G93']],
+                              f'python indices/pps_pvalue.py $SOURCES --pc 1')
+    c['G93_pvalue_agg'].append({'d': c['d'], 'n_iid': c['n_iid'],
+                               'n_epi': c['n_epi'], 'tgt': pps_G93_pvalue})
+    return pps_G93_pvalue
+
+
+@nest.add_target()
 def pi(outdir, c):
     '''proportion invariant sites summary stats'''
     pi = env.SRun(f'{outdir}/aln.nex.pi.summary.tsv',
@@ -208,17 +247,6 @@ def pi(outdir, c):
     c['pi_agg'].append({'d': c['d'], 'n_iid': c['n_iid'], 'n_epi': c['n_epi'],
                         'tgt': pi})
     return pi
-
-
-@nest.add_target()
-def G93(outdir, c):
-    '''multinomial likelihood summary stat from Goldman (1993)'''
-    G93 = env.SRun(f'{outdir}/aln.nex.G93.summary.tsv',
-                   c['aln'],
-                   'Rscript indices/goldman_yang_1993.R $SOURCE $TARGET')
-    c['G93_agg'].append({'d': c['d'], 'n_iid': c['n_iid'],
-                         'n_epi': c['n_epi'], 'tgt': G93})
-    return G93
 
 
 @nest.add_target()
@@ -276,6 +304,20 @@ def mi_pvalue_agg_input(outdir, c):
     mi_pvalue_input = env.Textfile(f'{outdir}/mi_pvalue_agg.input.tsv', lines)
     env.Depends(mi_pvalue_input, Flatten(mi_pvalue['tgt']))
     return mi_pvalue_input
+
+
+@nest.add_target()
+def G93_pvalue_agg_input(outdir, c):
+    '''some scons ninjutsu for building a file of G93 pvalue paths w/ associated args
+    '''
+    # first the header line
+    lines = ['d\tn_iid\tn_epi\tpath']
+    for G93_pvalue in c['G93_pvalue_agg']:
+        lines.append(f"{G93_pvalue['d']}\t{G93_pvalue['n_iid']}"
+                     f"\t{G93_pvalue['n_epi']}\t{File(G93_pvalue['tgt'][0])}")
+    G93_pvalue_input = env.Textfile(f'{outdir}/G93_pvalue_agg.input.tsv', lines)
+    env.Depends(G93_pvalue_input, Flatten(G93_pvalue['tgt']))
+    return G93_pvalue_input
 
 
 @nest.add_target()
@@ -381,6 +423,16 @@ def mi_pvalue_agg(outdir, c):
                              f'python utils/stats_agg.py $SOURCE {outdir}')
     env.Depends(mi_pvalue_agg, [x['tgt'] for x in c['mi_pvalue_agg']])
     return mi_pvalue_agg
+
+
+@nest.add_target()
+def G93_pvalue_agg(outdir, c):
+    '''aggregate G93 pvalue matrices'''
+    G93_pvalue_agg = env.SRun(f'{outdir}/agg_G93_pvalue.pdf',
+                              c['G93_pvalue_agg_input'],
+                              f'python utils/stats_agg.py $SOURCE {outdir}')
+    env.Depends(G93_pvalue_agg, [x['tgt'] for x in c['G93_pvalue_agg']])
+    return G93_pvalue_agg
 
 
 @nest.add_target()
