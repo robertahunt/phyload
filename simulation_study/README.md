@@ -50,27 +50,6 @@ To process a single alignment, use
 $ Rscript indices/goldman_yang_1993.R <path_to_aln> <output_file>
 ```
 
-### [`pairwise_variance.R`](indices/pairwise_variance.R)
-Calculates our new pairwise variance test statistic.
-This statistic is var(all_pairwise_hamming_distances), the variance of the hamming distance (number of differences) for all pairwise comparisons of taxa in the alignment.
-
-Prints a file where the first line is "PV" and the second line is the value of the test statistic for this alignment.
-
-To process a single alignment, use
-```bash
-$ Rscript indices/pairwise_variance.R <path_to_aln> <output_file>
-```
-### [`singleton_fixed_tree.R`](indices/singleton_fixed_tree.R)
-Calculates the p-value against the null hypothesis that all sites are iid (under some CTMC model of character evolution) on a given phylogeny.
-For details of this test, see the paper.
-
-Prints a file where the first line is "ST" and the second line is the p-value for this alignment.
-
-To process a single alignment, use
-```bash
-$ Rscript indices/singleton_fixed_tree.R <path_to_aln> <path_to_tree> <output_file>
-```
-
 ## [`simulation_scripts/`](simulation_scripts)
 Scripts needed to simulate a single cell in the simulation study.
 
@@ -194,3 +173,16 @@ Prints to stdout two convergence diagnostics for to filter out any analyses wher
 $ Rscript analysis_scripts/diagnose_convergence.R <dir>
 ```
 - [`analysis_template.Rev`](analysis_scripts/epistatic_doublet_model_stub.Rev) A template for a Rev script to analyze an alignment, missing key parameters.
+
+### [`continuous_parameters.R`](analysis_scripts/continuous_parameters.R)
+
+To compute summaries of the substitution model parameters, use
+```bash
+$ Rscript analysis_scripts/continuous_parameters.R <run1> <run2>
+```
+Computes the posterior mean alpha (gamma shape parameter for ASRV model), the mean of each relative exchange rate (e.g. rate(A<->T)), and the mean of each stationary frequency.
+Prints to stdout a tsv of the names of the summaries (row 1) and the summaries (row2).
+
+The arguments are
+- `run1`: path to posterior stochastic variables log for replicate/chain 1
+- `run2`: path to posterior stochastic variables log for replicate/chain 2
