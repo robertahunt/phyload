@@ -37,6 +37,8 @@ def main():
     # extract statistic name
     df_stat.reset_index(inplace=True)
 
+    df_stat.dropna(axis=1, how='all', inplace=True)
+
     # note the groupby and mean below will average over replicates
     df = pd.concat((df_meta, df_stat),
                    axis=1).groupby(['d',
