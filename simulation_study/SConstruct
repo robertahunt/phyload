@@ -72,6 +72,7 @@ nest.add_aggregate('distance_agg', list)
 nest.add_aggregate('mi_pvalue_agg', list)
 nest.add_aggregate('G93_pvalue_agg', list)
 nest.add_aggregate('splits_agg', list)
+nest.add_aggregate('continuous_parameters_agg', list)
 nest.add_aggregate('bl_agg', list)
 
 
@@ -250,6 +251,19 @@ def pi(outdir, c):
 
 
 @nest.add_target()
+def continuous_parameters(outdir, c):
+    '''posterior means from the GTR+G model inference.'''
+    cont_params = env.SRun(f'{outdir}/aln.nex.subparams.summary.tsv',
+                           c['trees'],
+                           'Rscript analysis_scripts/continuous_parameters.R '
+                           '$SOURCES > $TARGET')
+    c['continuous_parameters_agg'].append({'d': c['d'], 'n_iid': c['n_iid'],
+                                           'n_epi': c['n_epi'],
+                                           'tgt': cont_params})
+    return cont_params
+
+
+@nest.add_target()
 def splits(outdir, c):
     '''summaries related to the posterior distribution of splits'''
     split = env.SRun(f'{outdir}/split_based_metrics.tsv',
@@ -349,6 +363,20 @@ def G93_agg_input(outdir, c):
 
 
 @nest.add_target()
+def cont_params_agg_input(outdir, c):
+    '''some scons ninjutsu for building a file of subparams paths w/ associated args
+    '''
+    # first the header line
+    lines = ['d\tn_iid\tn_epi\tpath']
+    for param in c['continuous_parameters_agg']:
+        lines.append(f"{param['d']}\t{param['n_iid']}\t{param['n_epi']}"
+                     f"\t{File(param['tgt'][0])}")
+    cont_params_input = env.Textfile(f'{outdir}/subparams_agg.input.tsv', lines)
+    env.Depends(cont_params_input, Flatten(param['tgt']))
+    return cont_params_input
+
+
+@nest.add_target()
 def converge_agg_input(outdir, c):
     '''some scons ninjutsu for building a file of converge paths w/ associated args
     '''
@@ -433,6 +461,17 @@ def G93_pvalue_agg(outdir, c):
                               f'python utils/stats_agg.py $SOURCE {outdir}')
     env.Depends(G93_pvalue_agg, [x['tgt'] for x in c['G93_pvalue_agg']])
     return G93_pvalue_agg
+
+
+@nest.add_target()
+def cont_params_agg(outdir, c):
+    '''aggregate cont params matrices'''
+    cont_params_agg = env.SRun(f'{outdir}/agg_rate[AC].pdf',
+                               c['cont_params_agg_input'],
+                               f'python utils/stats_agg.py $SOURCE {outdir}')
+    env.Depends(cont_params_agg, [x['tgt'] for
+                x in c['continuous_parameters_agg']])
+    return cont_params_agg
 
 
 @nest.add_target()
