@@ -29,13 +29,14 @@ def calc_pvalue(pps, true, pc=0):
                                  columns=['m1', 'm2', 'm3']), \
                                  pd.DataFrame([[2, 2, 2],[5, 2, 2]], \
                                  columns=['m1', 'm2', 'm3']), 2)\
-                                 .loc[True].tolist()
+                                 .iloc[0].tolist()
     [0.5, 1.0, 1.0]
     """
     true = pd.concat([true]*len(pps), ignore_index=True)
     pvalue = pps.subtract(true).ge(0)  # greater than or equal to pps
-    pvalue = pvalue.apply(pd.Series.value_counts).fillna(0).loc[True:] + pc
+    pvalue = pvalue.apply(pd.Series.value_counts).fillna(0) + pc
     pvalue /= (len(pps) + pc)
+    pvalue = pvalue.reset_index()[pvalue.index].drop('index', axis=1)
     return pvalue
 
 
@@ -61,7 +62,8 @@ def main():
                             zip(df.columns.values,
                                 [f'{x}_pvalue' for x in df.columns.values])})
     assert df.isnull().sum(axis=1).sum() == 0
-    df.to_csv(f'{os.path.splitext(args.aln_metric)[0]}.pvalue.csv',
+    assert len(df) == 1
+    df.to_csv(f'{os.path.splitext(args.aln_metric)[0]}.pvalue.tsv',
               index=False,
               sep='\t')
 

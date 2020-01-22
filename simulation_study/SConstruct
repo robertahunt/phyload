@@ -220,7 +220,7 @@ def G93(outdir, c):
 @nest.add_target()
 def pps_mi_pvalue(outdir, c):
     '''calc mi pvalue for pps aln'''
-    pps_mi_pvalue = env.SRun(f'{outdir}/aln.nex.mi.summary.pvalue.csv',
+    pps_mi_pvalue = env.SRun(f'{outdir}/aln.nex.mi.summary.pvalue.tsv',
                              [c['pps_mi'], c['mi']],
                              f'python indices/pps_pvalue.py $SOURCES --pc 1')
     c['mi_pvalue_agg'].append({'d': c['d'], 'n_iid': c['n_iid'],
@@ -231,7 +231,7 @@ def pps_mi_pvalue(outdir, c):
 @nest.add_target()
 def pps_G93_pvalue(outdir, c):
     '''calc G93 pvalue for pps aln'''
-    pps_G93_pvalue = env.SRun(f'{outdir}/aln.nex.G93.summary.pvalue.csv',
+    pps_G93_pvalue = env.SRun(f'{outdir}/aln.nex.G93.summary.pvalue.tsv',
                               [c['pps_G93'], c['G93']],
                               f'python indices/pps_pvalue.py $SOURCES --pc 1')
     c['G93_pvalue_agg'].append({'d': c['d'], 'n_iid': c['n_iid'],

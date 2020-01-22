@@ -34,6 +34,7 @@ def main():
     df_meta = pd.read_csv(args.input_list, sep='\t')
     df_stat = pd.concat(pd.read_csv(path, sep='\t')
                         for path in df_meta.path)
+    assert len(df_meta) == len(df_stat)
     # extract statistic name
     df_stat.reset_index(inplace=True)
 
