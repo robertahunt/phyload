@@ -35,8 +35,12 @@ def calc_pvalue(pps, true, pc=0):
     true = pd.concat([true]*len(pps), ignore_index=True)
     pvalue = pps.subtract(true).ge(0)  # greater than or equal to pps
     pvalue = pvalue.apply(pd.Series.value_counts).fillna(0) + pc
-    pvalue /= (len(pps) + pc)
     pvalue = pvalue.reset_index()[pvalue.index].drop('index', axis=1)
+    # if there are no values greater than or eqaul to pps
+    if len(pvalue) == 0:
+        pvalue = pvalue.append({col: pc for col in pvalue.columns.values},
+                               ignore_index=True)  # add a row for of just pc
+    pvalue /= (len(pps) + pc)
     return pvalue
 
 
