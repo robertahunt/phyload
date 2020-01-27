@@ -302,10 +302,51 @@ But not all the files we produced because that's a loooot of logfiles and a looo
 
 \section*{Results\label{sec:results}}
 
+\amcomment{All values reported are currently over the entire simulation grid, no filtering has been performed for MCMC runs that fail convergence diagnostics.}
+
+\subsection*{Posterior predictive tests\label{pps_results}}
+
+\begin{figure}
+  \centering
+  \includegraphics[width=\textwidth]{figures/test_stat_sensitivity.pdf}
+  \caption{
+  The values of all three test statistics plotted against the proportion of sites in the alignment drawn from the epistatic model, colored by $d$.
+  Values are for the grid of ``real'' alignments corresponding to part (b) of Figure \ref{fig:schematic}
+  All statistics show at least a degree of sensitivity to the proportion of epistatic sites, and some sensitivity to $d$.
+  The plot is restricted to simulations where $384 \leq n_i + n_e \leq 416$ to remove the effect of the number of sites on the GY93 statistic.
+  }
+  \label{fig:test_stat_sensitivity}
+\end{figure}
+
+All three test statistics examined exhibit sensitivity to the presence of epistatic interactions and to the value of $d$ (Figure \ref{fig:test_stat_sensitivity}) in our ``real'' alignments (Figure \ref{fig:schematic}).
+Thus, in principle all three statistics are capable of detecting epistasis in alignments.
+Of the three statistics, $MI_{max}$ shows the most consistent separation by $d$, with a steady increase in average as $d$ increases, where both $MI_{kurt}$ and $GY93$ show large leaps in average values between $d=8$ and $d=1000$.
+Similarly, for both the $GY93$ and $MI_{kurt}$ statistics there is a clear difference in their relationship to the proportion of epistatic sites between $d = 8$ and $d = 1000$, while the $MI_{max}$ statistic has a more consistent relationship across $d$.
+The $GY93$ statistic is by far the most sensitive to the total number of sites in the alignment, with a correlation coefficient of -0.99 between $GY93$ and $n_i + n_e$ where the correlation coefficients for $MI_{kurt}$ and $MI_{max}$ were 0.19 and 0.28 respectively.
+
+\begin{figure}
+  \centering
+  \includegraphics[width=\textwidth]{figures/power_curves.pdf}
+  \caption{
+  Power to detect epistasis using posterior predictive checks at $\alpha = 0.05$.
+  Power is the proportion tests yielding a statistically significant result, that is, the true positive rate.
+  Curves are averages over windows of 10\% windows of the proportion of epistatic sites.
+  }
+  \label{fig:power_curves}
+\end{figure}
+
+In practice, both information theoretic summary statistics outperform $GY93$, with $MI_{max}$ performing the best.
+We test the practical properties of our statistics by performing posterior predictive simulation for each ``real'' alignment (Figure \ref{fig:schematic}).
+An ideal test statistic has a high power (true positive rate) and a false positive rate equal to the specified $\alpha$, which we take to be 0.05.
+The $MI_{max}$ statistic has a false positive rate of 0.059, averaged over all simulations with no epistasis present (that is, with $d = 0$ or $n_e = 0$), and as can be seen in Figure \ref{fig:power_curves}, and reaches a maximum power of 1 at both $d = 8$ and $d = 1000$.
+The $MI_{kurt}$ statistic has a false positive rate of 0.0026, with a maximum power at $d = 1000$ of 0.92.
+The $GY93$ statistic has a false positive rate of 0, and achieves a maximum power of 0.51 at $d = 1000$.
+Averaged over all proportions of epistatic sites, the $MI_{max}$ statistic has a power of 0.17 at $d = 0.5$, comparable to the power of the $GY93$ statistic at $d = 1000$ (0.18), and a power of 0.55 at $d = 2$, comparable to the power of the $MI_{kurt}$ statistic at $d = 1000$ (0.56).
+
 \subsection*{Accuracy\label{sec:error}}
 Preamble preamble preamble.
 
-\subsubsection*{Posterior measures\label{sec:tree_dists}}
+\subsubsection*{Distributional measures\label{sec:tree_dists}}
 As we are interested in Bayesian inference, we are not primarily interested in the error in point estimates of the phylogeny but in the overall goodness of the posterior distribution of trees.
 We employ two tree distance metrics, the Robinson-Foulds (RF) distance \citep{robinson1981comparison} and the branch score or Kuhner-Felsenstein (KF) distance \citep{kuhner1994simulation}.
 RF distance is a purely topological measure between a pair of trees, capturing the number of splits (bipartitions of taxa) present in one tree but not in the other.
@@ -317,16 +358,6 @@ As both $d$ and the proportion of epistatic sites increase, so does the distance
 However, the addition of epistatic sites improves rather than worsens inference, meaning the catastrophic model misspecification scenario does not apply.
 We find that overall the pattern is the same for both the KF and RF distances and for different summaries of the posterior distribution on distances.
 Thus we present only the results for the posterior mean KF distance in Figure \ref{fig:rf_mean}, additional results are available somewhere but maybe not in the supplement because that's 15 figures right there.
-
-\begin{figure}
-  \centering
-  \includegraphics[width=\textwidth]{figures/agg_rf_mean.pdf}
-  \caption{
-  The posterior mean RF distance to the true tree, plotted as a heatmap.
-  Larger values represent posterior distributions that are further on average from the true tree.
-  }
-  \label{fig:rf_mean}
-\end{figure}
 
 \subsubsection*{Summary trees\label{sec:point_estimates}}
 While comparisons based on the entire posterior distribution are useful for understanding the overall performance of inference, they do not necessarily reflect the experience of practitioners inferring phylogenies.
