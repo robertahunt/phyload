@@ -296,9 +296,78 @@ We consider two summaries of $\boldsymbol{I}$.
 First we consider the skew of $\boldsymbol{I}$, $I_s$, which should be sensitive to the strength of epistasis and proportion of epistatic sites, as the more interactions the more values that should fall in the right tail and the stronger the interactions the larger those values should get.
 We also consider the max, $I_m$, which should be sensitive to the presence or absence of epistasis, but is less likely to be sensistive to the proportion of epistatic sites.
 
+\subsection{Effective sequence length}
+
+\citet{nasrallah2011quantifying} define the effective sequence length, $n_eff$ to be the length of a hypothetical alignment drawn from a site-independent model which yields the same phylogenetic accuracy as the dependent alignment.
+An alternative to this is to define $n_eff$ in terms of the phylogenetic precision instead of accuracy.
+In any model-misspecification regime, we would expect that $n_eff < n$, that is, we expect the effective sequence length to be less than the true sequence length.
+In our simulations, $n = n_i + n_e$, which allows us to quantify which misspecification scenario applies.
+In the best-case scenario, $n_i \leq n_eff \leq n_i + n_e$, while in the catastrophic misspecification scenario $n_eff < n_i$.
+In order to quantify the effective sequence length, then, we need to first define measures of accuracy and precision, then we can choose an approach to estimate the effective sequence length.
+
+% Both of these definitions contrast with the classical definition of effective sample size
+
+
+\subsubsection*{Accuracy\label{sec:error}}
+As we are interested in Bayesian inference, we are not primarily interested in the accuracy in point estimates of the phylogeny but in the overall goodness of the posterior distribution of trees.
+We employ two tree distance metrics, the Robinson-Foulds (RF) distance \citep{robinson1981comparison} and the branch score or Kuhner-Felsenstein (KF) distance \citep{kuhner1994simulation}.
+RF distance is a purely topological measure between a pair of trees, capturing the number of splits (bipartitions of taxa) present in one tree but not in the other.
+The KF distance is the sum of squared differences in branch lengths between trees, treating a missing split in either tree as a 0, and so captures differences in both topology and branch length.
+The quantity that we are interested in is thus the posterior distribution on distances to the true tree.
+Given that we have samples from our posterior distribution on phylogenies, we can obtain samples from the posterior distribution on tree distances.
+We consider multiple univariate summaries of this distribution, namely the mean, median, minimum, and maximum of the distances, as well as the 2.5, 5, 95, and 97.5 percentiles.
+
+While comparisons based on the entire posterior distribution are useful for understanding the overall performance of inference, they do not necessarily reflect the experience of practitioners inferring phylogenies.
+In practice, the posterior distribution is, at least for the purposes of visualization, generally reduced to a single summary tree, often a majoriy rule consensus (MRC) tree.
+Thus, as an alternative accuracy measure, we take the number of splits in the MRC tree that are not in the true tree as an error measure of the point tree estimate.
+
+\subsubsection*{Precision\label{sec:precision}}
+To investigate precision-based effective sequence lengths, we must define a measure of the precision or variance of our posterior distributions.
+In the best-case scenario, where epistasic sites are simply less informative than independent sites, one would intuitively expect that the variance of the posterior distribution on trees should increase.
+On the other hand, in the catastrophic scenario, it is possible that the increase in information about certain edges in the tree, the variance of the posterior distribution may actually decrease.
+While the variance of a phylogeny is defined \citep[e.g.\ ][]{willis2019confidence}, the time required to compute this variance makes it prohibitively expensive for our purposes \citep{brown2019mean}.
+In order to address the matter of variance, we thus turn to two surrogates.
+
+The first metric we consider is the resolution of the majority-rule consensus (MRC) tree \citep{}.
+The MRC tree is obtained by including all splits in the posterior that occur with a frequency above 50\%.
+As the amount of information in an alignment increases, there should be more splits with sufficient signal to place in the MRC tree and the MRC tree should include more splits.
+An MRC tree on $t$ taxa includes a maximum of $2 t - 3$ non-trivial splits, so dividing the number of (non-trivial) splits in the MRC tree by $2 t - 3$ produces a standardized value in [0,1] which we call the proportion of resolved splits.
+At 0, the MRC tree is completely unresolved (a star tree), while at 1 it is a fully resolved tree.
+While this metric takes a somewhat circuitous path to precision, the focus on the summary tree ties it more closely to tangible effects of variance encountered when reading a paper that estimates a phylogeny.
+
+As an alternate metric, we consider the width of the 95\% CI of the distances to the true tree.
+The more information there is in an alignment, the narrower we expect the posterior distribution on trees, and thus the narrower we expect the distribution on distances to the true tree.
+We focus here on the KF distance as it is a purely topological measure and does not include any potentially confounding effects due to erroneously long (or short) estimated trees.
+This metric has the downside of being linked to the accuracy of the inference, which is less than ideal, but like our other metric it is correlated with the true precision of the distribution, and it has the benefit of requiring no extra computations, somewhat reducing the otherwise heavy CO$_2$ cost of this paper.
+
+\subsubsection*{Computing the effective sequence length\label{semiparametric_regression}}
+\amcomment{This section is a bit rough, it is going to need some work. I'm not sure if we want or need the bit about the effective sample size. It wasn't until I took a look at that that I realized how different it is from what we're doing and that I figured out how to frame what we're doing. So we may well be able to get away with a shorter section there. I'm also not tied to n-squiggle as our notation for effective sequence length, but as it is we shot ourselves in the feet by using the most intuitive notation n\_e for the number of epistatic sites.}
+
+The effective sequence length is a hypothetical comparison: how many independent sites is this alignment worth.
+We have explored accuracy- and precision-based measures that may allow us to define worth, but to actually compute the effective sequence length we must adopt a mathematical definition.
+Let $S(n)$ be the value of some summary of an inference on a dataset with $n$ sites drawn from some arbitrary model.
+Then the effective sequence length is $\tilde{n}$ such that $E[S(n)] = E[S(\tilde{n})]$.
+That is, if we repeatedly draw datasets with $n$ sites from some arbitrary, possibly dependent, model and $\tilde{n}$ from the independent model, then $\tilde{n}$ is the number of indepedent sites such that the average summary value is the same as for the $n$ sites from the arbitrary, possibly misspecified, model.
+Note that we can ignore the number of taxa because it must be the same between the two datasets.
+It is also worth noting that this formulation of an effective sequence length is broader than the formulation of the effective sample size.
+Classically, the notion of effective sample size, $n^*$ is defined with respect to the variance of an estimator $\hat{\theta}$.
+Specifically, the effective sample size is $n^*$ such that $Var(\hat{\theta} \mid n) = Var(\hat{\theta} \mid n^*)$.
+The variance of an estimator is given by $Var(\hat{\theta}) = E[ (\hat{\theta} - E[\hat{\theta}])^2 ]$.
+Thus, if we take $S(n) = (\hat{\theta} - E[\hat{\theta}])^2$, then we can see that our definition includes the standard definition of effective sample size.
+
+In our case, with $n = n_i + n_e$, we can define a model for the effective sequence length as $\tilde{n} = n_i + r(d) \times n_e$ where $r(d)$ is the relative worth of an epistatic site compared to an independent one for a given value of $d$.
+The dependency on $d$ is necessary because we expect that as $d$ increases and more substitutions are paired, the relative worth should decrease.
+Estimating $r$ is complicated by the fact that we do not know an appropriate functional form for $E[S(\tilde{n})]$ for any of our metrics.
+Thus, we turn to semiparametric models to estimate $r$ while avoiding an explicit form for $E[S(\tilde{n})]$.
+Semiparametric models are models of the form $E[y] = f(g(\boldsymbol{x}))$ where $g(X)$ is an explicit parametric model (such as a linear model, $g(\boldsymbol{x}) = \beta_0 + \beta_1 x_1 + \dots$) and $f()$ is never specified explicitly.
+We apply one of: a Gaussian Process regression, a GMRF, or a single index model, depending on how much time we're willing to let stan run and how badly we want uncertainty estimates.
+We will have to spend a sentence or two explaining how the chosen framework works.
+
 \subsection*{Data and code availability\label{sec:its_on_github}}
 All the code you need to reproduce these analyses is available somewhere.
 But not all the files we produced because that's a loooot of logfiles and a loooot of space required, sorry.
+
+
 
 \section*{Results\label{sec:results}}
 
@@ -343,55 +412,24 @@ The $MI_{kurt}$ statistic has a false positive rate of 0.0026, with a maximum po
 The $GY93$ statistic has a false positive rate of 0, and achieves a maximum power of 0.51 at $d = 1000$.
 Averaged over all proportions of epistatic sites, the $MI_{max}$ statistic has a power of 0.17 at $d = 0.5$, comparable to the power of the $GY93$ statistic at $d = 1000$ (0.18), and a power of 0.55 at $d = 2$, comparable to the power of the $MI_{kurt}$ statistic at $d = 1000$ (0.56).
 
-\subsection*{Accuracy\label{sec:error}}
-Preamble preamble preamble.
+\subsection*{Worth of an epistatic site}
 
-\subsubsection*{Distributional measures\label{sec:tree_dists}}
-As we are interested in Bayesian inference, we are not primarily interested in the error in point estimates of the phylogeny but in the overall goodness of the posterior distribution of trees.
-We employ two tree distance metrics, the Robinson-Foulds (RF) distance \citep{robinson1981comparison} and the branch score or Kuhner-Felsenstein (KF) distance \citep{kuhner1994simulation}.
-RF distance is a purely topological measure between a pair of trees, capturing the number of splits (bipartitions of taxa) present in one tree but not in the other.
-The KF distance is the sum of squared differences in branch lengths between trees, treating a missing split in either tree as a 0, and so captures differences in both topology and branch length.
-We compute the posterior distribution of the distance between each tree in the posterior and the true tree using both the KF and RF distances.
-We then summarize these distributions by recording the mean, median, min, and max of the distances, as well as the 2.5, 5, 95, and 97.5 percentiles.
+\begin{figure}
+  \centering
+  \includegraphics[width=\textwidth]{figures/accuracy_worth.png}
+  \caption{
+    The posterior distributions of the parameter $r(d)$ for our simulated values of $d$.
+    Inference was performed using a Gaussian Process regression on a subsample of 100 of the 675 data points per $d$ value.
+  }
+  \label{fig:worth}
+\end{figure}
 
-As both $d$ and the proportion of epistatic sites increase, so does the distance between the true tree and the posterior as measured by the average posterior KF distance.
-However, the addition of epistatic sites improves rather than worsens inference, meaning the catastrophic model misspecification scenario does not apply.
-We find that overall the pattern is the same for both the KF and RF distances and for different summaries of the posterior distribution on distances.
-Thus we present only the results for the posterior mean KF distance in Figure \ref{fig:rf_mean}, additional results are available somewhere but maybe not in the supplement because that's 15 figures right there.
-
-\subsubsection*{Summary trees\label{sec:point_estimates}}
-While comparisons based on the entire posterior distribution are useful for understanding the overall performance of inference, they do not necessarily reflect the experience of practitioners inferring phylogenies.
-In practice, the posterior distribution is, at least for the purposes of visualization, generally reduced to a single summary tree, often a majoriy rule consensus (MRC) tree.
-Thus, as an alternative measure of inference error, we look at the number of splits in the MRC tree that are not in the true tree.
-The results here largely recapitulate those based on the entire posterior distribution: epistatic sites improve inference, but not as much as an equal number of independent sites, and as $d$ increases their relative utility decreases.
-
-\subsection*{Precision\label{sec:variance}}
-We lastly investigated the effect of epistatic interactions on the variance of the posterior distribution on phylogenies.
-Intuitively one would expect that if epistasic sites are simply less informative than independent sites, the variance of the posterior distribution on trees should increase.
-While the variance of a phylogeny is defined \citep[e.g.\ ][]{willis2019confidence}, the time required to compute this variance makes it prohibitively expensive for our purposes \citep{brown2019mean}.
-In order to address the matter of variance, we thus turn to two surrogates.
-
-\subsubsection*{Tree distances\label{sec:kf_variance}}
-The first metric we consider is the width of the 95\% CI of the distance to the true tree.
-The less information there is in an alignment, the smaller the peak of this distribution one would expect at low values and thus the wider the region spanned by a 95\% CI.
-We use our results for the KF distance metric here, as this includes both topological and branch length variation.
-
-As can be seen in Figure \ref{fig:} we were either totally right or completely wrong, so that's cool.
-
-\subsubsection*{Resolution of the summary tree\label{sec:MRC}}
-The width of the tree distance distributions is tied in part to the accuracy of the inferred phylogeny, which is not ideal.
-We turn now to a measure that is independent of accuracy: the resolution of the majority-rule consensus (MRC) tree \citep{}.
-The MRC tree is obtained by including all splits in the posterior that occur with a frequency above 50\%.
-As the amount of information in an alignment dwindles, there should be fewer splits with sufficient signal to place in the MRC tree and the MRC tree should include more polytomies.
-An MRC tree on $t$ taxa includes a maximum of $2 t - 3$ non-trivial splits, so dividing the number of (non-trivial) splits in the MRC tree by $2 t - 3$ produces a standardized value in [0,1] which we call the proportion of resolved splits.
-At 0, the MRC tree is completely unresolved (a star tree), while at 1 it is a fully resolved tree.
-
-We plot the proportion of resolved splits in Figure \ref{fig:}, which shows things and stuff.
-
-\subsection*{Effective sequence length\label{sec:error}}
-Given that epistatic sites do not appear to make inference worse, but simply do not provide as much information as independent sites, we sought to quantify this effect.
-We use some technique to do this...
-\amcomment{We should give some strong consideration to how we want to do this and especially what the most natural scale is for the number of sites and for error.}
+All of our models infer that $0 < r(d) < 1$, meaning that the model misspecification here falls into the best-case scenario rather than the catastrophic one (Figure \ref{fig:worth}).
+In all cases, $r(1000) < r(8) < r(2) < r(0.5)$, meaning that increasing the strength of epistatic interactions decreases the value of a site.
+Additionally, in all cases $r(0) < 1$, meaning that there is a general informational penalty for using the incorrect inference model.
+Oddly, for our accuracy-based modeling, we find that $r(0) > r(0.5)$.
+Perhaps most noteworthy though is the fact that for all values of $d$, we find that $r_{accuracy}(d) < r_{precision}(d)$.
+This means that inference is somewhat more precise than it ``should be,'' because the accuracy added by adding an epistatic site is less than the precision added.
 
 
 \section*{Discussion\label{sec:discussion}}
