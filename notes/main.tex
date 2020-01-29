@@ -65,7 +65,7 @@ William DeWitt$^{1\ast}$, Sarah Hilton$^{1\ast}$, and Andrew Magee$^{2\ast}$\\
 Phylogenetic inference relies on probabilistic models of character state change along tree branches in which sites in the alignment are statistically independent.
 This severely restrictive assumption facilitates computational tractability, but cannot accommodate epistatic coupling of sites during the evolution of functional sequences that arise from structural and functional constraints on the encoded molecule.
 We consider the effect of this misspecification error on the accuracy of phylogenetic reconstruction in a setting of pairwise epistasis.
-We show that including epistatically coupled sites in an alignment improves reconstruction accuracy and we introduce an alignment test statistic that is diagnostic for epistasis and can be used in poster predictive checks.
+We show that including epistatically coupled sites in an alignment improves reconstruction accuracy and we introduce an alignment test statistic that is diagnostic for epistasis and can be used in posterior predictive checks.
 \end{abstract}
 
 \section*{{Introduction}\label{sec:intro}}
@@ -79,43 +79,30 @@ $<$We need to talk up the NH model here a decent bit$>$
 
 However, phylogenetic models of epistasis are not without drawbacks.
 When applying these models in practice, most require that a user specify \textit{a priori} all pairs of sites that are interacting $<$cite doublet models, NH model, pre-RJ Salamin models, others if we come across them$>$.
-In some cases such as identifying pairs of stem sites in ribosomal RNA (rRNA), this is possible, if difficult $<$citations on the shitshow of annotating things? maybe some of the databases?$>$.
-Even these models of epistasis are more computationally demanding than models that assume all sites are iid by increasing the size of the rate matrix from $4 \times 4$ to $16 \times 16$ and thus
-Nonetheless, in many cases there is no hope for pre-defining pairs of interacting sites, which lead \cite{meyer2019simultaneous} to develop a suitable extension of epistatic models for the case where interacting sites must be inferred.
-The cost of their approach is that the dimensionality of the parameter space is both drastically increased and variable, requiring reversible-jump MCMC \citep{green1995reversible} to sample from the posterior distribution of the assignments of sites to interacting pairs.
+In some cases---such as identifying pairs of stem sites in ribosomal RNA (rRNA)---this is possible, if difficult $<$citations on the shitshow of annotating things? maybe some of the databases?$>$.
+Even these models of epistasis are more computationally demanding than models that assume all sites are iid by increasing the size of the rate matrix from $4 \times 4$ to $16 \times 16$.
+In many cases there is no hope for pre-defining pairs of interacting sites, which lead \cite{meyer2019simultaneous} to extend epistatic models to include inference of which sites interact.
+The dimensionality of parameter space in this model is very high and also variable, requiring reversible-jump MCMC \citep{green1995reversible} to sample from the posterior distribution of the assignments of sites to interacting pairs.
 
-In parallel to the literature on phylogenetic models of epistasis, a literature on detecting epistasis in phylogenetic datasets.
+In parallel to literature on phylogenetic models of epistasis is literature on detecting epistasis in phylogenetic datasets.
 $<$Citations and some literature reviewing$>$
-Something something but this literature has mostly been confined to detecting the presence of epistatic interactions in datasets, and decoupled from either modeling these interactions or asking whether they exert a notable effect on phylogenetic inference.
-Mumble mumble they should have been doing posterior-predictive testing, or at least using alignment-based summary statistics because those are better because reasons.
+This literature has mostly been confined to detecting the presence of epistatic interactions in datasets, and decoupled from either modeling these interactions or asking whether they distort inferred phylogenies.
+$<$Mumble mumble they should have been doing posterior-predictive testing, or at least using alignment-based summary statistics because those are better because reasons.$>$
 
-Given the difficulties involved in applying epistatic phylogenetic models to real datasets, whether broadly applicable \citep{meyer2019simultaneous} or more specific to the dataset at hand $<$doublet and NH citations$>$, we seek to answer three questions involving the use of misspecified (site-iid) models for dataset where epistasis exists.
+Given the difficulties involved in applying epistatic phylogenetic models to real datasets, we seek to answer three questions involving the use of misspecified site-iid models for data generated from a evolutionary process with epistasis.
 First and foremost, what is the effect of including epistatically paired sites in inference?
-Secondly, can we detect the presence of epistatic interactions in datasets using posterior-predictive simulations?
-Thirdly, is there a test-statistic or set of test-statistics that allow researchers to detect the presence of specifically problematic epistasis?
-That is, if there is epistasis in a dataset and failing to model is is causing poor or inadequate phylogenetic inference, is there a way to know we are in this regime?
+Second, can we detect the presence of epistasis in datasets using posterior-predictive simulations?
+Third, is there an alignment test-statistic (or set of test-statistics) that allow researchers to diagnose the influence of epistasis when it has the potential to distort phylogenetic inference?
 
-To address these questions, we perform a simulation study using the epistatic model of \cite{nasrallah2013phylogenetic}, which has a single parameter, $d$ that controls the strength of epistatic interactions.
-We simulate alignments on a 3-dimensional grid, defined by the number of sites in the alignment that site-iid, the number of sites(not site-pairs) that are drawn from a paired model, and the value of $d$.
-Our grid thus includes a variety of alignment sizes.
+To address these questions, we perform a simulation study using the pairwise epistatic model of \cite{nasrallah2013phylogenetic}.
+We simulate alignments on a 3-dimensional parameter grid, defined by the number of sites in the alignment that are site-iid $n_{\mathrm{iid}}$, the number of sites that are epistatically paired $n_{\mathrm{epi}}$, and the strength of epistatic interactions $d$.
+Our grid thus includes a range of alignment sizes, a range of epistatic fractions $n_{\mathrm{iid}}+n_{\mathrm{epi}}$ $\frac{n_{\mathrm{epi}}}{n_{\mathrm{iid}}+n_{\mathrm{epi}}}$ for each size.
 This allows us to answer our first question and determine whether the inclusion of epistatic sites in an alignment improves or worsens phylogenetic estimates by tracing a line (for a fixed value of $d$) of increasing numbers of epistatic sites for a fixed value of iid sites.
-We define a set of test statistics, including several new ones designed to pick up on patterns of epistasis, and several previously described more general test statistics.
-By comparing across levels of epistasis in our simulated alignments, and by their use in posterior predictive checks, we address whether epistasis can be detected directly from alignments, answering our second question.
-By combining the posterior-predictive analyses used to answer question 2 and the accuracy results used to answer question 1, we can address whether we can detect problematic epistasis, answering our third question.
-
-
-
-
-Specifically, we ask if epistatic sites are useful but simply not as informative as independent sites or if they are actively harmful to inference.
-In other words: does the model misspecification grossly
+We assess several alignment test statistics---some previously described and several new ones designed to detect epistasis specifically---for their ability to detect epistasis directly from alignments using posterior predictive checks, answering our second question.
+By synthesizing the results from answering the first two questions, we can address whether we can detect epistasis in the regime where phylogenetic distortions are likely, answering our third question.
+% WD this statement needs more rigour, if possible
+Our results indicate that epistatic sites are phylogenetically informative, just less so that independent sites, and do not appear to grossly distort inference toward an incorrect topology.
 % \amcomment{That Huelsenbeck ``effective alignment length'' paper may sort of preclude the idea that these sites are actively harmful, but if we want to sell this work as a useful general framework it's worth pointing out you could get at that with this approach.}
-
-
-Look at all the dumb shit physics/math/CS people have been saying about inferring phylogenies being impossible because selection.
-Will's pal (who will remain unnamed) deigned to opine, but upon further discussion revealed that he doesn't know what a codon is, or a synonymous mutation.
-We will crush them.
-
-It would be nice to write an intro to phylo modeling that builds up complexity, mentioning GTR+$\Gamma$ and ExpCMs, then the \cite{nasrallah2013phylogenetic} stuff.
 
 \section*{Methods\label{sec:methods}}
 
