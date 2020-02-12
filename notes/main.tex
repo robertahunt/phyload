@@ -95,8 +95,8 @@ Second, can we detect the presence of epistasis in datasets using posterior-pred
 Third, is there an alignment test-statistic (or set of test-statistics) that allow researchers to diagnose the influence of epistasis when it has the potential to distort phylogenetic inference?
 
 To address these questions, we perform a simulation study using the pairwise epistatic model of \cite{nasrallah2013phylogenetic}.
-We simulate alignments on a 3-dimensional parameter grid, defined by the number of sites in the alignment that are site-iid $n_{\mathrm{iid}}$, the number of sites that are epistatically paired $n_{\mathrm{epi}}$, and the strength of epistatic interactions $d$.
-Our grid thus includes a range of alignment sizes, a range of epistatic fractions $n_{\mathrm{iid}}+n_{\mathrm{epi}}$ $\frac{n_{\mathrm{epi}}}{n_{\mathrm{iid}}+n_{\mathrm{epi}}}$ for each size.
+We simulate alignments on a 3-dimensional parameter grid, defined by the number of sites in the alignment that are site-iid $n_{\mathrm{i}}$, the number of sites that are epistatically paired $n_{\mathrm{e}}$, and the strength of epistatic interactions $d$.
+Our grid thus includes a range of alignment sizes, a range of epistatic fractions $n_{\mathrm{i}}+n_{\mathrm{e}}$ $\frac{n_{\mathrm{e}}}{n_{\mathrm{i}}+n_{\mathrm{e}}}$ for each size.
 This allows us to answer our first question and determine whether the inclusion of epistatic sites in an alignment improves or worsens phylogenetic estimates by tracing a line (for a fixed value of $d$) of increasing numbers of epistatic sites for a fixed value of iid sites.
 We assess several alignment test statistics---some previously described and several new ones designed to detect epistasis specifically---for their ability to detect epistasis directly from alignments using posterior predictive checks, answering our second question.
 By synthesizing the results from answering the first two questions, we can address whether we can detect epistasis in the regime where phylogenetic distortions are likely, answering our third question.
@@ -283,13 +283,13 @@ We consider two summaries of $\boldsymbol{I}$.
 First we consider the skew of $\boldsymbol{I}$, $I_s$, which should be sensitive to the strength of epistasis and proportion of epistatic sites, as the more interactions the more values that should fall in the right tail and the stronger the interactions the larger those values should get.
 We also consider the max, $I_m$, which should be sensitive to the presence or absence of epistasis, but is less likely to be sensistive to the proportion of epistatic sites.
 
-\subsection{Effective sequence length}
+\subsection*{Effective sequence length}
 
-\citet{nasrallah2011quantifying} define the effective sequence length, $n_eff$ to be the length of a hypothetical alignment drawn from a site-independent model which yields the same phylogenetic accuracy as the dependent alignment.
-An alternative to this is to define $n_eff$ in terms of the phylogenetic precision instead of accuracy.
-In any model-misspecification regime, we would expect that $n_eff < n$, that is, we expect the effective sequence length to be less than the true sequence length.
+\citet{nasrallah2011quantifying} define the effective sequence length, $n_{eff}$ to be the length of a hypothetical alignment drawn from a site-independent model which yields the same phylogenetic accuracy as the dependent alignment.
+An alternative to this is to define $n_{eff}$ in terms of the phylogenetic precision instead of accuracy.
+In any model-misspecification regime, we would expect that $n_{eff} < n$, that is, we expect the effective sequence length to be less than the true sequence length.
 In our simulations, $n = n_i + n_e$, which allows us to quantify which misspecification scenario applies.
-In the best-case scenario, $n_i \leq n_eff \leq n_i + n_e$, while in the catastrophic misspecification scenario $n_eff < n_i$.
+In the best-case scenario, $n_i \leq n_{eff} \leq n_i + n_e$, while in the catastrophic misspecification scenario $n_{eff} < n_i$.
 In order to quantify the effective sequence length, then, we need to first define measures of accuracy and precision, then we can choose an approach to estimate the effective sequence length.
 
 % Both of these definitions contrast with the classical definition of effective sample size
@@ -328,32 +328,37 @@ We focus here on the KF distance as it is a purely topological measure and does 
 This metric has the downside of being linked to the accuracy of the inference, which is less than ideal, but like our other metric it is correlated with the true precision of the distribution, and it has the benefit of requiring no extra computations, somewhat reducing the otherwise heavy CO$_2$ cost of this paper.
 
 \subsubsection*{Computing the effective sequence length\label{semiparametric_regression}}
-\amcomment{This section is a bit rough, it is going to need some work. I'm not sure if we want or need the bit about the effective sample size. It wasn't until I took a look at that that I realized how different it is from what we're doing and that I figured out how to frame what we're doing. So we may well be able to get away with a shorter section there. I'm also not tied to n-squiggle as our notation for effective sequence length, but as it is we shot ourselves in the feet by using the most intuitive notation n\_e for the number of epistatic sites.}
+\amcomment{This section is a bit rough, it is going to need some work. I'm not sure if we want or need the bit about the effective sample size. It wasn't until I took a look at that that I realized how different it is from what we're doing and that I figured out how to frame what we're doing. So we may well be able to get away with a shorter section there.}
 
 The effective sequence length is a hypothetical comparison: how many independent sites is this alignment worth.
 We have explored accuracy- and precision-based measures that may allow us to define worth, but to actually compute the effective sequence length we must adopt a mathematical definition.
 Let $S(n)$ be the value of some summary of an inference on a dataset with $n$ sites drawn from some arbitrary model.
-Then the effective sequence length is $\tilde{n}$ such that $E[S(n)] = E[S(\tilde{n})]$.
-That is, if we repeatedly draw datasets with $n$ sites from some arbitrary, possibly dependent, model and $\tilde{n}$ from the independent model, then $\tilde{n}$ is the number of indepedent sites such that the average summary value is the same as for the $n$ sites from the arbitrary, possibly misspecified, model.
-Note that we can ignore the number of taxa because it must be the same between the two datasets.
+This definition is intentionally vague on both the model the sites are drawn from and the summary.
+The sites could be drawn from a site-independent model, or a model that introduces dependency among sites, such as the Nasrallah-Huelsenbeck model of pairwise epistasis.
+As examples $S(n)$ could include the distance between a maximum likelihood tree and the true tree, or the variance of the posterior distribution of trees.
+If $S(n)$ is a summary of accuracy, then this definition includes that of \citet{nasrallah2011quantifying}.
+The effective sequence length is $n_{eff}$ such that $E[S(n)] = E[S(n_{eff})]$.
+That is, if we repeatedly draw datasets with $n$ sites from some arbitrary, possibly pairwise dependent, model and $n_{eff}$ from the (site-independent) model used for analysis, then $n_{eff}$ is the number of indepedent sites such that the average summary value is the same as for the $n$ sites from the arbitrary, possibly misspecified, model.
+Note that we can ignore the number of taxa because it must be the same between the datasets.
 It is also worth noting that this formulation of an effective sequence length is broader than the formulation of the effective sample size.
 Classically, the notion of effective sample size, $n^*$ is defined with respect to the variance of an estimator $\hat{\theta}$.
 Specifically, the effective sample size is $n^*$ such that $Var(\hat{\theta} \mid n) = Var(\hat{\theta} \mid n^*)$.
 The variance of an estimator is given by $Var(\hat{\theta}) = E[ (\hat{\theta} - E[\hat{\theta}])^2 ]$.
 Thus, if we take $S(n) = (\hat{\theta} - E[\hat{\theta}])^2$, then we can see that our definition includes the standard definition of effective sample size.
 
-In our case, with $n = n_i + n_e$, we can define a model for the effective sequence length as $\tilde{n} = n_i + r(d) \times n_e$ where $r(d)$ is the relative worth of an epistatic site compared to an independent one for a given value of $d$.
+In our case, with $n = n_i + n_e$, we can define a model for the effective sequence length as $n_{eff} = n_i + r(d) \times n_e$ where $r(d)$ is the relative worth of an epistatic site compared to an independent one for a given value of $d$.
 The dependency on $d$ is necessary because we expect that as $d$ increases and more substitutions are paired, the relative worth should decrease.
-Estimating $r$ is complicated by the fact that we do not know an appropriate functional form for $E[S(\tilde{n})]$ for any of our metrics.
-Thus, we turn to semiparametric models to estimate $r$ while avoiding an explicit form for $E[S(\tilde{n})]$.
-Semiparametric models are models of the form $E[y] = f(g(\boldsymbol{x}))$ where $g(X)$ is an explicit parametric model (such as a linear model, $g(\boldsymbol{x}) = \beta_0 + \beta_1 x_1 + \dots$) and $f()$ is never specified explicitly.
-We apply one of: a Gaussian Process regression, a GMRF, or a single index model, depending on how much time we're willing to let stan run and how badly we want uncertainty estimates.
-We will have to spend a sentence or two explaining how the chosen framework works.
+It is possible that $r$ is also not a constant; if there is asymptotic bias and the estimated tree does not converge to the true tree, then $r$ must eventually go to 0.
+However, in our finite data regime there is no evidence of asymptotic biases, and a model with constant $r$ will suffice.
+Estimating $r$ is complicated by the fact that we do not know an appropriate functional form for $E[S(n_{eff})]$ for any of our metrics.
+We know that accuracy and precision should both increase with increasing $n_{eff}$, but how rapidly this happens is unknown.
+Thus, to infer $r$ we turn to models where we do not need to explicitly specify this relationship.
+Specifically, we use isotonic regression to model the relationship between $S(n_{eff})$ and $n_{eff}$, and we fit our model with least squares.
+Isotonic regression, as implemented in the \texttt{isoreg} function in the R package \texttt{stats} \citep{R}, fits a piecewise constant function for $E[S(n_{eff})]$.
 
 \subsection*{Data and code availability\label{sec:its_on_github}}
 All the code you need to reproduce these analyses is available somewhere.
 But not all the files we produced because that's a loooot of logfiles and a loooot of space required, sorry.
-
 
 
 \section*{Results\label{sec:results}}
@@ -403,21 +408,30 @@ Averaged over all proportions of epistatic sites, the $MI_{max}$ statistic has a
 
 \begin{figure}
   \centering
-  \includegraphics[width=\textwidth]{figures/accuracy_worth.png}
+  \includegraphics[width=\textwidth]{figures/relative_worth.pdf}
   \caption{
-    The posterior distributions of the parameter $r(d)$ for our simulated values of $d$.
-    Inference was performed using a Gaussian Process regression on a subsample of 100 of the 675 data points per $d$ value.
+    Bootstrapped estimates of $r(d)$ for our simulated values of $d$.
+    Inference was performed via least squares using isotonic regression.
+    Accuracy-based estimates use the average posterior RF distance to the true tree, while precision-based estimates use the proportion of resolved splits in the MRC tree.
+    The boxplots summarize 1000 bootstrap replicates.
   }
   \label{fig:worth}
 \end{figure}
 
-All of our models infer that $0 < r(d) < 1$, meaning that the model misspecification here falls into the best-case scenario rather than the catastrophic one (Figure \ref{fig:worth}).
-In all cases, $r(1000) < r(8) < r(2) < r(0.5)$, meaning that increasing the strength of epistatic interactions decreases the value of a site.
-Additionally, in all cases $r(0) < 1$, meaning that there is a general informational penalty for using the incorrect inference model.
-Oddly, for our accuracy-based modeling, we find that $r(0) > r(0.5)$.
+To infer the effectice sequence length, we employ isotonic regression.
+In this setup, we have $E[S(n)] = f(n_i + r(d) \times n_e)$, where $S(n)$ is a summary of inference and $f()$ is a piecewise-constant function.
+For our summary measures, we focus on one accuracy-based measure, the average posterior RF distance to the true tree, and one precision-based measure, the percent of resolved splits in the MRC tree.
+Alternate results using different measures will eventually make their way into the supplementary materials.
+In order to quantify the uncertainty in our estimates of $r(d)$, we use nonparametric bootstrapping \citep{efron1992bootstrap} and infer the model on 1000 bootstrap replicate datasets for each summary measure and each value of $d$.
+
+In all cases, we infer that $0 < r(d) < 1$, meaning that the model misspecification here falls into the best-case scenario rather than the catastrophic one (Figure \ref{fig:worth}).
+For our accuracy-based estimates, we infer $r(1000) < r(8) < r(2) < r(0.5)$, meaning that increasing the strength of epistatic interactions decreases the value of a site.
+For the precision-based estimates using the resolution of the MRC tree we see the same general trend, though it is unclear whether $r(8) < r(2)$, but this could simply be noise.
+Additionally, in all cases $r(0) < 1$, meaning that there is an overall cost to inference due to the misspecified base frequencies, beyond simply the cost of doublet substitutions.
+Oddly, for our accuracy-based modeling, we find that $r(0) > r(0.5)$ (other summary approaches bear this phenomenon out).
 Perhaps most noteworthy though is the fact that for all values of $d$, we find that $r_{accuracy}(d) < r_{precision}(d)$.
 This means that inference is somewhat more precise than it ``should be,'' because the accuracy added by adding an epistatic site is less than the precision added.
-
+To give a concrete example, for $d = 0.5$, $r_{accuracy}(0.5) = 0.783$ while $r_{precision}(0.5) = 0.853$, so if one added 50 pairs of dependent sites (100 sites total) to an alignment, accuracy would increase as if 78.3 sites had been added, but precision would increase as if 85.3 sites had been added, a discrepancy of 7 sites.
 
 \section*{Discussion\label{sec:discussion}}
 

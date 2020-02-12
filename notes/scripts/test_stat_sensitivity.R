@@ -37,9 +37,9 @@ cor(kurt$value,nsites)
 cor(mmax$value,nsites)
 
 # diagonal-ish values only
-gy93 <- gy93[gy93$X.n_i. + gy93$X.n_e. >= 384 & gy93$X.n_i. + gy93$X.n_e. <= 414,]
-kurt <- kurt[kurt$X.n_i. + kurt$X.n_e. >= 384 & kurt$X.n_i. + kurt$X.n_e. <= 414,]
-mmax <- mmax[mmax$X.n_i. + mmax$X.n_e. >= 384 & mmax$X.n_i. + mmax$X.n_e. <= 414,]
+gy93 <- gy93[gy93$X.n_i. + gy93$X.n_e. >= 368 & gy93$X.n_i. + gy93$X.n_e. <= 428,]
+kurt <- kurt[kurt$X.n_i. + kurt$X.n_e. >= 368 & kurt$X.n_i. + kurt$X.n_e. <= 428,]
+mmax <- mmax[mmax$X.n_i. + mmax$X.n_e. >= 368 & mmax$X.n_i. + mmax$X.n_e. <= 428,]
 
 # plot sensitivity to prop epi
 pdf("~/git_repos/phyload/notes/figures/test_stat_sensitivity.pdf",width=7,height=2.5)

@@ -1,0 +1,54 @@
+# row 1: n_iid
+# row 2: n_epi
+# row 3: response variable (log of RF)
+
+data = readDataDelimitedFile("epi_rev_data.csv",header=false,delimiter=",")
+
+mvi = 0
+
+avmvn = mvAVMVN(weight=50)
+
+# Quartic model
+for (i in 1:5) {
+  beta[i] ~ dnNormal(0,1)
+  beta[i].setValue(-0.001)
+  avmvn.addVariable(beta[i])
+  moves[++mvi] = mvSlideBactrian(beta[i])
+}
+
+#moves[++mvi] = mvEllipticalSliceSamplingSimple(beta)
+
+conversion_factor ~ dnUniform(-10,10)
+conversion_factor.setValue(0.5)
+moves[++mvi] = mvSlideBactrian(conversion_factor,weight=2)
+moves[++mvi] = mvRandomDive(conversion_factor,weight=1)
+
+n_eff := data[1] + conversion_factor * data[2]
+
+sigma ~ dnExponential(1)
+moves[++mvi] = mvScaleBactrian(sigma,weight=5)
+
+mu := beta[1] + beta[2] * n_eff + beta[3] * n_eff + beta[4] * n_eff + beta[5] * n_eff
+
+for (i in 1:data[1].size()) {
+  y[i] ~ dnNormal(mu[i],sigma)
+  y[i].clamp(data[3][i])
+}
+
+moves[++mvi] = avmvn
+
+mymodel = model(conversion_factor)
+
+mni = 0
+
+monitors[++mni] = mnScreen(printgen=100)
+monitors[++mni] = mnModel("epi_modeling.log",printgen=10)
+
+mcmc = mcmc(mymodel,monitors,moves)
+
+mcmc.burnin(1000,50)
+mcmc.operatorSummary()
+mcmc.run(10000)
+mcmc.operatorSummary()
+
+q()
