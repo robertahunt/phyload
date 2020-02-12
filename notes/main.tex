@@ -63,24 +63,30 @@ William DeWitt$^{1\ast}$, Sarah Hilton$^{1\ast}$, and Andrew Magee$^{2\ast}$\\
 
 \begin{abstract}
 Phylogenetic inference relies on probabilistic models of character state change along tree branches in which sites in the alignment are statistically independent.
-This severely restrictive assumption facilitates computational tractability, but cannot accommodate epistatic coupling of sites during the evolution of functional sequences that arise from structural and functional constraints on the encoded molecule.
-We consider the effect of this misspecification error on the accuracy of phylogenetic reconstruction in a setting of pairwise epistasis.
+This severely restrictive assumption facilitates computational tractability, but cannot ignores the influence that epistasis, or the effect of genetic background on mutational effects, has on the evolution of functional sequences. 
+We consider the effect of a misspecified site-independent model on the accuracy of phylogenetic reconstruction in the setting of pairwise-site epistasis. 
 We show that including epistatically coupled sites in an alignment improves reconstruction accuracy and we introduce an alignment test statistic that is diagnostic for epistasis and can be used in posterior predictive checks.
 \end{abstract}
 
 \section*{{Introduction}\label{sec:intro}}
 
-Epistasis is $<$definition$>$
-This phenomenon is pervasive in datasets for phylogenetic inference $<$citations$>$
+Epistasis is the phenomenon where the effect of a mutation at one site in a sequence is dependent on the identity of another site or sites. 
+This dependence is pervasive in datasets for phylogenetic inference and can manifests itself as interactions between different genes $<cite>$, between different sites in a protein $<cite>$, or between different sites in RNA $<cite>$
+In the specific case of RNA, stem and loop secondary structures are evolutionary conserved by paired substitutions at specific sites to maintain Watson-Crick pairing (A-T and G-C). 
 
+In contrast, the vast majority phylogenetic models rely on the assumption that sites in the alignment are statistically independent. 
+Relaxing this assumption requires two new pieces of information: a method to identify the dependent sites and a model to character state change in the dependent regime.  
+While there is work on models with large alphabets (nucleotides or amino acids) and high-order epistasis <$cite nicolas rodrigue among others$>, here we restrict our consideration to the simple case of pairwise dependence of sites in an RNA. 
 Phylogenetic models of epistasis have a long history... we should be sure to emphasize here that most of these are pair models.
 $<$We need to talk up the NH model here a decent bit$>$
 \amcomment{We also need to be clear if we're going to discuss it as a model that has both iid and interacting sites or not, so we can be clear about our terminology when we set up our grid}
+% SHHere we should spend some time talking about protein models as well. Nicolas Rodrigue has a few. But they are so complicated and will probably take forever to run. I think he even has a paper that is like this is not worth it.}
 
 However, phylogenetic models of epistasis are not without drawbacks.
 When applying these models in practice, most require that a user specify \textit{a priori} all pairs of sites that are interacting $<$cite doublet models, NH model, pre-RJ Salamin models, others if we come across them$>$.
 In some cases---such as identifying pairs of stem sites in ribosomal RNA (rRNA)---this is possible, if difficult $<$citations on the shitshow of annotating things? maybe some of the databases?$>$.
-Even these models of epistasis are more computationally demanding than models that assume all sites are iid by increasing the size of the rate matrix from $4 \times 4$ to $16 \times 16$.
+Even with an \textit{a priori} understanding of the interacting sites, these model are more computationally demanding than models that assume all sites are independent. 
+In the simple case of pairwise epistasis on the nucleotide level the size of the rate matrix grows from from $4 \times 4$ to $16 \times 16$.  
 In many cases there is no hope for pre-defining pairs of interacting sites, which lead \cite{meyer2019simultaneous} to extend epistatic models to include inference of which sites interact.
 The dimensionality of parameter space in this model is very high and also variable, requiring reversible-jump MCMC \citep{green1995reversible} to sample from the posterior distribution of the assignments of sites to interacting pairs.
 
