@@ -63,52 +63,64 @@ William DeWitt$^{1\ast}$, Sarah Hilton$^{1\ast}$, and Andrew Magee$^{2\ast}$\\
 
 \begin{abstract}
 Phylogenetic inference relies on probabilistic models of character state change along tree branches in which sites in the alignment are statistically independent.
-This severely restrictive assumption facilitates computational tractability, but cannot ignores the influence that epistasis, or the effect of genetic background on mutational effects, has on the evolution of functional sequences. 
-We consider the effect of a misspecified site-independent model on the accuracy of phylogenetic reconstruction in the setting of pairwise-site epistasis. 
+This severely restrictive assumption facilitates computational tractability, but ignores the influence that epistasis, or the effect of genetic background on mutational effects, has on the evolution of functional sequences.
+We consider the effect of using a misspecified site-independent model on the accuracy of phylogenetic inference in the setting of pairwise-site epistasis.
 We show that including epistatically coupled sites in an alignment improves reconstruction accuracy and we introduce an alignment test statistic that is diagnostic for epistasis and can be used in posterior predictive checks.
 \end{abstract}
 
 \section*{{Introduction}\label{sec:intro}}
 
-Epistasis is the phenomenon where the effect of a mutation at one site in a sequence is dependent on the identity of another site or sites. 
+Epistasis is the phenomenon where the effect of a mutation at one site in a sequence is dependent on the identity of another site or sites.
 This dependence is pervasive in datasets for phylogenetic inference and can manifests itself as interactions between different genes $<cite>$, between different sites in a protein $<cite>$, or between different sites in RNA $<cite>$
-In the specific case of RNA, stem and loop secondary structures are evolutionary conserved by paired substitutions at specific sites to maintain Watson-Crick pairing (A-T and G-C). 
+In the specific case of RNA, stem and loop secondary structures are evolutionary conserved by paired substitutions at specific sites to maintain Watson-Crick pairing (A-T and G-C).
 
-In contrast, the vast majority phylogenetic models rely on the assumption that sites in the alignment are statistically independent. 
-Relaxing this assumption requires two new pieces of information: a method to identify the dependent sites and a model to character state change in the dependent regime.  
-While there is work on models with large alphabets (nucleotides or amino acids) and high-order epistasis <$cite nicolas rodrigue among others$>, here we restrict our consideration to the simple case of pairwise dependence of sites in an RNA. 
+\amcomment{It is probably worth pointing out that our focusing in on RNA is actually quite pragmatic, as there is a well-developed literature on this sort of epistasis.}
+
+In contrast, the vast majority phylogenetic models rely on the assumption that sites in the alignment are statistically independent.
+Relaxing this assumption requires two new pieces of information: a method to identify the dependent sites and a model to character state change in the dependent regime.
+While there is work on models with large alphabets (nucleotides or amino acids) and high-order epistasis $<cite$ nicolas rodrigue among others$>$, here we restrict our consideration to the simple case of pairwise dependence of sites in an RNA.
 Phylogenetic models of epistasis have a long history... we should be sure to emphasize here that most of these are pair models.
 $<$We need to talk up the NH model here a decent bit$>$
 \amcomment{We also need to be clear if we're going to discuss it as a model that has both iid and interacting sites or not, so we can be clear about our terminology when we set up our grid}
 % SHHere we should spend some time talking about protein models as well. Nicolas Rodrigue has a few. But they are so complicated and will probably take forever to run. I think he even has a paper that is like this is not worth it.}
 
 However, phylogenetic models of epistasis are not without drawbacks.
-When applying these models in practice, most require that a user specify \textit{a priori} all pairs of sites that are interacting $<$cite doublet models, NH model, pre-RJ Salamin models, others if we come across them$>$.
-In some cases---such as identifying pairs of stem sites in ribosomal RNA (rRNA)---this is possible, if difficult $<$citations on the shitshow of annotating things? maybe some of the databases?$>$.
-Even with an \textit{a priori} understanding of the interacting sites, these model are more computationally demanding than models that assume all sites are independent. 
-In the simple case of pairwise epistasis on the nucleotide level the size of the rate matrix grows from from $4 \times 4$ to $16 \times 16$.  
-In many cases there is no hope for pre-defining pairs of interacting sites, which lead \cite{meyer2019simultaneous} to extend epistatic models to include inference of which sites interact.
-The dimensionality of parameter space in this model is very high and also variable, requiring reversible-jump MCMC \citep{green1995reversible} to sample from the posterior distribution of the assignments of sites to interacting pairs.
+To apply a model that incorporates dependence between sites, one must either specify \textit{a priori} which sites are dependent, or the model must be capable of inferring these pairings.
+Defining pairings before analysis requires either that such information is available in a database \citep[\textit{e.g.},][]{wuyts2004european}, or that one can infer the secondary structure \citep[\textit{e.g.},][]{lorenz2011viennarna}.
+If such information is not available, secondary structure prediction proves problematic, then to avoid conditioning on pairs, one must integrate over pairings in some way.
+\cite{meyer2019simultaneous} employ reversible-jump MCMC \citep{green1995reversible} to sample possible pairings, which drastically increases the statespace of the model.
+One can also calculate the likelihood for all possible site pairings, as in \citet{golden2020evolutionary}, but as the number of pairings for $n$ sites is $n \choose 2$, this drastically increases the computational burden of calculating the likelihood of the data.
+Whether the integration is accomplished via MCMC or analytically, it is costly.
+Regardless of whether pairing is inferred or specified, current models assume that the pairs of interacting sites are fixed over the history of the tree.
+The effects of this assumption are unknown, but the state-space required to accommodate changes in pairings over time, in addition to inferring them, likely precludes the development of models that include this feature.
+
+Beyond the challenges of identifying pairs of interacting sites, the models for epistatically paired sites can be computationally burdensome.
+In the simple case of pairwise epistasis on the nucleotide level the size of the rate matrix grows from from $4 \times 4$ to $16 \times 16$.
+While models like that of \citet{nasrallah2013phylogenetic} avoid a large increase in the number of parameters by defining this matrix in relationship to an underlying nucleotide GTR model, the number of parameters required to model an rRNA sequence still increases from 9 to 25 to account for pairwise epistasis.
+In other models, additional, potentially high-dimensional, parameters are required.
+To model co-evolution in cases where the interacting sets are not known \textit{a priori}, the model of \citet{meyer2019simultaneous} must infer the so-called ``profile'' of coevolution for each pair of interacting sites, a discrete parameter with 192 possible values.
+To incorporate more of the evolutionary forces in an rRNA alignment, the model of \citet{golden2020evolutionary}
+
+
 
 In parallel to literature on phylogenetic models of epistasis is literature on detecting epistasis in phylogenetic datasets.
 $<$Citations and some literature reviewing$>$
 This literature has mostly been confined to detecting the presence of epistatic interactions in datasets, and decoupled from either modeling these interactions or asking whether they distort inferred phylogenies.
 $<$Mumble mumble they should have been doing posterior-predictive testing, or at least using alignment-based summary statistics because those are better because reasons.$>$
 
-Given the difficulties involved in applying epistatic phylogenetic models to real datasets, we seek to answer three questions involving the use of misspecified site-iid models for data generated from a evolutionary process with epistasis.
-First and foremost, what is the effect of including epistatically paired sites in inference?
-Second, can we detect the presence of epistasis in datasets using posterior-predictive simulations?
-Third, is there an alignment test-statistic (or set of test-statistics) that allow researchers to diagnose the influence of epistasis when it has the potential to distort phylogenetic inference?
+Given the difficulties involved in applying epistatic phylogenetic models to real datasets, we seek to answer two questions involving the use of misspecified site-iid models for data generated from a evolutionary process with (pairwise) epistasis.
+Can we \textit{detect} detect the presence of unmodeled (pairwise) epistasis in datasets using posterior-predictive model checks?
+What is the \textit{effect} of including epistatically paired sites on the quality of inferred trees?
+If (pairwise) epistasis is at least somewhat detrimental to inference, and it is detectable, we also wish to know, can it be detected when it has the potential to distort phylogenetic inference?
 
 To address these questions, we perform a simulation study using the pairwise epistatic model of \cite{nasrallah2013phylogenetic}.
 We simulate alignments on a 3-dimensional parameter grid, defined by the number of sites in the alignment that are site-iid $n_{\mathrm{i}}$, the number of sites that are epistatically paired $n_{\mathrm{e}}$, and the strength of epistatic interactions $d$.
-Our grid thus includes a range of alignment sizes, a range of epistatic fractions $n_{\mathrm{i}}+n_{\mathrm{e}}$ $\frac{n_{\mathrm{e}}}{n_{\mathrm{i}}+n_{\mathrm{e}}}$ for each size.
-This allows us to answer our first question and determine whether the inclusion of epistatic sites in an alignment improves or worsens phylogenetic estimates by tracing a line (for a fixed value of $d$) of increasing numbers of epistatic sites for a fixed value of iid sites.
-We assess several alignment test statistics---some previously described and several new ones designed to detect epistasis specifically---for their ability to detect epistasis directly from alignments using posterior predictive checks, answering our second question.
-By synthesizing the results from answering the first two questions, we can address whether we can detect epistasis in the regime where phylogenetic distortions are likely, answering our third question.
+Our grid thus includes a range of alignment sizes $n = n_{\mathrm{i}}+n_{\mathrm{e}}$, a range of epistatic fractions $\frac{n_{\mathrm{e}}}{n_{\mathrm{i}}+n_{\mathrm{e}}}$ for each size.
+We assess several alignment test statistics---some previously described and several new ones designed to detect epistasis specifically---for their ability to detect epistasis directly from alignments using posterior predictive checks, answering our first question.
+The use of a variable alignment length allows us to answer our second question and determine whether the inclusion of epistatic sites in an alignment improves or worsens phylogenetic estimates.
+Specifically, we examine whether adding $n_e$ epistatic sites to an alignment of size $n$ makes the inference better or worse.
+By synthesizing the results from answering the first two questions, we can address whether we can detect (pairwise) epistasis when it is making inference noticeably worse, answering our third question.
 % WD this statement needs more rigour, if possible
-Our results indicate that epistatic sites are phylogenetically informative, just less so that independent sites, and do not appear to grossly distort inference toward an incorrect topology.
-% \amcomment{That Huelsenbeck ``effective alignment length'' paper may sort of preclude the idea that these sites are actively harmful, but if we want to sell this work as a useful general framework it's worth pointing out you could get at that with this approach.}
 
 \section*{Methods\label{sec:methods}}
 
@@ -161,11 +173,11 @@ We can compute the total fraction of the substitutions that are doublet substitu
 \[
 p = \frac{ d \times r_{d} }{d \times r_{d} + r_{s}}
 \]
-with $r_d$ $1 / d$ times the total rate of doublet subtitutions,
+with $r_d$ being $1 / d$ times the total rate of doublet subtitutions,
 \[
   r_{d} = \sum_{x,y \in \boldsymbol{W}} \pi_{xy} \pi_{yx} S_{x_1,y_1} S_{x_2,y_2},
 \]
-and $r_s$ the total rate of single substitutions,
+and $r_s$ being the total rate of single substitutions,
 \[
   r_{s} = \sum_{x,y \not\in \boldsymbol{W}} \pi_{xy} \pi_{yx} S_{x_1,y_1} S_{x_2,y_2}.
 \]
@@ -182,7 +194,7 @@ Our values of $d$ correspond to 0\%, 3.2\%, 11.6\%, 34.5\%, and 98.5\% of all su
 To understand the effect of adding epistatic sites, for each value of $d$ we simulate a grid where we independently vary the number of epistatic sites, $n_e$ and independent sites, $n_i$.
 This setup is more informative than one in which we hold the number of sites constant and vary the proportion of sites coming from the epistatic model.
 It allows us to examine whether a posterior predictive test is capable of detecting the presence of only a few epistatically paired sites or whether it requires a larger number.
-By comparing the accuracy of inference on a dataset with $n_i$ independent sites and one with $n_i$ independent sites and $n_e$ epistatic sites, we can also determine if we are in the catastrophic model misspecification regime (inference with $n = n_i + n_e$ sites is worse than with $n = n_i$ sites) or the best-case regime (inference with $n = n_i + n_e$ is better than with $n = n_i$ sites).
+By comparing the accuracy of inference on a dataset with $n$ sites (possibly a mixture of independent and epistatic sites) to one with $n + n_e$ sites, we can determine if we are in the catastrophic model misspecification regime (inference with $n + n_e$ sites is worse than with $n$ sites) or the best-case regime (inference with $n + n_e$ is better than with $n$ sites).
 \skhcomment{I like the idea of being very clear here what the possible outcomes are. Andy mentioned in slack that we want to be clear that we think epi sites are less useful but not misleading.}
 
 For each value of $d$, we simulate a grid with $n_i,n_e \in \{0, 16, 32, \dots, 400\}$, excluding the cell in which $n_i = n_e = 0$.
@@ -333,7 +345,7 @@ The more information there is in an alignment, the narrower we expect the poster
 We focus here on the KF distance as it is a purely topological measure and does not include any potentially confounding effects due to erroneously long (or short) estimated trees.
 This metric has the downside of being linked to the accuracy of the inference, which is less than ideal, but like our other metric it is correlated with the true precision of the distribution, and it has the benefit of requiring no extra computations, somewhat reducing the otherwise heavy CO$_2$ cost of this paper.
 
-\subsubsection*{Computing the effective sequence length\label{semiparametric_regression}}
+\subsubsection*{Computing the effective sequence length\label{isotonic_regression}}
 \amcomment{This section is a bit rough, it is going to need some work. I'm not sure if we want or need the bit about the effective sample size. It wasn't until I took a look at that that I realized how different it is from what we're doing and that I figured out how to frame what we're doing. So we may well be able to get away with a shorter section there.}
 
 The effective sequence length is a hypothetical comparison: how many independent sites is this alignment worth.
@@ -409,6 +421,7 @@ The $MI_{max}$ statistic has a false positive rate of 0.059, averaged over all s
 The $MI_{kurt}$ statistic has a false positive rate of 0.0026, with a maximum power at $d = 1000$ of 0.92.
 The $GY93$ statistic has a false positive rate of 0, and achieves a maximum power of 0.51 at $d = 1000$.
 Averaged over all proportions of epistatic sites, the $MI_{max}$ statistic has a power of 0.17 at $d = 0.5$, comparable to the power of the $GY93$ statistic at $d = 1000$ (0.18), and a power of 0.55 at $d = 2$, comparable to the power of the $MI_{kurt}$ statistic at $d = 1000$ (0.56).
+We assess the sensitivity of these results to the strictness of MCMC convergence diagnostics, and find that there is little difference between the results presented here, and those based on either strict or no convergence filtering (Figure some figure in supplement).
 
 \subsection*{Worth of an epistatic site}
 
@@ -429,6 +442,8 @@ In this setup, we have $E[S(n)] = f(n_i + r(d) \times n_e)$, where $S(n)$ is a s
 For our summary measures, we focus on one accuracy-based measure, the average posterior RF distance to the true tree, and one precision-based measure, the percent of resolved splits in the MRC tree.
 Alternate results using different measures will eventually make their way into the supplementary materials.
 In order to quantify the uncertainty in our estimates of $r(d)$, we use nonparametric bootstrapping \citep{efron1992bootstrap} and infer the model on 1000 bootstrap replicate datasets for each summary measure and each value of $d$.
+As with the power analyses, we also assess the sensitivity of our inference of the worth of a site to the MCMC convergence standards employed.
+We find that the overall patterns remain qualitatively unchanged regardless of convergence cutoff (Figure something in the supplement).
 
 In all cases, we infer that $0 < r(d) < 1$, meaning that the model misspecification here falls into the best-case scenario rather than the catastrophic one (Figure \ref{fig:worth}).
 For our accuracy-based estimates, we infer $r(1000) < r(8) < r(2) < r(0.5)$, meaning that increasing the strength of epistatic interactions decreases the value of a site.
@@ -445,7 +460,40 @@ Phylogenetics is probably fine.
 
 \section*{Supplementary Material}
 
+\section*{Sensitity to MCMC convergence}
+All analyses presented in the paper filter out simulations for which MCMC convergence failed.
+We define failure to be PSRF $> 1.1$ or ASDSF $> 0.05$, a threshold that reflects our desire to balance convergence standards against retaining sufficient simulation replicates to make inferences from.
+To determine whether our results are robust to the convergence criterion, we now present results for Figures \ref{fig:power_curves} and \ref{fig:worth} in which we consider using all the data regardless of MCMC convergence diagnostics (``no convergence''), the standards presented in the main text (``convergence'') and a stricter standard (PSRF $> 1.01$ or ASDSF $> 0.01$, ``strict convergence'').
+As can be seen in Figure \ref{fig:power_curves_sensitivity}, the inferred power to detect epistasis is unaffected by convergence standards.
+Similarly, Figure \ref{fig:worth_sensitivity}, the inferred worth of epistatic sites is qualitatively unaffected by convergence cutoffs.
+The inferred worth values are also similar with the exception of the precision-based worth using strict standards.
+For $d = 1000$, the worth inferred from precision is higher than for the other convergence standards.
+However, the stricter convergence standards resulted in discarding over 33\% of the simulations at $d = 1000$, while for the other $d$ values less than 25\% were discarded, so the discrepency is likely a result of losing data.
 
+\begin{figure}
+  \centering
+  \includegraphics[width=\textwidth]{figures/power_curves_sensitivity.pdf}
+  \caption{
+  Power to detect epistasis using posterior predictive checks at $\alpha = 0.05$ across three different convergence thresholds.
+  The lowest threshold is to simply include all simulations (``no convergence''), the intermediate threshold is to remove any runs with PSRF $> 1.1$ or ASDSF $> 0.05$ (``convergence''), and the strict threshold is to remove any runs with PSRF $> 1.01$ or ASDSF $> 0.01$ (``strict convergence'').
+  Power is the proportion tests yielding a statistically significant result, that is, the true positive rate.
+  Curves are averages over windows of 10\% windows of the proportion of epistatic sites.
+  }
+  \label{fig:power_curves_sensitivity}
+\end{figure}
+
+\begin{figure}
+  \centering
+  \includegraphics[width=\textwidth]{figures/relative_worth_sensitivity.pdf}
+  \caption{
+    Bootstrapped estimates of $r(d)$ for our simulated values of $d$ across three different convergence diagnostic thresholds.
+    The lowest threshold is to simply include all simulations (``no convergence''), the intermediate threshold is to remove any runs with PSRF $> 1.1$ or ASDSF $> 0.05$ (``convergence''), and the strict threshold is to remove any runs with PSRF $> 1.01$ or ASDSF $> 0.01$ (``strict convergence'').
+    Inference of worth was performed via least squares using isotonic regression.
+    Accuracy-based estimates use the average posterior RF distance to the true tree, while precision-based estimates use the proportion of resolved splits in the MRC tree.
+    The boxplots summarize 1000 bootstrap replicates.
+  }
+  \label{fig:worth_sensitivity}
+\end{figure}
 \section*{Acknowledgments}
 We thank our PIs for giving us the freedom to pursue this project and the gods for not striking us down for our unholy combination of python, R, and Rev scripting.
 

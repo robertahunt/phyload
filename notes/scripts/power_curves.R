@@ -51,102 +51,149 @@ sum(null.dist < 0.05)/length(null.dist)
 
 ## Plot POWER CURVES!!!
 
-pdf("notes/figures/power_curves.pdf",width=6,height=2.5)
-
-  par(mfrow=c(1,3),mai=c(0.7,0.55,0.25,0.01),omi=rep(0.01,4))
-  windows.x <- seq(0,1,0.1)
+powerCurveLines <- function(data,d,col,windows.x=seq(0,1,0.1),lwd=2) {
+  # recover()
+  
   x.avg <- (windows.x[-1] + windows.x[-length(windows.x)])/2
+  x <- sort(rep(windows.x,2))[-c(1,length(windows.x)*2)]
+  
+  pvals <- data
+  pvals <- pvals[pvals$X.d. == d,]
+  detect <- pvals$value < 0.05
+  prop_epi <- pvals$X.n_e./(pvals$X.n_e.+pvals$X.n_i.)
+  
+  windows.y <- sapply(2:length(windows.x),function(i){
+    xl <- windows.x[i-1]
+    xh <- ifelse(i == length(windows.x),1.1,windows.x[i])
+    indices <- prop_epi < xh & prop_epi >= xl
+    sum(detect[indices])/sum(indices)
+  })
+  
+  y <- as.numeric(rbind(windows.y,windows.y))
+  
+  lines(x,y,col=col,lwd=lwd)
+  
+}
+
+pdf("notes/figures/power_curves.pdf",width=6,height=2.5)
+  par(mfrow=c(1,3),mai=c(0.7,0.55,0.25,0.01),omi=rep(0.01,4))
   cols <- viridis_pal()(5)
   
-  x <- sort(c(0,1,rep(seq(0.1,0.9,0.1),2)))
-  
   # GY93
-  cat("GY93 max power:\n")
   plot(NULL,NULL,xlim=c(-0.1,1),ylim=c(0,1),xlab="proportion of epistatic sites",ylab="power",main="GY93")
   for (i in 1:5) {
     d <- all.d[i]
-    
     pvals <- read.csv("~/Downloads/2020-01-06_csv/agg_G93_pvalue.csv",stringsAsFactors=FALSE)
-    pvals <- pvals[pvals$X.d. == d,]
-    detect <- pvals$value < 0.05
-    prop_epi <- pvals$X.n_e./(pvals$X.n_e.+pvals$X.n_i.)
-    
-    windows.y <- sapply(2:length(windows.x),function(i){
-      xl <- windows.x[i-1]
-      xh <- ifelse(i == length(windows.x),1.1,windows.x[i])
-      indices <- prop_epi < xh & prop_epi >= xl
-      sum(detect[indices])/sum(indices)
-    })
-    cat("  ",max(windows.y),"\n")
-    # lines(x.avg,windows.y,col=cols[i],lwd=2)
-    
-    y <- as.numeric(rbind(windows.y,windows.y))
-      
-    lines(x,y,col=cols[i],lwd=2)
-    
+    powerCurveLines(pvals,d,colors[i])
   }
 
   # kurt
-  cat("kurt max power:\n")
   plot(NULL,NULL,xlim=c(-0.1,1),ylim=c(0,1),xlab="proportion of epistatic sites",ylab="power",main="kurtosis(MI)")
   for (i in 1:5) {
     d <- all.d[i]
     
     pvals <- read.csv("~/Downloads/2020-01-06_csv/agg_kurtosis_pvalue.csv",stringsAsFactors=FALSE)
-    pvals <- pvals[pvals$X.d. == d,]
-    detect <- pvals$value < 0.05
-    prop_epi <- pvals$X.n_e./(pvals$X.n_e.+pvals$X.n_i.)
-    
-    windows.y <- sapply(2:length(windows.x),function(i){
-      xl <- windows.x[i-1]
-      xh <- ifelse(i == length(windows.x),1.1,windows.x[i])
-      indices <- prop_epi < xh & prop_epi >= xl
-      sum(detect[indices])/sum(indices)
-    })
-    cat("  ",max(windows.y),"\n")
-    
-    # lines(x.avg,windows.y,col=cols[i],lwd=2)
-    
-    y <- as.numeric(rbind(windows.y,windows.y))
-    
-    lines(x,y,col=cols[i],lwd=2)
-    
+    powerCurveLines(pvals,d,colors[i])
   }
   legend("topleft",legend=rev(paste0("d = ",all.d)),fill=rev(cols),bty="n",border=NA,cex=1)
   
   # max
-  cat("max max power:\n")
   plot(NULL,NULL,xlim=c(-0.1,1),ylim=c(0,1),xlab="proportion of epistatic sites",ylab="power",main="max(MI)")
   for (i in 1:5) {
     d <- all.d[i]
     
     pvals <- read.csv("~/Downloads/2020-01-06_csv/agg_max_pvalue.csv",stringsAsFactors=FALSE)
-    pvals <- pvals[pvals$X.d. == d,]
-    detect <- pvals$value < 0.05
-    prop_epi <- pvals$X.n_e./(pvals$X.n_e.+pvals$X.n_i.)
-    
-    windows.y <- sapply(2:length(windows.x),function(i){
-      xl <- windows.x[i-1]
-      xh <- ifelse(i == length(windows.x),1.1,windows.x[i])
-      indices <- prop_epi < xh & prop_epi >= xl
-      sum(detect[indices])/sum(indices)
-    })
-    cat("  ",max(windows.y),"\n")
-    
-    # lines(x.avg,windows.y,col=cols[i],lwd=2)
-    
-    y <- as.numeric(rbind(windows.y,windows.y))
-    
-    lines(x,y,col=cols[i],lwd=2)
-    
+    powerCurveLines(pvals,d,colors[i])
   }
 dev.off()
 
 
 
+########
+# sensitivity of power curves to convergence cutoffs
+########
+thresh.a <- c(Inf,0.05,0.01)
+thresh.p <- c(Inf,1.1,1.01)
 
+asdsf <- read.csv("~/Downloads/2020-01-06_csv/agg_asdsf.csv",stringsAsFactors=FALSE)
+psrf <- read.csv("~/Downloads/2020-01-06_csv/agg_psrf.csv",stringsAsFactors=FALSE)
 
+pdf("notes/figures/power_curves_sensitivity.pdf",width=6,height=7.5)
+  par(mfrow=c(3,3),mai=c(0.7,0.55,0.25,0.01),omi=rep(0.01,4))
+  cols <- viridis_pal()(5)
+  
+  # GY93
+  plot(NULL,NULL,xlim=c(-0.1,1),ylim=c(0,1),xlab="proportion of epistatic sites",ylab="power (GY93)",main="no convergence")
+  for (i in 1:5) {
+    d <- all.d[i]
+    pvals <- read.csv("~/Downloads/2020-01-06_csv/agg_G93_pvalue.csv",stringsAsFactors=FALSE)
+    pvals <- pvals[asdsf$value < thresh.a[1] & psrf$value < thresh.p[1],]
+    powerCurveLines(pvals,d,colors[i])
+  }
+  plot(NULL,NULL,xlim=c(-0.1,1),ylim=c(0,1),xlab="proportion of epistatic sites",ylab="power (GY93)",main="convergence")
+  for (i in 1:5) {
+    d <- all.d[i]
+    pvals <- read.csv("~/Downloads/2020-01-06_csv/agg_G93_pvalue.csv",stringsAsFactors=FALSE)
+    pvals <- pvals[asdsf$value < thresh.a[2] & psrf$value < thresh.p[2],]
+    powerCurveLines(pvals,d,colors[i])
+  }
+  legend("topleft",legend=rev(paste0("d = ",all.d)),fill=rev(cols),bty="n",border=NA,cex=1)
+  plot(NULL,NULL,xlim=c(-0.1,1),ylim=c(0,1),xlab="proportion of epistatic sites",ylab="power (GY93)",main="strict convergence")
+  for (i in 1:5) {
+    d <- all.d[i]
+    pvals <- read.csv("~/Downloads/2020-01-06_csv/agg_G93_pvalue.csv",stringsAsFactors=FALSE)
+    pvals <- pvals[asdsf$value < thresh.a[3] & psrf$value < thresh.p[3],]
+    powerCurveLines(pvals,d,colors[i])
+  }
+  
 
+  # kurt
+  plot(NULL,NULL,xlim=c(-0.1,1),ylim=c(0,1),xlab="proportion of epistatic sites",ylab="power (kurtosis(MI))",main="")
+  for (i in 1:5) {
+    d <- all.d[i]
+    pvals <- read.csv("~/Downloads/2020-01-06_csv/agg_kurtosis_pvalue.csv",stringsAsFactors=FALSE)
+    pvals <- pvals[asdsf$value < thresh.a[1] & psrf$value < thresh.p[1],]
+    powerCurveLines(pvals,d,colors[i])
+  }
+  plot(NULL,NULL,xlim=c(-0.1,1),ylim=c(0,1),xlab="proportion of epistatic sites",ylab="power (kurtosis(MI))",main="")
+  for (i in 1:5) {
+    d <- all.d[i]
+    pvals <- read.csv("~/Downloads/2020-01-06_csv/agg_kurtosis_pvalue.csv",stringsAsFactors=FALSE)
+    pvals <- pvals[asdsf$value < thresh.a[2] & psrf$value < thresh.p[2],]
+    powerCurveLines(pvals,d,colors[i])
+  }
+  plot(NULL,NULL,xlim=c(-0.1,1),ylim=c(0,1),xlab="proportion of epistatic sites",ylab="power (kurtosis(MI))",main="")
+  for (i in 1:5) {
+    d <- all.d[i]
+    pvals <- read.csv("~/Downloads/2020-01-06_csv/agg_kurtosis_pvalue.csv",stringsAsFactors=FALSE)
+    pvals <- pvals[asdsf$value < thresh.a[3] & psrf$value < thresh.p[3],]
+    powerCurveLines(pvals,d,colors[i])
+  }
+  
+  # max
+  plot(NULL,NULL,xlim=c(-0.1,1),ylim=c(0,1),xlab="proportion of epistatic sites",ylab="power (max(MI))",main="")
+  for (i in 1:5) {
+    d <- all.d[i]
+    pvals <- read.csv("~/Downloads/2020-01-06_csv/agg_max_pvalue.csv",stringsAsFactors=FALSE)
+    pvals <- pvals[asdsf$value < thresh.a[1] & psrf$value < thresh.p[1],]
+    powerCurveLines(pvals,d,colors[i])
+  }
+  plot(NULL,NULL,xlim=c(-0.1,1),ylim=c(0,1),xlab="proportion of epistatic sites",ylab="power (max(MI))",main="")
+  for (i in 1:5) {
+    d <- all.d[i]
+    pvals <- read.csv("~/Downloads/2020-01-06_csv/agg_max_pvalue.csv",stringsAsFactors=FALSE)
+    pvals <- pvals[asdsf$value < thresh.a[2] & psrf$value < thresh.p[2],]
+    powerCurveLines(pvals,d,colors[i])
+  }
+  plot(NULL,NULL,xlim=c(-0.1,1),ylim=c(0,1),xlab="proportion of epistatic sites",ylab="power (max(MI))",main="")
+  for (i in 1:5) {
+    d <- all.d[i]
+    pvals <- read.csv("~/Downloads/2020-01-06_csv/agg_max_pvalue.csv",stringsAsFactors=FALSE)
+    pvals <- pvals[asdsf$value < thresh.a[3] & psrf$value < thresh.p[3],]
+    powerCurveLines(pvals,d,colors[i])
+  }
+  
+dev.off()
 
 
 
