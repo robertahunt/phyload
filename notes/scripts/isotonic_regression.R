@@ -27,13 +27,13 @@ fit.r <- function(y,n.i,n.e,y.is.decreasing) {
 
 mle.accuracy <- sapply(all.d,function(d){
   data <- read.csv("~/Downloads/2020-01-06_csv/agg_rf.mean.csv",stringsAsFactors=FALSE)
-  data <- data[data$X.d. == d,]
+  data <- data[data$X.d. == d & asdsf$value < 0.05 & psrf$value < 1.1,]
   fit.r(data$value,data$X.n_i.,data$X.n_e.,y.is.decreasing=TRUE)
 })
 
 bootstrapped.accuracy <- lapply(all.d,function(d){
   data <- read.csv("~/Downloads/2020-01-06_csv/agg_rf.mean.csv",stringsAsFactors=FALSE)
-  data <- data[data$X.d. == d,]
+  data <- data[data$X.d. == d & asdsf$value < 0.05 & psrf$value < 1.1,]
   
   sapply(1:nboot,function(i) {
     idx <- sample.int(dim(data)[1],replace=TRUE)
@@ -45,13 +45,13 @@ bootstrapped.accuracy <- lapply(all.d,function(d){
 
 mle.precision <- sapply(all.d,function(d){
   data <- read.csv("~/Downloads/2020-01-06_csv/agg_mrc_percent_resolved.csv",stringsAsFactors=FALSE)
-  data <- data[data$X.d. == d,]
+  data <- data[data$X.d. == d & asdsf$value < 0.05 & psrf$value < 1.1,]
   fit.r(data$value,data$X.n_i.,data$X.n_e.,y.is.decreasing=FALSE)
 })
 
 bootstrapped.precision <- lapply(all.d,function(d){
   data <- read.csv("~/Downloads/2020-01-06_csv/agg_mrc_percent_resolved.csv",stringsAsFactors=FALSE)
-  data <- data[data$X.d. == d,]
+  data <- data[data$X.d. == d & asdsf$value < 0.05 & psrf$value < 1.1,]
   
   sapply(1:nboot,function(i) {
     idx <- sample.int(dim(data)[1],replace=TRUE)
