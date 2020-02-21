@@ -7,14 +7,18 @@ all.d <- c(0.0,0.5,2.0,8.0,1000.0)
 
 pvals <- read.csv("~/Downloads/2020-01-06_csv/agg_G93_pvalue.csv",stringsAsFactors=FALSE)
 
+asdsf <- read.csv("~/Downloads/2020-01-06_csv/agg_asdsf.csv",stringsAsFactors=FALSE)
+
+psrf <- read.csv("~/Downloads/2020-01-06_csv/agg_psrf.csv",stringsAsFactors=FALSE)
+
 true.pos <- sapply(all.d, function(d){
-  true.pos.p <- pvals$value[pvals$X.d. == d & pvals$X.n_e. > 0]
+  true.pos.p <- pvals$value[pvals$X.d. == d & pvals$X.n_e. > 0 & psrf$value < 1.1 & asdsf$value < 1.1]
   return(sum(true.pos.p < 0.05)/length(true.pos.p))
   # false.pos.p <- pvals$value[pvals$X.d. == d & pvals$X.n_e. == 0]
   # c(sum(true.pos.p < 0.05)/length(true.pos.p),sum(false.pos.p < 0.05)/length(false.pos.p))
 })
 
-null.dist <- pvals$value[pvals$X.n_e. == 0 | pvals$X.d. == 0]
+null.dist <- pvals$value[pvals$X.n_e. == 0 | pvals$X.d. == 0 & psrf$value < 1.1 & asdsf$value < 1.1]
 hist(null.dist,breaks=seq(0,1,0.05),xlab="p-value (MI max)",main="n_epi = 0, all d")
 sum(null.dist < 0.05)/length(null.dist)
 
@@ -23,13 +27,13 @@ sum(null.dist < 0.05)/length(null.dist)
 pvals <- read.csv("~/Downloads/2020-01-06_csv/agg_kurtosis_pvalue.csv",stringsAsFactors=FALSE)
 
 true.pos <- sapply(all.d, function(d){
-  true.pos.p <- pvals$value[pvals$X.d. == d & pvals$X.n_e. > 0]
+  true.pos.p <- pvals$value[pvals$X.d. == d & pvals$X.n_e. > 0 & psrf$value < 1.1 & asdsf$value < 1.1]
   return(sum(true.pos.p < 0.05)/length(true.pos.p))
   # false.pos.p <- pvals$value[pvals$X.d. == d & pvals$X.n_e. == 0]
   # c(sum(true.pos.p < 0.05)/length(true.pos.p),sum(false.pos.p < 0.05)/length(false.pos.p))
 })
 
-null.dist <- pvals$value[pvals$X.n_e. == 0 | pvals$X.d. == 0]
+null.dist <- pvals$value[pvals$X.n_e. == 0 | pvals$X.d. == 0 & psrf$value < 1.1 & asdsf$value < 1.1]
 hist(null.dist,breaks=seq(0,1,0.05),xlab="p-value (MI max)",main="n_epi = 0, all d")
 sum(null.dist < 0.05)/length(null.dist)
 
@@ -38,27 +42,28 @@ sum(null.dist < 0.05)/length(null.dist)
 pvals <- read.csv("~/Downloads/2020-01-06_csv/agg_max_pvalue.csv",stringsAsFactors=FALSE)
 
 true.pos <- sapply(all.d, function(d){
-  true.pos.p <- pvals$value[pvals$X.d. == d & pvals$X.n_e. > 0]
+  true.pos.p <- pvals$value[pvals$X.d. == d & pvals$X.n_e. > 0 & psrf$value < 1.1 & asdsf$value < 1.1]
   return(sum(true.pos.p < 0.05)/length(true.pos.p))
   # false.pos.p <- pvals$value[pvals$X.d. == d & pvals$X.n_e. == 0]
   # c(sum(true.pos.p < 0.05)/length(true.pos.p),sum(false.pos.p < 0.05)/length(false.pos.p))
 })
 
-null.dist <- pvals$value[pvals$X.n_e. == 0 | pvals$X.d. == 0]
+null.dist <- pvals$value[pvals$X.n_e. == 0 | pvals$X.d. == 0 & psrf$value < 1.1 & asdsf$value < 1.1]
 hist(null.dist,breaks=seq(0,1,0.05),xlab="p-value (MI max)",main="n_epi = 0, all d")
 sum(null.dist < 0.05)/length(null.dist)
 
+ks.test(null.dist,punif)
 
 ## Plot POWER CURVES!!!
 
-powerCurveLines <- function(data,d,col,windows.x=seq(0,1,0.1),lwd=2) {
+powerCurveLines <- function(data,d,col,asdsf,psrf,asdsf.thresh=0.05,psrf.thresh=1.1,windows.x=seq(0,1,0.1),lwd=2,verbose=FALSE) {
   # recover()
   
   x.avg <- (windows.x[-1] + windows.x[-length(windows.x)])/2
   x <- sort(rep(windows.x,2))[-c(1,length(windows.x)*2)]
   
   pvals <- data
-  pvals <- pvals[pvals$X.d. == d,]
+  pvals <- pvals[pvals$X.d. == d & asdsf < asdsf.thresh & psrf < psrf.thresh,]
   detect <- pvals$value < 0.05
   prop_epi <- pvals$X.n_e./(pvals$X.n_e.+pvals$X.n_i.)
   
@@ -73,18 +78,22 @@ powerCurveLines <- function(data,d,col,windows.x=seq(0,1,0.1),lwd=2) {
   
   lines(x,y,col=col,lwd=lwd)
   
+  if (verbose) {
+    cat("power = [",paste0(round(y[seq(1,length(y),2)],3),sep=","),"]\n")
+  }
+  
 }
 
 pdf("notes/figures/power_curves.pdf",width=6,height=2.5)
   par(mfrow=c(1,3),mai=c(0.7,0.55,0.25,0.01),omi=rep(0.01,4))
-  cols <- viridis_pal()(5)
+  colors <- cols <- viridis_pal()(5)
   
   # GY93
   plot(NULL,NULL,xlim=c(-0.1,1),ylim=c(0,1),xlab="proportion of epistatic sites",ylab="power",main="GY93")
   for (i in 1:5) {
     d <- all.d[i]
     pvals <- read.csv("~/Downloads/2020-01-06_csv/agg_G93_pvalue.csv",stringsAsFactors=FALSE)
-    powerCurveLines(pvals,d,colors[i])
+    powerCurveLines(pvals,d,colors[i],asdsf$value,psrf$value)
   }
 
   # kurt
@@ -93,7 +102,7 @@ pdf("notes/figures/power_curves.pdf",width=6,height=2.5)
     d <- all.d[i]
     
     pvals <- read.csv("~/Downloads/2020-01-06_csv/agg_kurtosis_pvalue.csv",stringsAsFactors=FALSE)
-    powerCurveLines(pvals,d,colors[i])
+    powerCurveLines(pvals,d,colors[i],asdsf$value,psrf$value)
   }
   legend("topleft",legend=rev(paste0("d = ",all.d)),fill=rev(cols),bty="n",border=NA,cex=1)
   
@@ -103,7 +112,7 @@ pdf("notes/figures/power_curves.pdf",width=6,height=2.5)
     d <- all.d[i]
     
     pvals <- read.csv("~/Downloads/2020-01-06_csv/agg_max_pvalue.csv",stringsAsFactors=FALSE)
-    powerCurveLines(pvals,d,colors[i])
+    powerCurveLines(pvals,d,colors[i],asdsf$value,psrf$value)
   }
 dev.off()
 

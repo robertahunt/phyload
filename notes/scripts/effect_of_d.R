@@ -1,5 +1,6 @@
 library(expm)
 library(phangorn)
+library(viridis)
 
 ########
 # Functions we need
@@ -128,5 +129,184 @@ p <- sapply(d,function(this_d){rateProportionDoublets(er,df,this_d)})
 
 # pdf("notes/figures/p_vs_d.pdf",)
 #   par(lend=2)
-  plot(d,p,type="l",log="x",ylab="proportion doublet")
+plot(d,p,type="l",log="x",ylab="proportion doublet")
 # dev.off()
+
+  
+#######
+# Compare how different the Q matrices are
+#######
+library(phylomd)
+
+countPriorSubs <- function(Q,tree) {
+  # recover()
+  
+  if ( class(Q) != "substitution.model" ) {
+    stop("Q must be of class substitution.model")
+  }
+  
+  nstates <- length(Q$states)
+  
+  counts <- numeric(choose(nstates,2))
+  
+  edges <- list(1:length(tree$edge.length))
+  
+  tips <- rep("-",length(tree$tip.label))
+  
+  idx <- 0
+  pb <- txtProgressBar(style=3)
+  for (i in 1:(nstates-1)) {
+    for (j in (i+1):nstates) {
+      idx <- idx + 1
+      L <- matrix(0,nstates,nstates)
+      L[i,j] <- 1
+      L[j,i] <- 1
+      counts[idx] <- phylo.nsubs.moments(tree,Q,L,edges,1,tips)[2]
+      names(counts)[idx] <- paste0(Q$states[i],"<->",Q$states[j])
+      setTxtProgressBar(pb,idx/length(counts))
+    }
+  }
+  return(counts)
+}
+
+doubletCounts2siteCounts <- function(dc) {
+  # recover()
+  
+  from <- do.call(rbind,strsplit(names(dc),"<->"))[,1]
+  to <- do.call(rbind,strsplit(names(dc),"<->"))[,2]
+  
+  doublet_states <- unique(unlist(strsplit(names(dc),"<->")))
+  single_states <- unique(unlist(strsplit(doublet_states,"")))
+  
+  counts <- matrix(0,length(single_states),length(single_states),dimnames=list(single_states,single_states))
+  
+  # get counts on single sites
+  for (i in 1:length(dc)) {
+    x <- strsplit(from[i],"")[[1]]
+    y <- strsplit(to[i],"")[[1]]
+    
+    if ( x[1] == y[1] && x[2] != y[2] ) {
+      counts[x[2],y[2]] <- counts[x[2],y[2]] + dc[i]
+    } else if ( x[1] != y[1] && x[2] == y[2] ) {
+      counts[x[1],y[1]] <- counts[x[1],y[1]] + dc[i]
+    } else if ( x[1] != y[1] && x[2] != y[2] ) {
+      counts[x[2],y[2]] <- counts[x[2],y[2]] + dc[i]
+      counts[x[1],y[1]] <- counts[x[1],y[1]] + dc[i]
+    }
+  }
+  
+  # flatten counts
+  flat_counts <- numeric(choose(length(single_states),2))
+  idx <- 0
+  for (i in 1:(length(single_states)-1)) {
+    for (j in (i+1):length(single_states)) {
+      idx <- idx + 1
+      flat_counts[idx] <- counts[i,j] + counts[j,i]
+      names(flat_counts)[idx] <- paste0(single_states[i],"<->",single_states[j])
+    }
+  }
+  return(flat_counts)
+}
+
+# tunicate tree
+tree <- read.tree("simulation_study/simulation_scripts/simulation_tree_tunicates.tre")
+
+# root to 0-length branch, this is arbitrary but required
+tree <- root(tree,outgroup=tree$tip.label[1],resolve.root=TRUE)
+
+# What we would get if we simply expanded the GTR rate matrix into a 16x16 matrix
+independent.df <- c(bf[1] * bf, bf[2] * bf, bf[3] * bf, bf[4] * bf)
+bigger.gtr <- assembleEpiQ(er,independent.df,0)
+
+d0.0 <- assembleEpiQ(er,df,0)
+d0.5 <- assembleEpiQ(er,df,0.5)
+d2.0 <- assembleEpiQ(er,df,2)
+d8.0 <- assembleEpiQ(er,df,8)
+d1000.0 <- assembleEpiQ(er,df,1000)
+
+# make "substitution model" class objects for use in mapping
+bigger.jc <- list(Q=assembleEpiQ(rep(1/6,6),rep(1/16,16),0),
+                  pi=rep(1/16,16),
+                  states=c(paste0(c("A"),c("A","C","G","T")),paste0(c("C"),c("A","C","G","T")),paste0(c("G"),c("A","C","G","T")),paste0(c("T"),c("A","C","G","T"))))
+class(bigger.jc) <- "substitution.model"
+
+bigger.gtr <- list(Q=bigger.gtr,
+                   pi=independent.df,
+                   states=c(paste0(c("A"),c("A","C","G","T")),paste0(c("C"),c("A","C","G","T")),paste0(c("G"),c("A","C","G","T")),paste0(c("T"),c("A","C","G","T"))))
+class(bigger.gtr) <- "substitution.model"
+
+d0.0 <- list(Q=d0.0,
+             pi=df,
+             states=c(paste0(c("A"),c("A","C","G","T")),paste0(c("C"),c("A","C","G","T")),paste0(c("G"),c("A","C","G","T")),paste0(c("T"),c("A","C","G","T"))))
+class(d0.0) <- "substitution.model"
+
+d0.5 <- list(Q=d0.5,
+             pi=df,
+             states=c(paste0(c("A"),c("A","C","G","T")),paste0(c("C"),c("A","C","G","T")),paste0(c("G"),c("A","C","G","T")),paste0(c("T"),c("A","C","G","T"))))
+class(d0.5) <- "substitution.model"
+
+d2.0 <- list(Q=d2.0,
+             pi=df,
+             states=c(paste0(c("A"),c("A","C","G","T")),paste0(c("C"),c("A","C","G","T")),paste0(c("G"),c("A","C","G","T")),paste0(c("T"),c("A","C","G","T"))))
+class(d2.0) <- "substitution.model"
+
+d8.0 <- list(Q=d8.0,
+             pi=df,
+             states=c(paste0(c("A"),c("A","C","G","T")),paste0(c("C"),c("A","C","G","T")),paste0(c("G"),c("A","C","G","T")),paste0(c("T"),c("A","C","G","T"))))
+class(d8.0) <- "substitution.model"
+
+d1000.0 <- list(Q=d1000.0,
+                pi=df,
+                states=c(paste0(c("A"),c("A","C","G","T")),paste0(c("C"),c("A","C","G","T")),paste0(c("G"),c("A","C","G","T")),paste0(c("T"),c("A","C","G","T"))))
+class(d1000.0) <- "substitution.model"
+
+# count substitutions over tree in doublet land
+# divide by 2 because rate matrices are normalized to sites but are on site-pairs
+count.bigger.jc <- countPriorSubs(bigger.jc,tree)/2
+
+count.bigger.gtr <- countPriorSubs(bigger.gtr,tree)/2
+
+count.d.0.0 <- countPriorSubs(d0.0,tree)/2
+
+count.d.0.5 <- countPriorSubs(d0.5,tree)/2
+
+count.d.2.0 <- countPriorSubs(d2.0,tree)/2
+
+count.d.8.0 <- countPriorSubs(d8.0,tree)/2
+
+count.d.1000.0 <- countPriorSubs(d1000.0,tree)/2
+
+counts <- rbind(count.bigger.jc,count.bigger.gtr,count.d.0.0,count.d.0.5,count.d.2.0,count.d.8.0,count.d.1000.0)
+
+dist(counts)
+
+# comparing in doublet land is hard because things are normalized per site, what if we compared in site land?
+site.count.bigger.jc <- doubletCounts2siteCounts(count.bigger.jc)
+
+site.count.bigger.gtr <- doubletCounts2siteCounts(count.bigger.gtr)
+
+site.count.d.0.0 <- doubletCounts2siteCounts(count.d.0.0)
+
+site.count.d.0.5 <- doubletCounts2siteCounts(count.d.0.5)
+
+site.count.d.2.0 <- doubletCounts2siteCounts(count.d.2.0)
+
+site.count.d.8.0 <- doubletCounts2siteCounts(count.d.8.0)
+
+site.count.d.1000.0 <- doubletCounts2siteCounts(count.d.1000.0)
+
+site.counts <- rbind(site.count.bigger.jc,site.count.bigger.gtr,site.count.d.0.0,site.count.d.0.5,site.count.d.2.0,site.count.d.8.0,site.count.d.1000.0)
+
+dist(site.counts)
+
+pca <- prcomp(site.counts)
+
+pca.coords <- site.counts %*% pca$rotation
+
+plot(NULL,NULL,xlim=range(pca.coords[,1])*c(1,1.05),ylim=range(pca.coords[,2])*c(1.05,1.05),xlab="PC1",ylab="PC2")
+text(c("JC","GTR",paste0("d=",c(0,0.5,2,8,1000))),x=pca.coords[,1],y=pca.coords[,2])
+
+plot(NULL,NULL,xlim=range(pca.coords[,1])*c(1,1.05),ylim=range(pca.coords[,2])*c(1.05,1.05),xlab="PC1",ylab="PC2")
+points(pca.coords[,1:2],col=c("red","black",viridis_pal()(5)),pch=16,cex=2)
+text(c("JC","GTR",paste0("d=",c(0,0.5,2,8,1000))),x=pca.coords[,1],y=pca.coords[,2])
+

@@ -59,8 +59,6 @@ William DeWitt$^{1\ast}$, Sarah Hilton$^{1\ast}$, and Andrew Magee$^{2\ast}$\\
 
 \maketitle
 
-\amcomment{We should take the time to consider clearing up our nomenclature. Sites, site pairs, epistatic sites, iid sites, all of these are things that could easily get us into trouble when writing/communicating our results to people.}
-
 \begin{abstract}
 Phylogenetic inference relies on probabilistic models of character state change along tree branches in which sites in the alignment are statistically independent.
 This severely restrictive assumption facilitates computational tractability, but ignores the influence that epistasis, or the effect of genetic background on mutational effects, has on the evolution of functional sequences.
@@ -111,8 +109,6 @@ $<$Mumble mumble they should have been doing posterior-predictive testing, or at
 Given the difficulties involved in applying epistatic phylogenetic models to real datasets, we seek to answer two questions involving the use of misspecified site-iid models for data generated from a evolutionary process with (pairwise) epistasis.
 Can we \textit{detect} detect the presence of unmodeled (pairwise) epistasis in datasets using posterior-predictive model checks?
 What is the \textit{effect} of including epistatically paired sites on the quality of inferred trees?
-If (pairwise) epistasis is at least somewhat detrimental to inference, and it is detectable, we also wish to know, can it be detected when it has the potential to distort phylogenetic inference?
-
 To address these questions, we perform a simulation study using the pairwise epistatic model of \cite{nasrallah2013phylogenetic}.
 We simulate alignments on a 3-dimensional parameter grid, defined by the number of sites in the alignment that are site-iid $n_{\mathrm{i}}$, the number of sites that are epistatically paired $n_{\mathrm{e}}$, and the strength of epistatic interactions $d$.
 Our grid thus includes a range of alignment sizes $n = n_{\mathrm{i}}+n_{\mathrm{e}}$, a range of epistatic fractions $\frac{n_{\mathrm{e}}}{n_{\mathrm{i}}+n_{\mathrm{e}}}$ for each size.
@@ -199,7 +195,7 @@ By comparing the accuracy of inference on a dataset with $n$ sites (possibly a m
 
 For each value of $d$, we simulate a grid with $n_i,n_e \in \{0, 16, 32, \dots, 400\}$, excluding the cell in which $n_i = n_e = 0$.
 To keep computation costs down, at each grid point we simulate a single alignment, and we refer to these alignments collectively as the ``real'' alignments.
-While this setup does not afford us a precise estimtate of any quantity at any grid cell, this is not an issue.
+While this setup does not afford us a precise estimate of any quantity at any grid cell, this is not an issue.
 For our statistical analyses, including estimation of the value of an epistatic site, the presence of sampling noise is expected by the models.
 
 \subsubsection*{Simulating parameters\label{sec:tunicates}}
@@ -221,7 +217,8 @@ In order to avoid analysis artifacts due to convergence issues we perform conver
 As we are interested in the phylogeny specifically, our convergence diagnostics focus on the tree and branch lengths.
 First, we use the average standard deviation of split frequencies (ASDSF) to compare topologies between the two chains.
 To account for the possibility of branch-length convergence issues, we also check if the tree length distributions between chains by using the potential scale reduction factor \citep[PSRF,\ ][]{brooks1998general}.
-We discard all chains where either ASDSF $>$ XXX or PSRF $>$ YYY.
+However, we must balance the stringency of our convergence standards against the number of analyses that must be discarded.
+To this end, we discard all chains where either ASDSF $>$ 0.05 or PSRF $>$ 1.1, and in the supplement we present additional results using different standards to assess the sensitivity of our results to the convergence standards.
 
 
 \subsection*{Posterior predictive assessments\label{sec:pps}}
@@ -456,7 +453,49 @@ To give a concrete example, for $d = 0.5$, $r_{accuracy}(0.5) = 0.783$ while $r_
 
 \section*{Discussion\label{sec:discussion}}
 
-Phylogenetics is probably fine.
+We set out to understand the role of epistasis in phylogenetic inference.
+Focusing in on pairwise epistasis in the form of RNA doublet models, we asked two questions.
+Can we detect epistasis in alignments with posterior predictive checks?
+What is the effect of pairwise epistasis on the quality of phylogenetic inference.
+Overall, we find that the right test statistic can detect epistasis with good power and few false positives, and that (pairwise) epistasis is only mildly harmful to phylogenetic inference.
+
+In our simulations, the model we used for inference was misspecified due to both differences in the relative exchange rates and in the stationary frequencies.
+Our inference model is a standard GTR+G model which works on individual sites, while our simulated data includes a mix of sites drawn from a site-iid GTR model and an epistatic doublet model.
+The doublet model is inherently a model of site pairs, both because it uses doublet stationary frequencies and because $d$ allows for substitutions at both sites.
+However, the doublet model still produces a pattern of substitutions at individual sites, so we can decompose the model misspecification into two parts: the portion due to paired substitutions, and the portion due to the fact that there are essentially two different site-level GTR models.
+The misspecification due to paired substitutions is a strictly increasing function of $d$.
+The misspecification due to the difference in underlying GTR models (the real one underyling the independent sites, and the hypothetical one underlying the epistatic sites) is somewhat less transparent.
+However, it appears that the difference is greatest between these two at $d = 0$, much less at $d = 0.5$, and then increases with $d$.
+This pattern could explain our observation that the worth of an epistatic site at $d = 0$ is less than for $d = 0.5$.
+
+Our posterior predictive checks for epistasis show that pairwise epistasis can be detected with the appropriate summary statistics.
+While the standard multinomial likelihood statistic has some ability to detect epistasis at the extreme of $d = 1000$ (an average power across all simulations of 0.18), it cannot detect realistic strengths of epistasis, and so it is not a particularly useful statistic.
+We also introduced two statistics based on mutual information.
+In both cases, we compute all the mutual information for all site pairs in the alignment, our statistics simply differ in how they summarize this distribution.
+One summary we considered is the kurtosis of this distribution, which has decent power at $d = 1000$ (power of 0.56), but at $d = 8$ power is much lower (0.07) and it has little ability to detect weaker epistasis.
+Our second summary, the maximum of the pairwise mutual information values, was much more successful.
+Averaging over all simulations, power is 0.17 at $d = 0.5$, 0.55 at $d = 2$, and 0.9 at $d = 8$, and despite this power the false positive rate is not exagerated ($\alpha = 0.05$, false positive rate = 0.06, though the distribution of p-values does not appear to be quite uniform under the null hypothesis).
+It is possible that summary statistics that take better advantage over the extreme upper end of the distribution of pairwise mutual information would have even better power, but we leave this to future research.
+It is also possible that one could identify interacting pairs of sites using the maximum mutual information, and then test if these pairs are significantly interacting using the posterior predictive distribution of mutual information for that pair of sites.
+
+We defined two scenarios for the worth of an epistatic site.
+In the catastrophic scenario, epistatic sites are worth some negative number of sites, such that adding epistatically interacting sites to an alignment of independent sites will make inference worse.
+In the best-case scenario, epistatic sites contribute positively to inference, but not as much as independent sites.
+Our simulations show conclusively that the sort of epistasis modeled by \citet{nasrallah2013phylogenetic} falls into the best-case scenario.
+When epistasis is simulated near maximum strength, we estimate that epistatic sites are worth slightly 40\% to 50\% of independent sites, while more realistic strengths lead to worths of 60\% to 80\%.
+One slight caveat is that epistasis has slightly different effects on the accuracy and precision of inference.
+When we define the worth of a site in terms of the increase in precision, we get slightly higher estimates of worth.
+This means that in practice when epistasis is present in phylogenetic datasets, inference will be slightly overconfident.
+Still, this effect is relatively mild for realistic values of the strength of epistasis, and it does not undermine the simple fact that adding epistatically paired sites improves inference.
+
+Overall, our results are quite promising for phylogenetic inference in the face of unmodeled epistasis.
+While epistasis decreases the accuracy and precision of inference, it does so slightly and not catastrophically.
+The addition of epistatic site pairs to an aligment will still lead to overall better inference, simply not inference as good as adding an equal number of independent sites from the true model.
+And moreover, when there is pairwise epistasis in an alignment we have shown that it can reliably be detected with a new test statistic: the maximum pairwise mutual information of sites.
+Thus, if one is worried that pairwise epistasis is interfering with their estimates, they can now detect it with good power and a low risk of false positives.
+Further work will need to be done using other models of epistasis (pairwise and higher order) to check that our findings on the effect of epistasis are not simply localized to one region of the space of epistatic models.
+It is likely that our new test statistic will also be useful for detecting other forms of pairwise epistasis, though this should also be tested.
+Our results suggest that in practice, phylogenies inferred from alignments with pairwise epistasis are still reliable estimates.
 
 \section*{Supplementary Material}
 

@@ -8,6 +8,9 @@ colors <- viridis_pal()(5)
 
 all.d <- c(0,0.5,2,8,1000)
 
+asdsf <- read.csv("~/Downloads/2020-01-06_csv/agg_asdsf.csv",stringsAsFactors=FALSE)
+psrf <- read.csv("~/Downloads/2020-01-06_csv/agg_psrf.csv",stringsAsFactors=FALSE)
+
 fit.r <- function(y,n.i,n.e,y.is.decreasing) {
   # recover()
   # function requires monotonically increasing y, so if y is decreasing, we model -y instead
@@ -19,31 +22,8 @@ fit.r <- function(y,n.i,n.e,y.is.decreasing) {
     fit <- isoreg(x=n_eff,y=y)
     sum(residuals(fit)^2)
   }
-  # ln_n <- log(length(y))
-  # fn_reg <- function(r) {
-  #   n_eff <- n.i + r * n.e
-  #   fit <- isoreg(x=n_eff,y=y)
-  #   ln_n * length(fit$iKnots) - 2*sum(dnorm(residuals(fit),log=TRUE))
-  # }
   optimise(fn,c(-1,1))$minimum
 }
-
-# fit.r <- function(y,n.i,n.e,y.is.decreasing) {
-#   recover()
-#   # function requires monotonically increasing y, so if y is decreasing, we model -y instead
-#   if ( y.is.decreasing) {
-#     y <- -y
-#   }
-#   fn <- function(r) {
-#     n_eff <- n.i + r * n.e
-#     # knots <- quantile(n_eff,seq(0.2,0.8,0.2))
-#     knots <- seq(min(n_eff),max(n_eff),length.out=21)[-c(1,21)]
-#     X <- iSpline(n_eff,knots=knots,degree=1)
-#     fit <- rlm(y ~ X)
-#     sum(abs(residuals(fit)))
-#   }
-#   optimise(fn,c(-1,1))$minimum
-# }
 
 mle.accuracy <- sapply(all.d,function(d){
   data <- read.csv("~/Downloads/2020-01-06_csv/agg_rf.mean.csv",stringsAsFactors=FALSE)
